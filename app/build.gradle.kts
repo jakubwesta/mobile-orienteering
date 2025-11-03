@@ -51,6 +51,10 @@ kapt {
     correctErrorTypes = true
 }
 
+hilt {
+    enableAggregatingTask = false
+}
+
 dependencies {
     // Core & Lifecycle
     implementation(libs.androidx.core.ktx)
