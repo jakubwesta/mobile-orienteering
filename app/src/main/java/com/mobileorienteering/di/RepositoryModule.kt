@@ -1,6 +1,7 @@
 package com.mobileorienteering.di
 
 import android.content.Context
+import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.FirstLaunchRepository
 import com.mobileorienteering.data.repository.SettingsRepository
 import dagger.Module
@@ -19,4 +20,8 @@ object RepositoryModule {
     @Provides
     fun provideFirstLaunchRepository(@ApplicationContext context: Context): FirstLaunchRepository =
         FirstLaunchRepository(context)
+
+    @Provides
+    fun provideAuthRepository(@ApplicationContext context: Context): AuthRepository =
+        AuthRepository(context)
 }
