@@ -1,6 +1,7 @@
 package com.mobileorienteering.di
 
 import android.content.Context
+import com.mobileorienteering.data.repository.FirstLaunchRepository
 import com.mobileorienteering.data.repository.SettingsRepository
 import dagger.Module
 import dagger.Provides
@@ -14,4 +15,8 @@ object RepositoryModule {
     @Provides
     fun provideSettingsRepository(@ApplicationContext context: Context): SettingsRepository =
         SettingsRepository(context)
+
+    @Provides
+    fun provideFirstLaunchRepository(@ApplicationContext context: Context): FirstLaunchRepository =
+        FirstLaunchRepository(context)
 }

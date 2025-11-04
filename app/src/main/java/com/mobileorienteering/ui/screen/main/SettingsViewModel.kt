@@ -2,6 +2,7 @@ package com.mobileorienteering.ui.screen.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mobileorienteering.data.model.SettingsModel
 import com.mobileorienteering.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,27 +15,29 @@ class SettingsViewModel @Inject constructor(
     private val repo: SettingsRepository
 ) : ViewModel() {
 
-    val darkMode = repo.darkModeFlow.stateIn(
+    val settings = repo.settingsFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        false
+        SettingsModel()
     )
 
-    val volume = repo.volumeFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        50
-    )
-
-    fun toggleDarkMode(enabled: Boolean) {
-        viewModelScope.launch {
-            repo.setDarkMode(enabled)
-        }
+    fun toggleDarkMode(enabled: Boolean) = viewModelScope.launch {
+        repo.updateDarkMode(enabled)
     }
 
-    fun updateVolume(value: Int) {
-        viewModelScope.launch {
-            repo.setVolume(value)
-        }
+    fun updateVolume(value: Int) = viewModelScope.launch {
+        repo.updateVolume(value)
+    }
+
+    fun updateVibration(enabled: Boolean) = viewModelScope.launch {
+        repo.updateVibration(enabled)
+    }
+
+    fun updateGpsAccuracy(value: Int) = viewModelScope.launch {
+        repo.updateGpsAccuracy(value)
+    }
+
+    fun updateAll(settings: SettingsModel) = viewModelScope.launch {
+        repo.updateSettings(settings)
     }
 }
