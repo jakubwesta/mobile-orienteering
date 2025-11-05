@@ -1,6 +1,6 @@
 [versions]
 # Gradle & Kotlin
-agp = "8.7.3"
+agp = "8.13.0"
 kotlin = "2.1.0"  # Use Kotlin 2.1.0 instead (stable and KSP is available)
 ksp = "2.1.0-1.0.29"  # Matching KSP version for Kotlin 2.1.0
 
@@ -49,6 +49,9 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+
+# Google fonts
+google-fonts = "androidx.compose.ui:ui-text-google-fonts:1.6.0"
 
 # Navigation
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }

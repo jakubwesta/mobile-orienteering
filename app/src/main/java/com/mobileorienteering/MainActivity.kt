@@ -11,7 +11,7 @@ import com.mobileorienteering.ui.component.AppScaffold
 import com.mobileorienteering.ui.screen.auth.AuthViewModel
 import com.mobileorienteering.ui.screen.main.SettingsViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchViewModel
-import com.mobileorienteering.ui.theme.MobileOrienteeringTheme
+import com.mobileorienteering.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
             val navController = rememberNavController()
 
-            MobileOrienteeringTheme(darkTheme = settings.darkMode) {
+            AppTheme(darkTheme = settings.darkMode) {
                 AppScaffold(navController, isFirstLaunch, isLoggedIn)
             }
         }
