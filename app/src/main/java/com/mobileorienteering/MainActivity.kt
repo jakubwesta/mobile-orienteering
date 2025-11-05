@@ -29,7 +29,10 @@ class MainActivity : ComponentActivity() {
 
             val navController = rememberNavController()
 
-            AppTheme(darkTheme = settings.darkMode) {
+            AppTheme(
+                darkTheme = settings.darkMode,
+                dynamicColor = false
+            ) {
                 AppScaffold(navController, isFirstLaunch, isLoggedIn)
             }
         }
