@@ -1,20 +1,23 @@
 package com.mobileorienteering.ui.screen.main
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import org.maplibre.compose.map.GestureOptions
+import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.MaplibreMap
 
 @Composable
 fun MapScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Map Screen Placeholder", style = MaterialTheme.typography.titleLarge)
-    }
+    MaplibreMap(
+        modifier = Modifier.fillMaxSize(),
+        options = MapOptions(
+            gestureOptions = GestureOptions(
+                isTiltEnabled = true,
+                isZoomEnabled = true,
+                isRotateEnabled = true,
+                isScrollEnabled = true,
+            )
+        )
+    )
 }
