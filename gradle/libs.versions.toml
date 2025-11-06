@@ -1,8 +1,8 @@
 [versions]
 # Gradle & Kotlin
 agp = "8.13.0"
-kotlin = "2.1.0"  # Use Kotlin 2.1.0 instead (stable and KSP is available)
-ksp = "2.1.0-1.0.29"  # Matching KSP version for Kotlin 2.1.0
+kotlin = "2.1.0"
+ksp = "2.1.0-1.0.29"
 
 # AndroidX
 coreKtx = "1.15.0"
@@ -28,6 +28,9 @@ okhttpLogging = "4.12.0"
 
 # MapLibre
 maplibreCompose = "0.11.1"
+
+# Google Play Services
+playServicesLocation = "21.3.0"
 
 # Test
 junit = "4.13.2"
@@ -61,6 +64,10 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 
 # MapLibre
 maplibre-compose = { group = "org.maplibre.compose", name = "maplibre-compose", version.ref = "maplibreCompose" }
+maplibre-composeMaterial3 = { module = "org.maplibre.compose:maplibre-compose-material3", version = "0.11.1" }
+
+# Google Play Services
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 # Hilt
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }

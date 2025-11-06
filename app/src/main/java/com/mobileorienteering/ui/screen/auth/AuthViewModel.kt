@@ -1,5 +1,6 @@
 package com.mobileorienteering.ui.screen.auth
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val repo: AuthRepository
@@ -22,7 +22,7 @@ class AuthViewModel @Inject constructor(
         SharingStarted.WhileSubscribed(5000),
         false
     )
-
+    
     val authModel = repo.authModelFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),

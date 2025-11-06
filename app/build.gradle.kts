@@ -92,6 +92,10 @@ dependencies {
 
     // MapLibre Compose
     implementation(libs.maplibre.compose)
+    implementation(libs.maplibre.composeMaterial3)
+
+    // Google Play Services Location
+    implementation(libs.play.services.location)
 
     // Testing
     testImplementation(libs.junit)
