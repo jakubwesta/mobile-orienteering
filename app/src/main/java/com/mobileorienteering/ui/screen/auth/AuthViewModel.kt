@@ -1,10 +1,10 @@
 package com.mobileorienteering.ui.screen.auth
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.*
+import com.mobileorienteering.data.model.LoginModel
+import com.mobileorienteering.data.model.RegisterModel
 import com.mobileorienteering.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +22,7 @@ class AuthViewModel @Inject constructor(
         SharingStarted.WhileSubscribed(5000),
         false
     )
-    
+
     val authModel = repo.authModelFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -34,10 +34,13 @@ class AuthViewModel @Inject constructor(
     var username = mutableStateOf("")
     var fullName = mutableStateOf<String?>(null)
     var phoneNumber = mutableStateOf<String?>(null)
+
     var error = mutableStateOf<String?>(null)
+    var isLoading = mutableStateOf(false)
 
     fun login() {
         viewModelScope.launch {
+            isLoading.value = true
             try {
                 repo.login(
                     LoginModel(
@@ -48,12 +51,15 @@ class AuthViewModel @Inject constructor(
                 error.value = null
             } catch (e: Exception) {
                 error.value = e.message
+            } finally {
+                isLoading.value = false
             }
         }
     }
 
     fun register() {
         viewModelScope.launch {
+            isLoading.value = true
             try {
                 repo.register(
                     RegisterModel(
@@ -67,6 +73,8 @@ class AuthViewModel @Inject constructor(
                 error.value = null
             } catch (e: Exception) {
                 error.value = e.message
+            } finally {
+                isLoading.value = false
             }
         }
     }
@@ -75,5 +83,9 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             repo.logout()
         }
+    }
+
+    fun clearError() {
+        error.value = null
     }
 }

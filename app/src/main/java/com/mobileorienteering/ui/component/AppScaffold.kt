@@ -1,22 +1,18 @@
 package com.mobileorienteering.ui.component
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.mobileorienteering.ui.navigation.AppScreen
 import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
-import com.mobileorienteering.ui.screen.main.LibraryScreen
-import com.mobileorienteering.ui.screen.main.MapScreen
-import com.mobileorienteering.ui.screen.main.RunsScreen
-import com.mobileorienteering.ui.screen.main.SettingsScreen
+import com.mobileorienteering.ui.screen.main.*
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
-import com.mobileorienteering.ui.navigation.AppScreen
 
 @Composable
 fun AppScaffold(
@@ -24,13 +20,11 @@ fun AppScaffold(
     isFirstLaunch: Boolean,
     isLoggedIn: Boolean
 ) {
-    val navBackStackEntry = navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry.value?.destination?.route
-
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val showBottomBar = currentRoute in AppScreen.mainScreens.map { it.route }
 
     LaunchedEffect(isLoggedIn) {
-        if (!isLoggedIn) {
+        if (!isLoggedIn && currentRoute in AppScreen.mainScreens.map { it.route }) {
             navController.navigate(AppScreen.Login.route) {
                 popUpTo(0) { inclusive = true }
             }

@@ -1,15 +1,44 @@
 package com.mobileorienteering.ui.navigation
 
-sealed class AppScreen(val route: String) {
-    object Welcome : AppScreen("welcome")
+import com.mobileorienteering.R
 
+sealed class AppScreen(
+    val route: String,
+    val label: String? = null,
+    val iconFilled: Int? = null,
+    val iconOutlined: Int? = null
+) {
+    object Welcome : AppScreen("welcome")
     object Login : AppScreen("login")
     object Register : AppScreen("register")
 
-    object Map : AppScreen("map")
-    object Library : AppScreen("library")
-    object Runs : AppScreen("runs")
-    object Settings : AppScreen("settings")
+    object Map : AppScreen(
+        route = "map",
+        label = "Map",
+        iconFilled = R.drawable.ic_map_filled,
+        iconOutlined = R.drawable.ic_map_outlined
+    )
+
+    object Library : AppScreen(
+        route = "library",
+        label = "Library",
+        iconFilled = R.drawable.ic_library_filled,
+        iconOutlined = R.drawable.ic_library_outlined
+    )
+
+    object Runs : AppScreen(
+        route = "runs",
+        label = "Runs",
+        iconFilled = R.drawable.ic_runs_filled,
+        iconOutlined = R.drawable.ic_runs_outlined
+    )
+
+    object Settings : AppScreen(
+        route = "settings",
+        label = "Settings",
+        iconFilled = R.drawable.ic_settings_filled,
+        iconOutlined = R.drawable.ic_settings_outlined
+    )
 
     companion object {
         val mainScreens = listOf(Map, Library, Runs, Settings)
