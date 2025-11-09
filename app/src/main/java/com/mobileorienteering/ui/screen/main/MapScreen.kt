@@ -1,5 +1,8 @@
 package com.mobileorienteering.ui.screen.main
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -7,28 +10,61 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.component.LocationPermissionHandler
-import kotlinx.coroutines.launch
-import org.maplibre.compose.camera.CameraPosition
-import org.maplibre.compose.camera.rememberCameraState
-import org.maplibre.compose.map.GestureOptions
-import org.maplibre.compose.map.MapOptions
-import org.maplibre.compose.map.MaplibreMap
-import org.maplibre.compose.map.OrnamentOptions
-import org.maplibre.compose.style.BaseStyle
-import org.maplibre.compose.style.rememberStyleState
-import io.github.dellisd.spatialk.geojson.Position
+import org.maplibre.android.MapLibre
+import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.location.LocationComponentActivationOptions
+import org.maplibre.android.location.LocationComponentOptions
+import org.maplibre.android.location.modes.CameraMode
+import org.maplibre.android.location.modes.RenderMode
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.Style
 
 @Composable
 fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
-    val cameraState = rememberCameraState()
-    val styleState = rememberStyleState()
-    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    var mapView: MapView? by remember { mutableStateOf(null) }
+    var mapLibreMap: MapLibreMap? by remember { mutableStateOf(null) }
+    var isMapReady by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.currentLocation, isMapReady) {
+        val location = state.currentLocation ?: return@LaunchedEffect
+        val map = mapLibreMap ?: return@LaunchedEffect
+        if (!isMapReady) return@LaunchedEffect
+
+        map.animateCamera(
+            org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
+                CameraPosition.Builder()
+                    .target(LatLng(location.latitude, location.longitude))
+                    .zoom(18.0)  // Zwiększony zoom
+                    .build()
+            ),
+            1000
+        )
+    }
+
+    LaunchedEffect(state.isTracking, state.hasPermission, isMapReady) {
+        val map = mapLibreMap ?: return@LaunchedEffect
+        if (!isMapReady) return@LaunchedEffect
+
+        if (state.isTracking && state.hasPermission) {
+            map.style?.let { style ->
+                enableLocationComponent(context, map, style)
+            }
+        } else {
+            disableLocationComponent(map)
+        }
+    }
 
     LocationPermissionHandler(
         onPermissionGranted = {
@@ -42,15 +78,30 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
     ) { requestPermission ->
 
         Box(Modifier.fillMaxSize()) {
-            MaplibreMap(
+            AndroidView(
+                factory = { ctx ->
+                    MapView(ctx).apply {
+                        mapView = this
+                        getMapAsync { map ->
+                            mapLibreMap = map
+
+                            // Ustaw początkową pozycję kamery (Wrocław domyślnie)
+                            map.cameraPosition = CameraPosition.Builder()
+                                .target(LatLng(51.1079, 17.0385))
+                                .zoom(10.0)
+                                .build()
+
+                            // Styl positron - jasny, czytelny, z ścieżkami
+                            map.setStyle("https://tiles.openfreemap.org/styles/positron") { style ->
+                                isMapReady = true
+                            }
+                        }
+                    }
+                },
                 modifier = Modifier.fillMaxSize(),
-                cameraState = cameraState,
-                styleState = styleState,
-                baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
-                options = MapOptions(
-                    ornamentOptions = OrnamentOptions.AllDisabled,
-                    gestureOptions = GestureOptions.Standard
-                ),
+                update = { view ->
+                    view.onResume()
+                }
             )
 
             FloatingActionButton(
@@ -73,24 +124,58 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_location),
-                    contentDescription = "Track location"
+                    contentDescription = if (state.isTracking) "Zatrzymaj" else "Start",
+                    tint = if (state.isTracking)
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    else
+                        MaterialTheme.colorScheme.onSurface
                 )
             }
         }
 
-        LaunchedEffect(state.currentLocation) {
-            val location = state.currentLocation ?: return@LaunchedEffect
-            coroutineScope.launch {
-                cameraState.animateTo(
-                    CameraPosition(
-                        target = Position(
-                            longitude = location.longitude,
-                            latitude = location.latitude
-                        ),
-                        zoom = 15.0
-                    )
-                )
+        DisposableEffect(Unit) {
+            onDispose {
+                mapView?.onPause()
+                mapView?.onStop()
+                mapView?.onDestroy()
             }
         }
+    }
+}
+
+@SuppressLint("MissingPermission")
+private fun enableLocationComponent(context: Context, map: MapLibreMap, style: Style) {
+    try {
+        val locationComponentOptions = LocationComponentOptions.builder(context)
+            .accuracyAlpha(0.15f)
+            .accuracyColor(Color.BLUE)
+            .foregroundTintColor(Color.BLUE)
+            .pulseEnabled(true)
+            .build()
+
+        val locationComponentActivationOptions = LocationComponentActivationOptions.builder(context, style)
+            .locationComponentOptions(locationComponentOptions)
+            .useDefaultLocationEngine(true)
+            .build()
+
+        map.locationComponent.apply {
+            if (!isLocationComponentActivated) {
+                activateLocationComponent(locationComponentActivationOptions)
+            }
+            isLocationComponentEnabled = true
+            cameraMode = CameraMode.TRACKING
+            renderMode = RenderMode.COMPASS
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
+@SuppressLint("MissingPermission")
+private fun disableLocationComponent(map: MapLibreMap) {
+    try {
+        map.locationComponent.isLocationComponentEnabled = false
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }

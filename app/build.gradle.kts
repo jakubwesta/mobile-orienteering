@@ -94,6 +94,12 @@ dependencies {
     implementation(libs.maplibre.compose)
     implementation(libs.maplibre.composeMaterial3)
 
+    // MapLibre Native SDK
+    implementation(libs.maplibre.native)
+
+    // MapLibre Native SDK (dla AndroidView)
+    implementation(libs.maplibre.native)
+
     // Google Play Services Location
     implementation(libs.play.services.location)
 
