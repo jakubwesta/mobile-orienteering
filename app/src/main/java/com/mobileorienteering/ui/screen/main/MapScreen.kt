@@ -3,6 +3,7 @@ package com.mobileorienteering.ui.screen.main
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
     var mapView: MapView? by remember { mutableStateOf(null) }
     var mapLibreMap: MapLibreMap? by remember { mutableStateOf(null) }
     var isMapReady by remember { mutableStateOf(false) }
+    var locationComponentActive by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.currentLocation, isMapReady) {
         val location = state.currentLocation ?: return@LaunchedEffect
@@ -46,7 +48,7 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
             org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
                 CameraPosition.Builder()
                     .target(LatLng(location.latitude, location.longitude))
-                    .zoom(18.0)  // Zwiększony zoom
+                    .zoom(18.0)
                     .build()
             ),
             1000
@@ -60,9 +62,43 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
         if (state.isTracking && state.hasPermission) {
             map.style?.let { style ->
                 enableLocationComponent(context, map, style)
+                locationComponentActive = true
             }
         } else {
             disableLocationComponent(map)
+            locationComponentActive = false
+        }
+    }
+
+    // Rysuj aktualną trasę gdy jest widoczna
+    LaunchedEffect(state.currentRoutePoints.size, locationComponentActive, isMapReady, state.isShowingRoute) {
+        val map = mapLibreMap ?: return@LaunchedEffect
+        if (!isMapReady || !locationComponentActive) return@LaunchedEffect
+
+        map.style?.let { style ->
+            if (state.isShowingRoute && state.currentRoutePoints.size >= 2) {
+                drawRoute(style, state.currentRoutePoints, "current-route", Color.BLUE)
+            } else {
+                // Usuń warstwę aktualnej trasy jeśli rysowanie wyłączone
+                try {
+                    style.removeLayer("current-route-layer")
+                    style.removeSource("current-route-source")
+                } catch (e: Exception) {
+                    // Ignore
+                }
+            }
+        }
+    }
+
+    // Rysuj zapisane biegi
+    LaunchedEffect(state.savedRuns, isMapReady) {
+        val map = mapLibreMap ?: return@LaunchedEffect
+        if (!isMapReady) return@LaunchedEffect
+
+        map.style?.let { style ->
+            state.savedRuns.forEachIndexed { index, run ->
+                drawRoute(style, run.routePoints, "saved-route-$index", Color.BLUE)
+            }
         }
     }
 
@@ -85,13 +121,19 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                         getMapAsync { map ->
                             mapLibreMap = map
 
-                            // Ustaw początkową pozycję kamery (Wrocław domyślnie)
+                            // Włącz tylko podstawowe gestures
+                            map.uiSettings.isZoomGesturesEnabled = true          // Pinch-to-zoom (2 palce)
+                            map.uiSettings.isScrollGesturesEnabled = true        // Przesuwanie (1 palec)
+                            map.uiSettings.isDoubleTapGesturesEnabled = true     // Double tap - zoom in
+                            map.uiSettings.isRotateGesturesEnabled = false       // Wyłącz obracanie
+                            map.uiSettings.isTiltGesturesEnabled = false         // Wyłącz nachylanie
+                            map.uiSettings.isQuickZoomGesturesEnabled = false    // Wyłącz quick zoom
+
                             map.cameraPosition = CameraPosition.Builder()
                                 .target(LatLng(51.1079, 17.0385))
                                 .zoom(10.0)
                                 .build()
 
-                            // Styl positron - jasny, czytelny, z ścieżkami
                             map.setStyle("https://tiles.openfreemap.org/styles/positron") { style ->
                                 isMapReady = true
                             }
@@ -104,6 +146,30 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 }
             )
 
+            // Przycisk toggle widoczności trasy
+            if (state.isTracking) {
+                FloatingActionButton(
+                    onClick = { viewModel.toggleRouteDrawing() },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp),
+                    containerColor = if (state.isShowingRoute)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else
+                        MaterialTheme.colorScheme.surface
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_route),
+                        contentDescription = if (state.isShowingRoute) "Ukryj trasę" else "Pokaż trasę",
+                        tint = if (state.isShowingRoute)
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            // Przycisk start/stop tracking
             FloatingActionButton(
                 onClick = {
                     if (!state.hasPermission) {
@@ -177,5 +243,55 @@ private fun disableLocationComponent(map: MapLibreMap) {
         map.locationComponent.isLocationComponentEnabled = false
     } catch (e: Exception) {
         e.printStackTrace()
+    }
+}
+
+private fun drawRoute(style: Style, points: List<LatLng>, routeId: String, color: Int) {
+    try {
+        Log.d("MapScreen", "Drawing route $routeId with ${points.size} points")
+
+        val coordinates = points.map {
+            doubleArrayOf(it.longitude, it.latitude)
+        }.toTypedArray()
+
+        val lineGeoJson = """
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": ${coordinates.joinToString(",", "[", "]") { "[${it[0]},${it[1]}]" }}
+                }
+            }
+        """.trimIndent()
+
+        val sourceId = "$routeId-source"
+        val layerId = "$routeId-layer"
+
+        val source = style.getSource(sourceId)
+
+        if (source == null) {
+            Log.d("MapScreen", "Creating route source and layer: $routeId")
+
+            style.addSource(
+                org.maplibre.android.style.sources.GeoJsonSource(
+                    sourceId,
+                    lineGeoJson
+                )
+            )
+
+            val lineLayer = org.maplibre.android.style.layers.LineLayer(layerId, sourceId)
+                .withProperties(
+                    org.maplibre.android.style.layers.PropertyFactory.lineColor(color),
+                    org.maplibre.android.style.layers.PropertyFactory.lineWidth(5f),
+                    org.maplibre.android.style.layers.PropertyFactory.lineOpacity(0.8f)
+                )
+
+            style.addLayer(lineLayer)
+            Log.d("MapScreen", "Route layer added: $routeId")
+        } else {
+            (source as? org.maplibre.android.style.sources.GeoJsonSource)?.setGeoJson(lineGeoJson)
+        }
+    } catch (e: Exception) {
+        Log.e("MapScreen", "Error drawing route", e)
     }
 }
