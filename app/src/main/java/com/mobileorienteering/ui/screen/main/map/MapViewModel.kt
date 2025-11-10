@@ -1,4 +1,4 @@
-package com.mobileorienteering.ui.screen.main
+package com.mobileorienteering.ui.screen.main.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +11,7 @@ import android.location.Location
 import android.util.Log
 import javax.inject.Inject
 import org.maplibre.android.geometry.LatLng
+import com.mobileorienteering.domain.model.Checkpoint
 import java.util.UUID
 import java.util.Date
 
@@ -30,7 +31,9 @@ data class LocationState(
     val currentRoutePoints: List<LatLng> = emptyList(),  // Aktualna trasa
     val isShowingRoute: Boolean = true,  // Czy pokazujemy trasę na mapie
     val savedRuns: List<Run> = emptyList(),  // Zapisane biegi
-    val currentRunStartTime: Date? = null
+    val currentRunStartTime: Date? = null,
+    val checkpoints: List<Checkpoint> = emptyList(),  // Checkpointy
+    val isBottomSheetExpanded: Boolean = false  // Stan Bottom Sheet
 )
 
 private const val TAG = "MapViewModel"
@@ -160,7 +163,7 @@ class MapViewModel @Inject constructor(
         var distance = 0f
         for (i in 0 until points.size - 1) {
             val results = FloatArray(1)
-            android.location.Location.distanceBetween(
+            Location.distanceBetween(
                 points[i].latitude, points[i].longitude,
                 points[i + 1].latitude, points[i + 1].longitude,
                 results
@@ -173,6 +176,57 @@ class MapViewModel @Inject constructor(
     fun clearAllRuns() {
         Log.d(TAG, "Clearing all saved runs")
         stateFlow.update { it.copy(savedRuns = emptyList()) }
+    }
+
+    fun addCheckpointAtCurrentLocation() {
+        stateFlow.update { currentState ->
+            val location = currentState.currentLocation
+            if (location != null) {
+                val newCheckpoint = Checkpoint(
+                    number = currentState.checkpoints.size + 1,
+                    name = "CP ${currentState.checkpoints.size + 1}",
+                    location = LatLng(location.latitude, location.longitude)
+                )
+                Log.d(TAG, "Adding checkpoint at current location: ${newCheckpoint.name}")
+                currentState.copy(checkpoints = currentState.checkpoints + newCheckpoint)
+            } else {
+                Log.w(TAG, "Cannot add checkpoint - no current location")
+                currentState.copy(error = "Brak lokalizacji")
+            }
+        }
+    }
+
+    fun addCheckpointAtLocation(latLng: LatLng) {
+        stateFlow.update { currentState ->
+            val newCheckpoint = Checkpoint(
+                number = currentState.checkpoints.size + 1,
+                name = "CP ${currentState.checkpoints.size + 1}",
+                location = latLng
+            )
+            Log.d(TAG, "Adding checkpoint at map location: ${newCheckpoint.name}")
+            currentState.copy(checkpoints = currentState.checkpoints + newCheckpoint)
+        }
+    }
+
+    fun removeCheckpoint(checkpointId: String) {
+        stateFlow.update { currentState ->
+            val updatedCheckpoints = currentState.checkpoints
+                .filter { it.id != checkpointId }
+                .mapIndexed { index, checkpoint ->
+                    checkpoint.copy(number = index + 1, name = "CP ${index + 1}")
+                }
+            Log.d(TAG, "Removed checkpoint, ${updatedCheckpoints.size} remaining")
+            currentState.copy(checkpoints = updatedCheckpoints)
+        }
+    }
+
+    fun clearAllCheckpoints() {
+        Log.d(TAG, "Clearing all checkpoints")
+        stateFlow.update { it.copy(checkpoints = emptyList()) }
+    }
+
+    fun toggleBottomSheet() {
+        stateFlow.update { it.copy(isBottomSheetExpanded = !it.isBottomSheetExpanded) }
     }
 
     fun getCurrentLocation() {

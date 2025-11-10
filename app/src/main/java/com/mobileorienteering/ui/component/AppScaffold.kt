@@ -13,7 +13,6 @@ import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
 import com.mobileorienteering.ui.screen.main.*
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
-
 @Composable
 fun AppScaffold(
     navController: NavHostController,
