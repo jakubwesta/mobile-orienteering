@@ -89,6 +89,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.moshi.converter)
     implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.moshi)
+    ksp(libs.moshi.codegen)
 
     // MapLibre Compose
     implementation(libs.maplibre.compose)

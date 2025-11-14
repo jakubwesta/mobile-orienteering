@@ -245,6 +245,10 @@ private val highContrastDarkColorScheme = darkColorScheme(
     surfaceContainerHighest = surfaceContainerHighestDarkHighContrast,
 )
 
+enum class ContrastLevel {
+    DEFAULT, MEDIUM, HIGH
+}
+
 @Immutable
 data class ColorFamily(
     val color: Color,
@@ -261,16 +265,20 @@ val unspecified_scheme = ColorFamily(
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
-    content: @Composable() () -> Unit
+    contrastLevel: ContrastLevel = ContrastLevel.DEFAULT,
+    content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val colorScheme = when (contrastLevel) {
+        ContrastLevel.DEFAULT -> {
+            if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val context = LocalContext.current
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            } else {
+                if (darkTheme) darkScheme else lightScheme
+            }
         }
-
-        darkTheme -> darkScheme
-        else -> lightScheme
+        ContrastLevel.MEDIUM -> if (darkTheme) mediumContrastDarkColorScheme else mediumContrastLightColorScheme
+        ContrastLevel.HIGH -> if (darkTheme) highContrastDarkColorScheme else highContrastLightColorScheme
     }
 
     val view = LocalView.current

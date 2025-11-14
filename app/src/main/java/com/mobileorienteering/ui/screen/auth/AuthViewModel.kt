@@ -29,9 +29,9 @@ class AuthViewModel @Inject constructor(
         null
     )
 
-    var email = mutableStateOf("")
-    var password = mutableStateOf("")
     var username = mutableStateOf("")
+    var password = mutableStateOf("")
+    var email = mutableStateOf("")
     var fullName = mutableStateOf<String?>(null)
     var phoneNumber = mutableStateOf<String?>(null)
 
@@ -42,15 +42,19 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading.value = true
             try {
-                repo.login(
+                val result = repo.login(
                     LoginModel(
-                        email = email.value,
+                        username = username.value,
                         password = password.value
                     )
                 )
-                error.value = null
+                result.onSuccess {
+                    error.value = null
+                }.onFailure { e ->
+                    error.value = e.message ?: "Login failed"
+                }
             } catch (e: Exception) {
-                error.value = e.message
+                error.value = e.message ?: "Unknown error"
             } finally {
                 isLoading.value = false
             }
@@ -61,7 +65,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading.value = true
             try {
-                repo.register(
+                val result = repo.register(
                     RegisterModel(
                         username = username.value,
                         email = email.value,
@@ -70,9 +74,13 @@ class AuthViewModel @Inject constructor(
                         phoneNumber = phoneNumber.value
                     )
                 )
-                error.value = null
+                result.onSuccess {
+                    error.value = null
+                }.onFailure { e ->
+                    error.value = e.message ?: "Registration failed"
+                }
             } catch (e: Exception) {
-                error.value = e.message
+                error.value = e.message ?: "Unknown error"
             } finally {
                 isLoading.value = false
             }

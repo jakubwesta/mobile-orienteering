@@ -13,6 +13,7 @@ import com.mobileorienteering.ui.screen.auth.AuthViewModel
 import com.mobileorienteering.ui.screen.main.SettingsViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchViewModel
 import com.mobileorienteering.ui.theme.AppTheme
+import com.mobileorienteering.ui.theme.ContrastLevel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -33,7 +34,8 @@ class MainActivity : ComponentActivity() {
 
             AppTheme(
                 darkTheme = settings.darkMode,
-                dynamicColor = false
+                dynamicColor = false,
+                contrastLevel = ContrastLevel.DEFAULT
             ) {
                 AppScaffold(navController, isFirstLaunch, isLoggedIn)
             }
