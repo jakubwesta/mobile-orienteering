@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -10,6 +12,12 @@ android {
     namespace = "com.mobileorienteering"
     compileSdk = 35
 
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { localProperties.load(it) }
+    }
+
     defaultConfig {
         applicationId = "com.mobileorienteering"
         minSdk = 26
@@ -17,18 +25,25 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val googleWebClientId = localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
     }
 
     signingConfigs {
         create("release") {
             keyAlias = "app-alias"
             keyPassword = "orienteering-password"
-            storeFile = file("keystore.jks")
+            storeFile = file("../keystore.jks")
             storePassword = "orienteering-password"
         }
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        }
+
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -36,6 +51,9 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
+
+            val releaseUrl = localProperties.getProperty("RELEASE_BASE_URL", "http://10.0.2.2:8080/")
+            buildConfigField("String", "BASE_URL", "\"$releaseUrl\"")
         }
     }
 
@@ -50,6 +68,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -104,6 +123,7 @@ dependencies {
 
     // Google Play Services Location
     implementation(libs.play.services.location)
+    implementation(libs.play.services.auth)
 
     // Testing
     testImplementation(libs.junit)

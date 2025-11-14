@@ -57,6 +57,19 @@ class AuthRepository(
         }
     }
 
+    suspend fun loginWithGoogle(idToken: String): Result<AuthModel> {
+        return try {
+            val response = authApi.loginWithGoogle(
+                GoogleLoginRequest(idToken = idToken)
+            )
+            handleAuthResponse(response)
+        } catch (e: IOException) {
+            Result.failure(Exception("Network error. Please check your connection."))
+        } catch (e: Exception) {
+            Result.failure(Exception("Google login failed: ${e.message ?: "Unknown error"}"))
+        }
+    }
+
     suspend fun register(model: RegisterModel): Result<AuthModel> {
         return try {
             val response = authApi.register(

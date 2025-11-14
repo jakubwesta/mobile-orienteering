@@ -37,6 +37,7 @@ class AuthViewModel @Inject constructor(
 
     var error = mutableStateOf<String?>(null)
     var isLoading = mutableStateOf(false)
+    var isGoogleSignInLoading = mutableStateOf(false)
 
     fun login() {
         viewModelScope.launch {
@@ -57,6 +58,24 @@ class AuthViewModel @Inject constructor(
                 error.value = e.message ?: "Unknown error"
             } finally {
                 isLoading.value = false
+            }
+        }
+    }
+
+    fun loginWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            isGoogleSignInLoading.value = true
+            try {
+                val result = repo.loginWithGoogle(idToken)
+                result.onSuccess {
+                    error.value = null
+                }.onFailure { e ->
+                    error.value = e.message ?: "Google login failed"
+                }
+            } catch (e: Exception) {
+                error.value = e.message ?: "Unknown error"
+            } finally {
+                isGoogleSignInLoading.value = false
             }
         }
     }

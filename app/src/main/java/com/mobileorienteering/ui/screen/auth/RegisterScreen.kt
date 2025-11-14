@@ -136,7 +136,7 @@ fun RegisterScreen(
                     } else {
                         Text(
                             "Create account",
-                            style = MaterialTheme.typography.labelLarge
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }
@@ -179,7 +179,7 @@ fun RegisterScreen(
                 ) {
                     Text(
                         "Log in",
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.titleMedium
                     )
                 }
             }

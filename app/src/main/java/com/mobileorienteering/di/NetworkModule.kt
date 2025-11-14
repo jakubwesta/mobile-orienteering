@@ -1,5 +1,6 @@
 package com.mobileorienteering.di
 
+import com.mobileorienteering.BuildConfig
 import com.mobileorienteering.data.api.AuthApiService
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private const val BASE_URL = BuildConfig.BASE_URL
 
     @Provides
     @Singleton
@@ -30,7 +31,11 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor =
         HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
 
     @Provides
