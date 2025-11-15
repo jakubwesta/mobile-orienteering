@@ -1,12 +1,13 @@
 package com.mobileorienteering.data.api
 
 import com.mobileorienteering.data.repository.AuthRepository
+import dagger.Lazy
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 
 class AuthInterceptor(
-    private val authRepository: AuthRepository
+    private val authRepository: Lazy<AuthRepository>
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -17,7 +18,7 @@ class AuthInterceptor(
         }
 
         val token = runBlocking {
-            authRepository.getCurrentAuth()?.token
+            authRepository.get().getCurrentAuth()?.token
         }
 
         val request = if (token != null) {
