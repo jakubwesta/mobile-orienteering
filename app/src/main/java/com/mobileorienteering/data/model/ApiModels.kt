@@ -47,3 +47,40 @@ data class ApiError(
     val message: String?,
     val status: Int?
 )
+
+@JsonClass(generateAdapter = true)
+data class ControlPointDto(
+    val latitude: Double,
+    val longitude: Double,
+    val id: Long
+)
+
+@JsonClass(generateAdapter = true)
+data class MapDataDto(
+    val controlPoints: List<ControlPointDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class CreateMapRequest(
+    val userId: Long,
+    val name: String,
+    val description: String,
+    val location: String,
+    val mapData: MapDataDto
+)
+
+@JsonClass(generateAdapter = true)
+data class CreateMapResponse(
+    val id: Long
+)
+
+@JsonClass(generateAdapter = true)
+data class MapResponse(
+    val id: Long,
+    val userId: Long,
+    val name: String,
+    val description: String,
+    val location: String,
+    val mapData: MapDataDto,
+    val createdAt: String
+)

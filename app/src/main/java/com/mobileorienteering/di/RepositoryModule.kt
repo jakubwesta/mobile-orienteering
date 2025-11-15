@@ -2,8 +2,10 @@ package com.mobileorienteering.di
 
 import android.content.Context
 import com.mobileorienteering.data.api.AuthApiService
+import com.mobileorienteering.data.api.MapApiService
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.FirstLaunchRepository
+import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.repository.SettingsRepository
 import dagger.Module
 import dagger.Provides
@@ -32,4 +34,11 @@ object RepositoryModule {
         authApi: AuthApiService
     ): AuthRepository =
         AuthRepository(context, authApi)
+
+    @Provides
+    @Singleton
+    fun provideMapRepository(
+        mapApi: MapApiService
+    ): MapRepository =
+        MapRepository(mapApi)
 }

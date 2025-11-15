@@ -8,8 +8,6 @@ import com.mobileorienteering.data.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
-import retrofit2.Response
-import java.io.IOException
 
 private val Context.authDataStore by preferencesDataStore("auth")
 
@@ -42,37 +40,41 @@ class AuthRepository(
     }
 
     suspend fun login(model: LoginModel): Result<AuthModel> {
-        return try {
-            val response = authApi.login(
+        return ApiHelper.safeApiCall("Login failed") {
+            authApi.login(
                 LoginRequest(
                     username = model.username,
                     password = model.password
                 )
             )
-            handleAuthResponse(response)
-        } catch (e: IOException) {
-            Result.failure(Exception("Network error. Please check your connection."))
-        } catch (e: Exception) {
-            Result.failure(Exception("Login failed: ${e.message ?: "Unknown error"}"))
+        }.mapCatching { authResponse ->
+            val auth = AuthModel(
+                username = authResponse.username,
+                token = authResponse.token,
+                refreshToken = authResponse.refreshToken
+            )
+            saveAuth(auth)
+            auth
         }
     }
 
     suspend fun loginWithGoogle(idToken: String): Result<AuthModel> {
-        return try {
-            val response = authApi.loginWithGoogle(
-                GoogleLoginRequest(idToken = idToken)
+        return ApiHelper.safeApiCall("Google login failed") {
+            authApi.loginWithGoogle(GoogleLoginRequest(idToken = idToken))
+        }.mapCatching { authResponse ->
+            val auth = AuthModel(
+                username = authResponse.username,
+                token = authResponse.token,
+                refreshToken = authResponse.refreshToken
             )
-            handleAuthResponse(response)
-        } catch (e: IOException) {
-            Result.failure(Exception("Network error. Please check your connection."))
-        } catch (e: Exception) {
-            Result.failure(Exception("Google login failed: ${e.message ?: "Unknown error"}"))
+            saveAuth(auth)
+            auth
         }
     }
 
     suspend fun register(model: RegisterModel): Result<AuthModel> {
-        return try {
-            val response = authApi.register(
+        return ApiHelper.safeApiCall("Registration failed") {
+            authApi.register(
                 RegisterRequest(
                     username = model.username,
                     fullName = model.fullName,
@@ -82,40 +84,31 @@ class AuthRepository(
                     private = model.isPrivate
                 )
             )
-            handleAuthResponse(response)
-        } catch (e: IOException) {
-            Result.failure(Exception("Network error. Please check your connection."))
-        } catch (e: Exception) {
-            Result.failure(Exception("Registration failed: ${e.message ?: "Unknown error"}"))
+        }.mapCatching { authResponse ->
+            val auth = AuthModel(
+                username = authResponse.username,
+                token = authResponse.token,
+                refreshToken = authResponse.refreshToken
+            )
+            saveAuth(auth)
+            auth
         }
     }
 
     suspend fun refreshToken(): Result<String> {
-        return try {
-            val currentAuth = getCurrentAuth()
-            if (currentAuth?.refreshToken == null) {
-                return Result.failure(Exception("No refresh token available"))
-            }
+        val currentAuth = getCurrentAuth()
+        if (currentAuth?.refreshToken == null) {
+            return Result.failure(Exception("No refresh token available"))
+        }
 
-            val response = authApi.refreshToken(
-                RefreshTokenRequest(refreshToken = currentAuth.refreshToken)
-            )
-
-            if (response.isSuccessful && response.body() != null) {
-                val tokenResponse = response.body()!!
-                context.authDataStore.edit { prefs ->
-                    prefs[TOKEN] = tokenResponse.accessToken
-                    prefs[REFRESH_TOKEN] = tokenResponse.refreshToken
-                }
-                Result.success(tokenResponse.accessToken)
-            } else {
-                val errorMessage = extractErrorMessage(response, "Token refresh failed")
-                Result.failure(Exception(errorMessage))
+        return ApiHelper.safeApiCall("Token refresh failed") {
+            authApi.refreshToken(RefreshTokenRequest(refreshToken = currentAuth.refreshToken))
+        }.mapCatching { tokenResponse ->
+            context.authDataStore.edit { prefs ->
+                prefs[TOKEN] = tokenResponse.accessToken
+                prefs[REFRESH_TOKEN] = tokenResponse.refreshToken
             }
-        } catch (e: IOException) {
-            Result.failure(Exception("Network error. Please check your connection."))
-        } catch (e: Exception) {
-            Result.failure(Exception("Token refresh failed: ${e.message}"))
+            tokenResponse.accessToken
         }
     }
 
@@ -146,50 +139,6 @@ class AuthRepository(
             prefs[TOKEN] = auth.token
             prefs[USERNAME] = auth.username
             prefs[REFRESH_TOKEN] = auth.refreshToken
-        }
-    }
-
-    private suspend fun handleAuthResponse(response: Response<AuthResponse>): Result<AuthModel> {
-        return if (response.isSuccessful && response.body() != null) {
-            val authResponse = response.body()!!
-            val auth = AuthModel(
-                username = authResponse.username,
-                token = authResponse.token,
-                refreshToken = authResponse.refreshToken
-            )
-            saveAuth(auth)
-            Result.success(auth)
-        } else {
-            val errorMessage = extractErrorMessage(response, "Authentication failed")
-            Result.failure(Exception(errorMessage))
-        }
-    }
-
-    private fun <T> extractErrorMessage(response: Response<T>, defaultMessage: String): String {
-        return try {
-            val errorBody = response.errorBody()?.string()
-            when {
-                errorBody != null && errorBody.isNotEmpty() -> {
-                    if (errorBody.contains("message")) {
-                        errorBody
-                            .substringAfter("\"message\":")
-                            .substringAfter("\"")
-                            .substringBefore("\"")
-                            .ifEmpty { defaultMessage }
-                    } else {
-                        errorBody.take(100)
-                    }
-                }
-                response.code() == 401 -> "Invalid username or password"
-                response.code() == 403 -> "Access forbidden"
-                response.code() == 404 -> "Server endpoint not found"
-                response.code() == 409 -> "Username or email already exists"
-                response.code() == 422 -> "Invalid input. Please check your data"
-                response.code() >= 500 -> "Server error. Please try again later"
-                else -> "$defaultMessage (${response.code()})"
-            }
-        } catch (e: Exception) {
-            "$defaultMessage (${response.code()})"
         }
     }
 }

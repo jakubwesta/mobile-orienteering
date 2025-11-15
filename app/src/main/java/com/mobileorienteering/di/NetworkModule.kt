@@ -3,6 +3,7 @@ package com.mobileorienteering.di
 import com.mobileorienteering.BuildConfig
 import com.mobileorienteering.data.api.AuthApiService
 import com.mobileorienteering.data.api.AuthInterceptor
+import com.mobileorienteering.data.api.MapApiService
 import com.mobileorienteering.data.api.TokenAuthenticator
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -70,4 +71,9 @@ object NetworkModule {
     @Singleton
     fun provideAuthApiService(retrofit: Retrofit): AuthApiService =
         retrofit.create(AuthApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMapApiService(retrofit: Retrofit): MapApiService =
+        retrofit.create(MapApiService::class.java)
 }
