@@ -1,12 +1,19 @@
 package com.mobileorienteering.ui.screen.main.map
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -15,49 +22,69 @@ import com.mobileorienteering.ui.component.LocationPermissionHandler
 import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
-import org.maplibre.compose.expressions.dsl.*
-import org.maplibre.compose.expressions.value.*
-import org.maplibre.compose.layers.*
+import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
-import org.maplibre.compose.sources.*
+import org.maplibre.compose.sources.GeoJsonData
+import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.style.rememberStyleState
-import org.maplibre.spatialk.geojson.*
-import org.maplibre.compose.sources.GeoJsonData
+import org.maplibre.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.Position
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
+
     val state by viewModel.state.collectAsState()
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
     val coroutineScope = rememberCoroutineScope()
 
-    // GeoJSON dla lokalizacji użytkownika
-    val locationPoint = remember(state.currentLocation) {
-        state.currentLocation?.let { location ->
-            Point(
-                Position(
-                    longitude = location.longitude,
-                    latitude = location.latitude
+    // dialog dodawania checkpointa
+    var longPressPosition by remember { mutableStateOf<Position?>(null) }
+    var showCheckpointDialog by remember { mutableStateOf(false) }
+
+    // bottom sheet state
+    val scaffoldState = rememberBottomSheetScaffoldState()
+
+    BottomSheetScaffold(
+        scaffoldState = scaffoldState,
+        sheetPeekHeight = 64.dp,
+        sheetDragHandle = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    Modifier
+                        .width(40.dp)
+                        .height(5.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                 )
+            }
+        },
+        sheetContent = {
+            CheckpointBottomSheetContent(
+                state = state,
+                viewModel = viewModel
             )
         }
-    }
+    ) { paddingValues ->
 
-    LocationPermissionHandler(
-        onPermissionGranted = {
-            viewModel.updatePermissionState()
-            viewModel.startTracking()
-        },
-        onPermissionDenied = {
-            viewModel.updatePermissionState()
-            viewModel.stopTracking()
-        }
-    ) { requestPermission ->
-        Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+
+            // --- MAPA ---
             MaplibreMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraState = cameraState,
@@ -65,56 +92,57 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
                 options = MapOptions(
                     ornamentOptions = OrnamentOptions.AllDisabled,
-                    gestureOptions = if (state.isTracking) {
+                    gestureOptions = if (state.isTracking)
                         GestureOptions.AllDisabled
-                    } else {
+                    else
                         GestureOptions.Standard
-                    }
                 )
             ) {
-                // Źródło danych dla lokalizacji
-                locationPoint?.let { point ->
-                    val locationSource = rememberGeoJsonSource(
+
+                // warstwy checkpointów
+                state.checkpoints.forEach { checkpoint ->
+                    val source = rememberGeoJsonSource(
+                        data = GeoJsonData.Features(
+                            Point(Position(checkpoint.position.longitude, checkpoint.position.latitude))
+                        )
+                    )
+
+                    CircleLayer(
+                        id = "checkpoint-${checkpoint.id}",
+                        source = source,
+                        color = const(Color(0xFFFF5722)),
+                        radius = const(12.dp),
+                        strokeColor = const(Color.White),
+                        strokeWidth = const(2.dp)
+                    )
+
+                    CircleLayer(
+                        id = "checkpoint-inner-${checkpoint.id}",
+                        source = source,
+                        color = const(Color.White),
+                        radius = const(4.dp)
+                    )
+                }
+
+                // warstwa lokalizacji użytkownika
+                state.currentLocation?.let { location ->
+                    val point = Point(Position(location.longitude, location.latitude))
+                    val locSource = rememberGeoJsonSource(
                         data = GeoJsonData.Features(point)
                     )
 
-                    // Warstwa accuracy (większe przezroczyste koło)
-                    state.currentLocation?.let { location ->
-                        if (location.hasAccuracy() && location.accuracy > 0) {
-                            CircleLayer(
-                                id = "user-location-accuracy",
-                                source = locationSource,
-                                color = const(Color(0x302196F3)),  // Przezroczysty niebieski
-                                radius = const((location.accuracy / 2).dp),  // Promień dokładności
-                                strokeColor = const(Color(0xFF2196F3)),
-                                strokeWidth = const(1.dp)
-                            )
-                        }
-                    }
-
-                    // Warstwa lokalizacji (niebieska kropka)
                     CircleLayer(
                         id = "user-location-dot",
-                        source = locationSource,
-                        color = const(Color(0xFF2196F3)),  // Niebieski
+                        source = locSource,
+                        color = const(Color(0xFF2196F3)),
                         radius = const(8.dp),
                         strokeColor = const(Color.White),
-                        strokeWidth = const(3.dp),
-                        strokeOpacity = const(1f)
-                    )
-
-                    // Wewnętrzna biała kropka dla efektu
-                    CircleLayer(
-                        id = "user-location-inner",
-                        source = locationSource,
-                        color = const(Color.White),
-                        radius = const(3.dp),
-                        opacity = const(0.8f)
+                        strokeWidth = const(3.dp)
                     )
                 }
             }
 
-            // Panel informacji o lokalizacji
+            // panel lokalizacji
             if (state.isTracking && state.currentLocation != null) {
                 Card(
                     modifier = Modifier
@@ -131,48 +159,28 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Tracking aktywny",
+                            "Tracking aktywny",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary
                         )
 
                         HorizontalDivider()
 
-                        state.currentLocation?.let { location ->
-                            Text(
-                                text = "Szerokość: %.5f°".format(location.latitude),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Text(
-                                text = "Długość: %.5f°".format(location.longitude),
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                        state.currentLocation?.let { loc ->
+                            Text("Szerokość: %.5f°".format(loc.latitude))
+                            Text("Długość: %.5f°".format(loc.longitude))
 
-                            if (location.hasAccuracy()) {
-                                Text(
-                                    text = "Dokładność: %.0f m".format(location.accuracy),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = when {
-                                        location.accuracy < 10 -> Color.Green
-                                        location.accuracy < 30 -> Color.Yellow
-                                        else -> Color.Red
-                                    }
-                                )
-                            }
+                            if (loc.hasAccuracy())
+                                Text("Dokładność: %.0f m".format(loc.accuracy))
 
-                            if (location.hasSpeed() && location.speed > 0) {
-                                Text(
-                                    text = "Prędkość: %.1f km/h".format(location.speed * 3.6),
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
+                            if (loc.hasSpeed())
+                                Text("Prędkość: %.1f km/h".format(loc.speed * 3.6))
                         }
 
                         if (state.distanceTraveled > 0) {
                             HorizontalDivider()
                             Text(
-                                text = "Dystans: %.2f km".format(state.distanceTraveled / 1000),
-                                style = MaterialTheme.typography.bodySmall,
+                                "Dystans: %.2f km".format(state.distanceTraveled / 1000),
                                 color = MaterialTheme.colorScheme.secondary
                             )
                         }
@@ -180,63 +188,99 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 }
             }
 
-            // Główny przycisk trackingu
+            // --- FAB TRACKING ---
             FloatingActionButton(
                 onClick = {
-                    if (!state.hasPermission) {
-                        requestPermission()
-                    } else if (state.isTracking) {
-                        viewModel.stopTracking()
-                    } else {
-                        viewModel.startTracking()
-                    }
+                    if (state.isTracking) viewModel.stopTracking()
+                    else viewModel.startTracking()
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp),
-                containerColor = when {
-                    !state.hasPermission -> MaterialTheme.colorScheme.errorContainer
-                    state.isTracking -> MaterialTheme.colorScheme.primaryContainer
-                    else -> MaterialTheme.colorScheme.secondaryContainer
-                },
-                contentColor = when {
-                    !state.hasPermission -> MaterialTheme.colorScheme.onErrorContainer
-                    state.isTracking -> MaterialTheme.colorScheme.onPrimaryContainer
-                    else -> MaterialTheme.colorScheme.onSecondaryContainer
-                }
+                containerColor = if (state.isTracking)
+                    MaterialTheme.colorScheme.primaryContainer
+                else
+                    MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = if (state.isTracking)
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                else
+                    MaterialTheme.colorScheme.onSecondaryContainer
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
-                    contentDescription = if (state.isTracking) {
-                        "Zatrzymaj śledzenie"
-                    } else {
-                        "Rozpocznij śledzenie"
+                    contentDescription = if (state.isTracking) "Zatrzymaj" else "Start"
+                )
+            }
+
+            // --- FAB DODAWANIA CHECKPOINTA ---
+            if (state.currentLocation != null) {
+                FloatingActionButton(
+                    onClick = {
+                        longPressPosition = Position(
+                            state.currentLocation!!.longitude,
+                            state.currentLocation!!.latitude
+                        )
+                        showCheckpointDialog = true
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp, 88.dp),
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Dodaj checkpoint"
+                    )
+                }
+            }
+
+            // dialog dodawania checkpointa
+            if (showCheckpointDialog && longPressPosition != null) {
+                var name by remember { mutableStateOf("") }
+
+                AlertDialog(
+                    onDismissRequest = {
+                        showCheckpointDialog = false
+                        longPressPosition = null
+                        name = ""
+                    },
+                    title = { Text("Dodaj checkpoint") },
+                    text = {
+                        Column {
+                            Text("Wprowadź nazwę:")
+                            Spacer(Modifier.height(8.dp))
+                            TextField(
+                                value = name,
+                                onValueChange = { name = it },
+                                singleLine = true
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            longPressPosition?.let { pos ->
+                                viewModel.addCheckpoint(
+                                    longitude = pos.longitude,
+                                    latitude = pos.latitude,
+                                    name = name
+                                )
+                            }
+                            showCheckpointDialog = false
+                            longPressPosition = null
+                            name = ""
+                        }) { Text("Dodaj") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showCheckpointDialog = false
+                        }) { Text("Anuluj") }
                     }
                 )
             }
 
-            // Informacja gdy brak GPS
-            if (!state.hasPermission) {
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(32.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Text(
-                        text = "Brak uprawnień GPS\nKliknij przycisk poniżej",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-            }
-
-            // Wyświetl błąd jeśli występuje
-            state.error?.let { error ->
+            // snackbar błędu
+            state.error?.let { err ->
                 Snackbar(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -247,39 +291,101 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                         }
                     }
                 ) {
-                    Text(text = error)
+                    Text(err)
                 }
             }
         }
+    }
 
-        // Automatyczne centrowanie na lokalizacji użytkownika
-        LaunchedEffect(state.currentLocation) {
-            val location = state.currentLocation ?: return@LaunchedEffect
+    // kamera śledzi użytkownika
+    LaunchedEffect(state.currentLocation) {
+        val loc = state.currentLocation ?: return@LaunchedEffect
+        if (state.isTracking) {
+            coroutineScope.launch {
+                cameraState.animateTo(
+                    CameraPosition(
+                        target = Position(loc.longitude, loc.latitude),
+                        zoom = if (cameraState.position.zoom < 14) 16.0 else cameraState.position.zoom
+                    )
+                )
+            }
+        }
+    }
 
-            if (state.isTracking) {
-                coroutineScope.launch {
-                    cameraState.animateTo(
-                        CameraPosition(
-                            target = Position(
-                                longitude = location.longitude,
-                                latitude = location.latitude
-                            ),
-                            zoom = if (cameraState.position.zoom < 14) 16.0 else cameraState.position.zoom
-                        )
+    // pozycja startowa kamery
+    LaunchedEffect(Unit) {
+        cameraState.position = CameraPosition(
+            target = Position(21.0122, 52.2297),
+            zoom = 10.0
+        )
+    }
+}
+
+@Composable
+fun CheckpointBottomSheetContent(
+    state: MapState,
+    viewModel: MapViewModel
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Punkty kontrolne",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            if (state.checkpoints.isNotEmpty()) {
+                IconButton(onClick = { viewModel.clearCheckpoints() }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        tint = MaterialTheme.colorScheme.error,
+                        contentDescription = "Usuń wszystkie"
                     )
                 }
             }
         }
 
-        // Początkowa pozycja kamery
-        LaunchedEffect(Unit) {
-            cameraState.position = CameraPosition(
-                target = Position(
-                    longitude = 21.0122,
-                    latitude = 52.2297
-                ),
-                zoom = 10.0
+        Spacer(Modifier.height(8.dp))
+
+        if (state.checkpoints.isEmpty()) {
+            Text(
+                text = "Brak zapisanych checkpointów.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        } else {
+            state.checkpoints.forEach { checkpoint ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        checkpoint.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { viewModel.removeCheckpoint(checkpoint.id) }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            tint = MaterialTheme.colorScheme.error,
+                            contentDescription = "Usuń"
+                        )
+                    }
+                }
+            }
         }
     }
 }
