@@ -1,258 +1,173 @@
 package com.mobileorienteering.ui.screen.main.map
 
+import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.util.LocationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Job
-import android.location.Location
-import android.util.Log
 import javax.inject.Inject
-import org.maplibre.android.geometry.LatLng
-import com.mobileorienteering.domain.model.Checkpoint
-import java.util.UUID
-import java.util.Date
 
-data class Run(
-    val id: String = UUID.randomUUID().toString(),
-    val routePoints: List<LatLng>,
-    val startTime: Date,
-    val endTime: Date,
-    val distance: Float = 0f  // w metrach
-)
-
-data class LocationState(
+data class MapState(
     val currentLocation: Location? = null,
     val isTracking: Boolean = false,
     val hasPermission: Boolean = false,
     val error: String? = null,
-    val currentRoutePoints: List<LatLng> = emptyList(),  // Aktualna trasa
-    val isShowingRoute: Boolean = true,  // Czy pokazujemy trasę na mapie
-    val savedRuns: List<Run> = emptyList(),  // Zapisane biegi
-    val currentRunStartTime: Date? = null,
-    val checkpoints: List<Checkpoint> = emptyList(),  // Checkpointy
-    val isBottomSheetExpanded: Boolean = false  // Stan Bottom Sheet
+    val locationHistory: List<Location> = emptyList(),
+    val distanceTraveled: Float = 0f,
+    val trackingStartTime: Long = 0L,
+    val checkpoints: List<Checkpoint> = emptyList()
 )
 
-private const val TAG = "MapViewModel"
+data class Checkpoint(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val position: org.maplibre.spatialk.geojson.Position,
+    val name: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val locationManager: LocationManager
 ) : ViewModel() {
 
-    private val stateFlow = MutableStateFlow(LocationState())
-    val state: StateFlow<LocationState> = stateFlow.asStateFlow()
+    private val _state = MutableStateFlow(MapState())
+    val state: StateFlow<MapState> = _state.asStateFlow()
 
-    private var trackingJob: Job? = null
-
-    init {
-        // Sprawdź uprawnienia przy starcie
-        updatePermissionState()
-    }
+    private var lastLocation: Location? = null
 
     fun updatePermissionState() {
-        val hasPermission = locationManager.hasLocationPermission()
-        stateFlow.update { it.copy(hasPermission = hasPermission) }
-        Log.d(TAG, "Permission state updated: $hasPermission")
+        _state.update {
+            it.copy(hasPermission = locationManager.hasLocationPermission())
+        }
     }
 
     fun startTracking() {
-        // Anuluj poprzedni job jeśli istnieje
-        trackingJob?.cancel()
-
         if (!locationManager.hasLocationPermission()) {
-            stateFlow.update { it.copy(error = "Location permission not granted") }
-            Log.e(TAG, "Cannot start tracking - no permission")
+            _state.update { it.copy(error = "Brak uprawnień do lokalizacji") }
             return
         }
 
-        Log.d(TAG, "Starting location tracking")
-
-        // Wyczyść tylko aktualną trasę i ustaw czas startu
-        stateFlow.update { it.copy(
-            currentRoutePoints = emptyList(),
-            currentRunStartTime = Date()
-        ) }
-
-        trackingJob = viewModelScope.launch {
-            locationManager.getLocationUpdates(
-                intervalMillis = 1000L,  // Co 1 sekundę (szybsze)
-                minimalDistance = 2f     // Co 2 metry (precyzyjniejsze)
+        _state.update {
+            it.copy(
+                isTracking = true,
+                error = null,
+                trackingStartTime = System.currentTimeMillis(),
+                locationHistory = emptyList(),
+                distanceTraveled = 0f
             )
-                .onStart {
-                    stateFlow.update { it.copy(isTracking = true, error = null) }
-                    Log.d(TAG, "Location tracking started")
-                }
+        }
+
+        viewModelScope.launch {
+            locationManager.getLocationUpdates(
+                intervalMillis = 2000L,  // Aktualizacja co 2 sekundy
+                minimalDistance = 5f      // Minimalna zmiana 5 metrów
+            )
                 .catch { e ->
-                    Log.e(TAG, "Error in location tracking", e)
-                    stateFlow.update {
+                    _state.update {
                         it.copy(
                             isTracking = false,
-                            error = e.message ?: "Unknown error"
+                            error = "Błąd śledzenia: ${e.message}"
                         )
                     }
                 }
                 .collectLatest { location ->
-                    Log.d(TAG, "New location received: lat=${location.latitude}, lon=${location.longitude}, accuracy=${location.accuracy}")
-
-                    // ZAWSZE dodawaj punkt do trasy gdy tracking jest włączony
-                    stateFlow.update { currentState ->
-                        val newPoint = LatLng(location.latitude, location.longitude)
-                        val updatedPoints = currentState.currentRoutePoints + newPoint
-
-                        currentState.copy(
-                            currentLocation = location,
-                            currentRoutePoints = updatedPoints
-                        )
-                    }
+                    updateLocation(location)
                 }
         }
+    }
+
+    private fun updateLocation(location: Location) {
+        // Oblicz dystans jeśli mamy poprzednią lokalizację
+        val distance = lastLocation?.distanceTo(location) ?: 0f
+
+        _state.update { currentState ->
+            currentState.copy(
+                currentLocation = location,
+                locationHistory = currentState.locationHistory + location,
+                distanceTraveled = currentState.distanceTraveled + distance
+            )
+        }
+
+        lastLocation = location
     }
 
     fun stopTracking() {
-        Log.d(TAG, "Stopping location tracking")
-        trackingJob?.cancel()
-        trackingJob = null
-        stateFlow.update { it.copy(
-            isTracking = false,
-            currentRoutePoints = emptyList(),
-            currentRunStartTime = null
-        ) }
-    }
-
-    fun toggleRouteDrawing() {
-        stateFlow.update { currentState ->
-            val newShowingState = !currentState.isShowingRoute
-            Log.d(TAG, "Route visibility toggled: $newShowingState")
-
-            currentState.copy(isShowingRoute = newShowingState)
+        _state.update {
+            it.copy(isTracking = false)
         }
-    }
-
-    fun saveCurrentRun() {
-        stateFlow.update { currentState ->
-            if (currentState.currentRoutePoints.size >= 2) {
-                val distance = calculateDistance(currentState.currentRoutePoints)
-                val newRun = Run(
-                    routePoints = currentState.currentRoutePoints,
-                    startTime = currentState.currentRunStartTime ?: Date(),
-                    endTime = Date(),
-                    distance = distance
-                )
-
-                Log.d(TAG, "Saving run: ${newRun.routePoints.size} points, ${distance}m")
-
-                currentState.copy(
-                    currentRoutePoints = emptyList(),
-                    savedRuns = currentState.savedRuns + newRun,
-                    currentRunStartTime = Date()
-                )
-            } else {
-                Log.d(TAG, "Run too short, not saving")
-                currentState
-            }
-        }
-    }
-
-    private fun calculateDistance(points: List<LatLng>): Float {
-        if (points.size < 2) return 0f
-
-        var distance = 0f
-        for (i in 0 until points.size - 1) {
-            val results = FloatArray(1)
-            Location.distanceBetween(
-                points[i].latitude, points[i].longitude,
-                points[i + 1].latitude, points[i + 1].longitude,
-                results
-            )
-            distance += results[0]
-        }
-        return distance
-    }
-
-    fun clearAllRuns() {
-        Log.d(TAG, "Clearing all saved runs")
-        stateFlow.update { it.copy(savedRuns = emptyList()) }
-    }
-
-    fun addCheckpointAtCurrentLocation() {
-        stateFlow.update { currentState ->
-            val location = currentState.currentLocation
-            if (location != null) {
-                val newCheckpoint = Checkpoint(
-                    number = currentState.checkpoints.size + 1,
-                    name = "CP ${currentState.checkpoints.size + 1}",
-                    location = LatLng(location.latitude, location.longitude)
-                )
-                Log.d(TAG, "Adding checkpoint at current location: ${newCheckpoint.name}")
-                currentState.copy(checkpoints = currentState.checkpoints + newCheckpoint)
-            } else {
-                Log.w(TAG, "Cannot add checkpoint - no current location")
-                currentState.copy(error = "Brak lokalizacji")
-            }
-        }
-    }
-
-    fun addCheckpointAtLocation(latLng: LatLng) {
-        stateFlow.update { currentState ->
-            val newCheckpoint = Checkpoint(
-                number = currentState.checkpoints.size + 1,
-                name = "CP ${currentState.checkpoints.size + 1}",
-                location = latLng
-            )
-            Log.d(TAG, "Adding checkpoint at map location: ${newCheckpoint.name}")
-            currentState.copy(checkpoints = currentState.checkpoints + newCheckpoint)
-        }
-    }
-
-    fun removeCheckpoint(checkpointId: String) {
-        stateFlow.update { currentState ->
-            val updatedCheckpoints = currentState.checkpoints
-                .filter { it.id != checkpointId }
-                .mapIndexed { index, checkpoint ->
-                    checkpoint.copy(number = index + 1, name = "CP ${index + 1}")
-                }
-            Log.d(TAG, "Removed checkpoint, ${updatedCheckpoints.size} remaining")
-            currentState.copy(checkpoints = updatedCheckpoints)
-        }
-    }
-
-    fun clearAllCheckpoints() {
-        Log.d(TAG, "Clearing all checkpoints")
-        stateFlow.update { it.copy(checkpoints = emptyList()) }
-    }
-
-    fun toggleBottomSheet() {
-        stateFlow.update { it.copy(isBottomSheetExpanded = !it.isBottomSheetExpanded) }
     }
 
     fun getCurrentLocation() {
         viewModelScope.launch {
             if (!locationManager.hasLocationPermission()) {
-                stateFlow.update { it.copy(error = "Location permission not granted") }
-                Log.e(TAG, "Cannot get current location - no permission")
+                _state.update { it.copy(error = "Brak uprawnień do lokalizacji") }
                 return@launch
             }
 
-            Log.d(TAG, "Getting current location")
             val location = locationManager.getCurrentLocation()
-
-            if (location != null) {
-                Log.d(TAG, "Current location received: lat=${location.latitude}, lon=${location.longitude}")
-                stateFlow.update { it.copy(currentLocation = location, error = null) }
-            } else {
-                Log.e(TAG, "Failed to get current location")
-                stateFlow.update { it.copy(error = "Failed to get location") }
+            _state.update {
+                it.copy(
+                    currentLocation = location,
+                    error = if (location == null) "Nie udało się pobrać lokalizacji" else null
+                )
             }
         }
     }
 
+    fun clearError() {
+        _state.update { it.copy(error = null) }
+    }
+
+    fun addCheckpoint(longitude: Double, latitude: Double, name: String = "") {
+        val checkpoint = Checkpoint(
+            position = org.maplibre.spatialk.geojson.Position(
+                longitude = longitude,
+                latitude = latitude
+            ),
+            name = name.ifEmpty { "Checkpoint ${_state.value.checkpoints.size + 1}" }
+        )
+        _state.update {
+            it.copy(checkpoints = it.checkpoints + checkpoint)
+        }
+    }
+
+    fun removeCheckpoint(id: String) {
+        _state.update {
+            it.copy(checkpoints = it.checkpoints.filter { checkpoint -> checkpoint.id != id })
+        }
+    }
+
+    fun clearCheckpoints() {
+        _state.update {
+            it.copy(checkpoints = emptyList())
+        }
+    }
+
+    fun updateCheckpointName(id: String, newName: String) {
+        _state.update { currentState ->
+            currentState.copy(
+                checkpoints = currentState.checkpoints.map { checkpoint ->
+                    if (checkpoint.id == id) {
+                        checkpoint.copy(name = newName)
+                    } else {
+                        checkpoint
+                    }
+                }
+            )
+        }
+    }
+
+    fun resetTracking() {
+        _state.update {
+            MapState(hasPermission = it.hasPermission)
+        }
+        lastLocation = null
+    }
+
     override fun onCleared() {
         super.onCleared()
-        Log.d(TAG, "ViewModel cleared, stopping tracking")
         stopTracking()
     }
 }

@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 android {
     namespace = "com.mobileorienteering"
     compileSdk = 35
@@ -52,7 +56,8 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
 
-            val releaseUrl = localProperties.getProperty("RELEASE_BASE_URL", "http://10.0.2.2:8080/")
+            val releaseUrl =
+                localProperties.getProperty("RELEASE_BASE_URL", "http://10.0.2.2:8080/")
             buildConfigField("String", "BASE_URL", "\"$releaseUrl\"")
         }
     }
@@ -77,6 +82,10 @@ hilt {
 }
 
 dependencies {
+
+    // Shared KMP module
+    implementation(project(":shared"))
+
     // Core & lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -96,7 +105,7 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // Hilt - using KSP instead of kapt
+    // Hilt (KSP)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
@@ -111,17 +120,12 @@ dependencies {
     implementation(libs.moshi)
     ksp(libs.moshi.codegen)
 
-    // MapLibre Compose
+    // MapLibre Android
     implementation(libs.maplibre.compose)
-    implementation(libs.maplibre.composeMaterial3)
+    // Usuń linię poniżej jeśli wywołuje błędy
+    // implementation(libs.maplibre.composeMaterial3)
 
-    // MapLibre Native SDK
-    implementation(libs.maplibre.native)
-
-    // MapLibre Native SDK (dla AndroidView)
-    implementation(libs.maplibre.native)
-
-    // Google Play Services Location
+    // Google Play Services
     implementation(libs.play.services.location)
     implementation(libs.play.services.auth)
 

@@ -12,6 +12,7 @@ import com.mobileorienteering.ui.navigation.AppScreen
 import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
 import com.mobileorienteering.ui.screen.main.*
+import com.mobileorienteering.ui.screen.main.map.MapScreen
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
 @Composable
 fun AppScaffold(
