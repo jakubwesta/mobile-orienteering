@@ -170,4 +170,27 @@ class MapViewModel @Inject constructor(
         super.onCleared()
         stopTracking()
     }
+
+    fun moveCheckpointUp(id: String) {
+        val list = _state.value.checkpoints.toMutableList()
+        val index = list.indexOfFirst { it.id == id }
+        if (index > 0) {
+            val item = list.removeAt(index)
+            list.add(index - 1, item)
+            _state.update { it.copy(checkpoints = list) }
+        }
+    }
+
+    fun moveCheckpointDown(id: String) {
+        val list = _state.value.checkpoints.toMutableList()
+        val index = list.indexOfFirst { it.id == id }
+        if (index != -1 && index < list.size - 1) {
+            val item = list.removeAt(index)
+            list.add(index + 1, item)
+            _state.update { it.copy(checkpoints = list) }
+        }
+    }
+
+
+
 }
