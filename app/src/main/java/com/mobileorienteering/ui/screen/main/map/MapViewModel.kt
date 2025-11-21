@@ -3,6 +3,9 @@ package com.mobileorienteering.ui.screen.main.map
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mobileorienteering.data.model.Route
+import com.mobileorienteering.data.model.RouteCheckpoint
+import com.mobileorienteering.data.repository.RouteRepository
 import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
 import com.mobileorienteering.ui.screen.main.map.models.MapState
 import com.mobileorienteering.util.LocationManager
@@ -14,13 +17,21 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
-    private val locationManager: LocationManager
+    private val locationManager: LocationManager,
+    private val routeRepository: RouteRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MapState())
     val state: StateFlow<MapState> = _state.asStateFlow()
 
     private var lastLocation: Location? = null
+
+    private val _shouldMoveCamera = MutableStateFlow(false)
+    val shouldMoveCamera: StateFlow<Boolean> = _shouldMoveCamera.asStateFlow()
+
+    fun cameraMoved() {
+        _shouldMoveCamera.value = false
+    }
 
     fun updatePermissionState() {
         _state.update {
@@ -165,6 +176,39 @@ class MapViewModel @Inject constructor(
             MapState(hasPermission = it.hasPermission)
         }
         lastLocation = null
+    }
+
+    fun saveCurrentRoute(name: String) {
+        val route = Route(
+            name = name,
+            checkpoints = _state.value.checkpoints.mapIndexed { index, cp ->
+                RouteCheckpoint(
+                    longitude = cp.position.longitude,
+                    latitude = cp.position.latitude,
+                    name = cp.name,
+                    order = index
+                )
+            }
+        )
+        routeRepository.saveRoute(route)
+    }
+
+    fun loadRoute(routeId: String) {
+        val route = routeRepository.getRoute(routeId) ?: return
+
+        val checkpoints = route.checkpoints
+            .sortedBy { it.order }
+            .map { cp ->
+                Checkpoint(
+                    position = Position(cp.longitude, cp.latitude),
+                    name = cp.name
+                )
+            }
+
+        _state.update {
+            it.copy(checkpoints = checkpoints)
+        }
+        _shouldMoveCamera.value = true
     }
 
     override fun onCleared() {

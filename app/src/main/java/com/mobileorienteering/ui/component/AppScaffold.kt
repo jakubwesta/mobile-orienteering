@@ -8,14 +8,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.mobileorienteering.ui.navigation.AppScreen
 import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
-import com.mobileorienteering.ui.screen.main.LibraryScreen
+import com.mobileorienteering.ui.screen.main.library.LibraryScreen
 import com.mobileorienteering.ui.screen.main.RunsScreen
 import com.mobileorienteering.ui.screen.main.SettingsScreen
 import com.mobileorienteering.ui.screen.main.map.MapScreen
+import com.mobileorienteering.ui.screen.main.map.MapViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 @Composable
 fun AppScaffold(
     navController: NavHostController,
@@ -24,6 +29,9 @@ fun AppScaffold(
 ) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val showBottomBar = currentRoute in AppScreen.mainScreens.map { it.route }
+
+    // Współdzielony MapViewModel na poziomie AppScaffold
+    val mapViewModel: MapViewModel = hiltViewModel()
 
     LaunchedEffect(isLoggedIn) {
         if (!isLoggedIn && currentRoute in AppScreen.mainScreens.map { it.route }) {
@@ -53,8 +61,19 @@ fun AppScaffold(
             composable(AppScreen.Login.route) { LoginScreen(navController) }
             composable(AppScreen.Register.route) { RegisterScreen(navController) }
 
-            composable(AppScreen.Map.route) { MapScreen() }
-            composable(AppScreen.Library.route) { LibraryScreen() }
+            composable(AppScreen.Map.route) {
+                MapScreen(viewModel = mapViewModel)
+            }
+
+            composable(AppScreen.Library.route) {
+                LibraryScreen(
+                    onEditRoute = { routeId ->
+                        mapViewModel.loadRoute(routeId)
+                        navController.navigate(AppScreen.Map.route)
+                    }
+                )
+            }
+
             composable(AppScreen.Runs.route) { RunsScreen() }
             composable(AppScreen.Settings.route) { SettingsScreen() }
         }

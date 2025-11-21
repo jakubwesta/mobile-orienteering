@@ -19,10 +19,7 @@ import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
-import org.maplibre.compose.expressions.dsl.format
-import org.maplibre.compose.expressions.dsl.span
 import org.maplibre.compose.layers.CircleLayer
-import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.map.*
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
@@ -44,6 +41,27 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
 
     var tapPosition by remember { mutableStateOf<Position?>(null) }
     var showCheckpointDialog by remember { mutableStateOf(false) }
+    var showSaveDialog by remember { mutableStateOf(false) }
+    val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsState()
+
+    // Przesunięcie kamery tylko przy wczytaniu trasy
+    LaunchedEffect(shouldMoveCamera) {
+        if (shouldMoveCamera && state.checkpoints.isNotEmpty()) {
+            val firstCheckpoint = state.checkpoints.first()
+            coroutineScope.launch {
+                cameraState.animateTo(
+                    CameraPosition(
+                        target = Position(
+                            firstCheckpoint.position.longitude,
+                            firstCheckpoint.position.latitude
+                        ),
+                        zoom = 15.0
+                    )
+                )
+                viewModel.cameraMoved()
+            }
+        }
+    }
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
@@ -52,7 +70,8 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
         sheetContent = {
             CheckpointBottomSheetContent(
                 state = state,
-                viewModel = viewModel
+                viewModel = viewModel,
+                onSaveRoute = { showSaveDialog = true }
             )
         }
     ) {
@@ -61,7 +80,6 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            // Główna mapa
             MaplibreMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraState = cameraState,
@@ -80,14 +98,10 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                     ClickResult.Pass
                 }
             ) {
-                // Warstwa checkpointów
                 RenderCheckpoints(state.checkpoints)
-
-                // Warstwa lokalizacji użytkownika
                 RenderUserLocation(state.currentLocation)
             }
 
-            // Panel informacji o lokalizacji
             LocationInfoCard(
                 state = state,
                 modifier = Modifier
@@ -95,7 +109,6 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                     .padding(16.dp)
             )
 
-            // FAB tracking
             FloatingActionButton(
                 onClick = {
                     if (state.isTracking) viewModel.stopTracking()
@@ -115,7 +128,6 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 )
             }
 
-            // FAB dodania checkpointa z obecnej lokalizacji
             if (state.currentLocation != null) {
                 FloatingActionButton(
                     onClick = {
@@ -133,7 +145,6 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 }
             }
 
-            // Dialog dodawania checkpointa
             CheckpointDialog(
                 position = tapPosition,
                 onDismiss = {
@@ -150,10 +161,18 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                     }
                 }
             )
+
+            if (showSaveDialog) {
+                SaveRouteDialog(
+                    onDismiss = { showSaveDialog = false },
+                    onSave = { name ->
+                        viewModel.saveCurrentRoute(name)
+                    }
+                )
+            }
         }
     }
 
-    // Śledzenie kamery za użytkownikiem
     LaunchedEffect(state.currentLocation) {
         val location = state.currentLocation ?: return@LaunchedEffect
         if (state.isTracking) {
@@ -168,10 +187,9 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
         }
     }
 
-    // Początkowa pozycja kamery
     LaunchedEffect(Unit) {
         cameraState.position = CameraPosition(
-            target = Position(21.0122, 52.2297), // Warszawa
+            target = Position(21.0122, 52.2297),
             zoom = 10.0
         )
     }
@@ -227,7 +245,7 @@ private fun RenderUserLocation(location: android.location.Location?) {
         CircleLayer(
             id = "user-location",
             source = source,
-            color = const(Color(0xFF2196F3)), // Niebieski
+            color = const(Color(0xFF2196F3)),
             radius = const(8.dp),
             strokeColor = const(Color.White),
             strokeWidth = const(3.dp)
