@@ -3,29 +3,14 @@ package com.mobileorienteering.ui.screen.main.map
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
+import com.mobileorienteering.ui.screen.main.map.models.MapState
 import com.mobileorienteering.util.LocationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.maplibre.spatialk.geojson.Position
 import javax.inject.Inject
-
-data class MapState(
-    val currentLocation: Location? = null,
-    val isTracking: Boolean = false,
-    val hasPermission: Boolean = false,
-    val error: String? = null,
-    val locationHistory: List<Location> = emptyList(),
-    val distanceTraveled: Float = 0f,
-    val trackingStartTime: Long = 0L,
-    val checkpoints: List<Checkpoint> = emptyList()
-)
-
-data class Checkpoint(
-    val id: String = java.util.UUID.randomUUID().toString(),
-    val position: org.maplibre.spatialk.geojson.Position,
-    val name: String = "",
-    val timestamp: Long = System.currentTimeMillis()
-)
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
@@ -61,8 +46,8 @@ class MapViewModel @Inject constructor(
 
         viewModelScope.launch {
             locationManager.getLocationUpdates(
-                intervalMillis = 2000L,  // Aktualizacja co 2 sekundy
-                minimalDistance = 5f      // Minimalna zmiana 5 metrów
+                intervalMillis = 2000L,
+                minimalDistance = 5f
             )
                 .catch { e ->
                     _state.update {
@@ -79,7 +64,6 @@ class MapViewModel @Inject constructor(
     }
 
     private fun updateLocation(location: Location) {
-        // Oblicz dystans jeśli mamy poprzednią lokalizację
         val distance = lastLocation?.distanceTo(location) ?: 0f
 
         _state.update { currentState ->
@@ -122,10 +106,7 @@ class MapViewModel @Inject constructor(
 
     fun addCheckpoint(longitude: Double, latitude: Double, name: String = "") {
         val checkpoint = Checkpoint(
-            position = org.maplibre.spatialk.geojson.Position(
-                longitude = longitude,
-                latitude = latitude
-            ),
+            position = Position(longitude = longitude, latitude = latitude),
             name = name.ifEmpty { "Checkpoint ${_state.value.checkpoints.size + 1}" }
         )
         _state.update {
@@ -159,18 +140,6 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun resetTracking() {
-        _state.update {
-            MapState(hasPermission = it.hasPermission)
-        }
-        lastLocation = null
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        stopTracking()
-    }
-
     fun moveCheckpointUp(id: String) {
         val list = _state.value.checkpoints.toMutableList()
         val index = list.indexOfFirst { it.id == id }
@@ -191,6 +160,15 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    fun resetTracking() {
+        _state.update {
+            MapState(hasPermission = it.hasPermission)
+        }
+        lastLocation = null
+    }
 
-
+    override fun onCleared() {
+        super.onCleared()
+        stopTracking()
+    }
 }

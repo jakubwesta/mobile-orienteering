@@ -11,7 +11,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.mobileorienteering.ui.navigation.AppScreen
 import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
-import com.mobileorienteering.ui.screen.main.*
+import com.mobileorienteering.ui.screen.main.LibraryScreen
+import com.mobileorienteering.ui.screen.main.RunsScreen
+import com.mobileorienteering.ui.screen.main.SettingsScreen
 import com.mobileorienteering.ui.screen.main.map.MapScreen
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
 @Composable
