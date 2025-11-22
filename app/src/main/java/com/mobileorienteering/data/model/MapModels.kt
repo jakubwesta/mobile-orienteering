@@ -1,5 +1,6 @@
 package com.mobileorienteering.data.model
 
+import com.squareup.moshi.JsonClass
 import org.maplibre.android.geometry.LatLng
 import java.time.Instant
 
@@ -13,6 +14,7 @@ data class Map(
     val createdAt: Instant
 )
 
+@JsonClass(generateAdapter = true)
 data class ControlPoint(
     val id: Long,
     val latitude: Double,

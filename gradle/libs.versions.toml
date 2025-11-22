@@ -27,6 +27,9 @@ moshiConverter = "2.11.0"
 moshi = "1.15.1"
 okhttpLogging = "4.12.0"
 
+# Room
+room = "2.6.1"
+
 # Google Play Services
 playServicesLocation = "21.3.0"
 playServicesAuth = "21.2.0"
@@ -69,6 +72,11 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 # MapLibre (ANDROID-ONLY API, stabilne!)
 maplibre-compose = { module = "org.maplibre.compose:maplibre-compose", version = "0.12.1" }
 maplibre-composeMaterial3 = { module = "org.maplibre.compose:maplibre-compose-material3", version = "0.11.0" }
+
+# Room
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 # Google Play Services
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }

@@ -4,6 +4,8 @@ import android.content.Context
 import com.mobileorienteering.data.api.ActivityApiService
 import com.mobileorienteering.data.api.AuthApiService
 import com.mobileorienteering.data.api.MapApiService
+import com.mobileorienteering.data.local.dao.ActivityDao
+import com.mobileorienteering.data.local.dao.MapDao
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.FirstLaunchRepository
@@ -21,12 +23,16 @@ import javax.inject.Singleton
 object RepositoryModule {
     @Provides
     @Singleton
-    fun provideSettingsRepository(@ApplicationContext context: Context): SettingsRepository =
+    fun provideSettingsRepository
+                (@ApplicationContext context: Context
+    ): SettingsRepository =
         SettingsRepository(context)
 
     @Provides
     @Singleton
-    fun provideFirstLaunchRepository(@ApplicationContext context: Context): FirstLaunchRepository =
+    fun provideFirstLaunchRepository(
+        @ApplicationContext context: Context
+    ): FirstLaunchRepository =
         FirstLaunchRepository(context)
 
     @Provides
@@ -40,14 +46,16 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideMapRepository(
-        mapApi: MapApiService
+        mapApi: MapApiService,
+        mapDao: MapDao
     ): MapRepository =
-        MapRepository(mapApi)
+        MapRepository(mapApi, mapDao)
 
     @Provides
     @Singleton
     fun provideActivityRepository(
-        activityApi: ActivityApiService
+        activityApi: ActivityApiService,
+        activityDao: ActivityDao
     ): ActivityRepository =
-        ActivityRepository(activityApi)
+        ActivityRepository(activityApi, activityDao)
 }

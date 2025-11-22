@@ -125,6 +125,11 @@ dependencies {
     // Usuń linię poniżej jeśli wywołuje błędy
     // implementation(libs.maplibre.composeMaterial3)
 
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
     // Google Play Services
     implementation(libs.play.services.location)
     implementation(libs.play.services.auth)

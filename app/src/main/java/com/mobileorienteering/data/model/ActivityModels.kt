@@ -1,5 +1,6 @@
 package com.mobileorienteering.data.model
 
+import com.squareup.moshi.JsonClass
 import java.time.Instant
 
 data class Activity(
@@ -14,6 +15,7 @@ data class Activity(
     val createdAt: Instant
 )
 
+@JsonClass(generateAdapter = true)
 data class PathPoint(
     val latitude: Double,
     val longitude: Double,
