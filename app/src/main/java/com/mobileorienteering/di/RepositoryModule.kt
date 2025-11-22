@@ -1,8 +1,10 @@
 package com.mobileorienteering.di
 
 import android.content.Context
+import com.mobileorienteering.data.api.ActivityApiService
 import com.mobileorienteering.data.api.AuthApiService
 import com.mobileorienteering.data.api.MapApiService
+import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.FirstLaunchRepository
 import com.mobileorienteering.data.repository.MapRepository
@@ -41,4 +43,11 @@ object RepositoryModule {
         mapApi: MapApiService
     ): MapRepository =
         MapRepository(mapApi)
+
+    @Provides
+    @Singleton
+    fun provideActivityRepository(
+        activityApi: ActivityApiService
+    ): ActivityRepository =
+        ActivityRepository(activityApi)
 }

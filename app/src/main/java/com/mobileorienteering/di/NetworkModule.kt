@@ -1,6 +1,7 @@
 package com.mobileorienteering.di
 
 import com.mobileorienteering.BuildConfig
+import com.mobileorienteering.data.api.ActivityApiService
 import com.mobileorienteering.data.api.AuthApiService
 import com.mobileorienteering.data.api.AuthInterceptor
 import com.mobileorienteering.data.api.MapApiService
@@ -76,4 +77,9 @@ object NetworkModule {
     @Singleton
     fun provideMapApiService(retrofit: Retrofit): MapApiService =
         retrofit.create(MapApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideActivityApiService(retrofit: Retrofit): ActivityApiService =
+        retrofit.create(ActivityApiService::class.java)
 }

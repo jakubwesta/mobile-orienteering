@@ -84,3 +84,39 @@ data class MapResponse(
     val mapData: MapDataDto,
     val createdAt: String
 )
+
+@JsonClass(generateAdapter = true)
+data class PathPointDto(
+    val latitude: Double,
+    val longitude: Double,
+    val timestamp: String
+)
+
+@JsonClass(generateAdapter = true)
+data class CreateActivityRequest(
+    val userId: Long,
+    val mapId: Long,
+    val title: String,
+    val startTime: String,
+    val duration: String,
+    val distance: Double,
+    val pathData: List<PathPointDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class CreateActivityResponse(
+    val id: Long
+)
+
+@JsonClass(generateAdapter = true)
+data class ActivityResponse(
+    val id: Long,
+    val userId: Long,
+    val mapId: Long,
+    val title: String,
+    val startTime: String,
+    val duration: String,
+    val distance: Double,
+    val pathData: List<PathPointDto>,
+    val createdAt: String
+)
