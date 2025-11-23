@@ -3,6 +3,7 @@ package com.mobileorienteering.data.local.converter
 import androidx.room.TypeConverter
 import com.mobileorienteering.data.model.ControlPoint
 import com.mobileorienteering.data.model.PathPoint
+import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
@@ -59,7 +60,6 @@ class Converters {
     }
 }
 
-// Moshi adapter
 class InstantAdapter {
     @ToJson
     fun toJson(instant: Instant): String {
@@ -68,6 +68,6 @@ class InstantAdapter {
 
     @FromJson
     fun fromJson(json: String): Instant {
-        return Instant.parse(json)
+        return json.toInstant()
     }
 }

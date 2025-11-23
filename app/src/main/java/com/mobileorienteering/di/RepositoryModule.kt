@@ -4,6 +4,7 @@ import android.content.Context
 import com.mobileorienteering.data.api.ActivityApiService
 import com.mobileorienteering.data.api.AuthApiService
 import com.mobileorienteering.data.api.MapApiService
+import com.mobileorienteering.data.api.UserApiService
 import com.mobileorienteering.data.local.dao.ActivityDao
 import com.mobileorienteering.data.local.dao.MapDao
 import com.mobileorienteering.data.repository.ActivityRepository
@@ -39,9 +40,10 @@ object RepositoryModule {
     @Singleton
     fun provideAuthRepository(
         @ApplicationContext context: Context,
-        authApi: AuthApiService
+        authApi: AuthApiService,
+        userApi: UserApiService
     ): AuthRepository =
-        AuthRepository(context, authApi)
+        AuthRepository(context, authApi, userApi)
 
     @Provides
     @Singleton

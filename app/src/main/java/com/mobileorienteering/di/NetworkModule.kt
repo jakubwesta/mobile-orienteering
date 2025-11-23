@@ -6,6 +6,8 @@ import com.mobileorienteering.data.api.AuthApiService
 import com.mobileorienteering.data.api.AuthInterceptor
 import com.mobileorienteering.data.api.MapApiService
 import com.mobileorienteering.data.api.TokenAuthenticator
+import com.mobileorienteering.data.api.UserApiService  // ADD THIS
+import com.mobileorienteering.data.local.converter.InstantAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -28,6 +30,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideMoshi(): Moshi = Moshi.Builder()
+        .add(InstantAdapter())
         .add(KotlinJsonAdapterFactory())
         .build()
 
@@ -82,4 +85,9 @@ object NetworkModule {
     @Singleton
     fun provideActivityApiService(retrofit: Retrofit): ActivityApiService =
         retrofit.create(ActivityApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideUserApiService(retrofit: Retrofit): UserApiService =
+        retrofit.create(UserApiService::class.java)
 }

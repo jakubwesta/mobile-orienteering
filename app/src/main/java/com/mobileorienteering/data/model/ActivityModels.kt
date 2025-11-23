@@ -1,5 +1,6 @@
 package com.mobileorienteering.data.model
 
+import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.JsonClass
 import java.time.Instant
 
@@ -28,11 +29,11 @@ fun ActivityResponse.toDomainModel(): Activity {
         userId = userId,
         mapId = mapId,
         title = title,
-        startTime = Instant.parse(startTime),
+        startTime = startTime.toInstant(),
         duration = duration,
         distance = distance,
         pathData = pathData.map { it.toDomainModel() },
-        createdAt = Instant.parse(createdAt)
+        createdAt = createdAt.toInstant()
     )
 }
 
@@ -40,7 +41,7 @@ fun PathPointDto.toDomainModel(): PathPoint {
     return PathPoint(
         latitude = latitude,
         longitude = longitude,
-        timestamp = Instant.parse(timestamp)
+        timestamp = timestamp.toInstant()
     )
 }
 
@@ -51,4 +52,3 @@ fun PathPoint.toDto(): PathPointDto {
         timestamp = timestamp.toString()
     )
 }
-

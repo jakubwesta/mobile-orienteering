@@ -8,18 +8,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.mobileorienteering.ui.navigation.AppScreen
 import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
 import com.mobileorienteering.ui.screen.main.library.LibraryScreen
-import com.mobileorienteering.ui.screen.main.RunsScreen
+import com.mobileorienteering.ui.screen.main.runs.RunsScreen
 import com.mobileorienteering.ui.screen.main.SettingsScreen
 import com.mobileorienteering.ui.screen.main.map.MapScreen
 import com.mobileorienteering.ui.screen.main.map.MapViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun AppScaffold(

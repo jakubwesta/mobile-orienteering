@@ -43,6 +43,16 @@ data class RefreshTokenResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class UserResponse(
+    val id: Long,
+    val username: String,
+    val fullName: String?,
+    val email: String,
+    val phoneNumber: String?,
+    @field:Json(name = "private") val isPrivate: Boolean
+)
+
+@JsonClass(generateAdapter = true)
 data class ApiError(
     val message: String?,
     val status: Int?

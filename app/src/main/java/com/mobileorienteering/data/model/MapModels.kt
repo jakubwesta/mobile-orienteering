@@ -1,5 +1,6 @@
 package com.mobileorienteering.data.model
 
+import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.JsonClass
 import org.maplibre.android.geometry.LatLng
 import java.time.Instant
@@ -31,7 +32,7 @@ fun MapResponse.toDomainModel(): Map {
         description = description,
         location = location,
         controlPoints = mapData.controlPoints.map { it.toDomainModel() },
-        createdAt = Instant.parse(createdAt)
+        createdAt = createdAt.toInstant()
     )
 }
 
