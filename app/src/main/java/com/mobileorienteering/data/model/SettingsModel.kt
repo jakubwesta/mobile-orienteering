@@ -1,8 +1,27 @@
 package com.mobileorienteering.data.model
 
+import com.mobileorienteering.ui.theme.ContrastLevel as ThemeLevel
+
+enum class ContrastLevel {
+    LOW, MEDIUM, HIGH;
+
+    fun getLabel(): String = when (this) {
+        LOW -> "Low"
+        MEDIUM -> "Medium"
+        HIGH -> "High"
+    }
+
+    fun toTheme(): ThemeLevel = when (this) {
+        LOW -> ThemeLevel.DEFAULT
+        MEDIUM -> ThemeLevel.MEDIUM
+        HIGH -> ThemeLevel.HIGH
+    }
+}
+
 data class SettingsModel(
     val darkMode: Boolean = false,
-    val volume: Int = 50,
-    val vibration: Boolean = true,
+    val contrastLevel: ContrastLevel = ContrastLevel.MEDIUM,
+    val controlPointSound: Boolean = true,
+    val controlPointVibration: Boolean = true,
     val gpsAccuracy: Int = 10
 )

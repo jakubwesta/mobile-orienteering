@@ -1,7 +1,8 @@
-package com.mobileorienteering.ui.screen.main
+package com.mobileorienteering.ui.screen.main.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mobileorienteering.data.model.ContrastLevel
 import com.mobileorienteering.data.model.SettingsModel
 import com.mobileorienteering.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,12 +26,16 @@ class SettingsViewModel @Inject constructor(
         repo.updateDarkMode(enabled)
     }
 
-    fun updateVolume(value: Int) = viewModelScope.launch {
-        repo.updateVolume(value)
+    fun updateContrastLevel(level: ContrastLevel) = viewModelScope.launch {
+        repo.updateContrastLevel(level)
     }
 
-    fun updateVibration(enabled: Boolean) = viewModelScope.launch {
-        repo.updateVibration(enabled)
+    fun updateControlPointSound(enabled: Boolean) = viewModelScope.launch {
+        repo.updateControlPointSound(enabled)
+    }
+
+    fun updateControlPointVibration(enabled: Boolean) = viewModelScope.launch {
+        repo.updateControlPointVibration(enabled)
     }
 
     fun updateGpsAccuracy(value: Int) = viewModelScope.launch {

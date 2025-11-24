@@ -13,11 +13,12 @@ import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
 import com.mobileorienteering.ui.screen.main.library.LibraryScreen
 import com.mobileorienteering.ui.screen.main.runs.RunsScreen
-import com.mobileorienteering.ui.screen.main.SettingsScreen
+import com.mobileorienteering.ui.screen.main.settings.SettingsScreen
 import com.mobileorienteering.ui.screen.main.map.MapScreen
 import com.mobileorienteering.ui.screen.main.map.MapViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mobileorienteering.ui.screen.main.settings.EditProfileScreen
 
 @Composable
 fun AppScaffold(
@@ -74,6 +75,7 @@ fun AppScaffold(
 
             composable(AppScreen.Runs.route) { RunsScreen() }
             composable(AppScreen.Settings.route) { SettingsScreen() }
+            composable(AppScreen.EditProfile.route) { EditProfileScreen() }
         }
     }
 }

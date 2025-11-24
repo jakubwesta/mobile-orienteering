@@ -12,6 +12,8 @@ sealed class AppScreen(
     object Login : AppScreen("login")
     object Register : AppScreen("register")
 
+    object EditProfile : AppScreen("edit_profile")
+
     object Map : AppScreen(
         route = "map",
         label = "Map",
