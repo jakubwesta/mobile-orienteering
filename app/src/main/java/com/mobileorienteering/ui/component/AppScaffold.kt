@@ -51,7 +51,9 @@ fun AppScaffold(
                 !isLoggedIn -> AppScreen.Login.route
                 else -> AppScreen.Map.route
             },
-            modifier = Modifier.padding(padding)
+            modifier = Modifier
+                .padding(padding)
+                .consumeWindowInsets(padding)
         ) {
             composable(AppScreen.Welcome.route) {
                 FirstLaunchScreen(
