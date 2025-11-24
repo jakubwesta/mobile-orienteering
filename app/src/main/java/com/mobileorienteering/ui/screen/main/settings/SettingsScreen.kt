@@ -15,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
 import com.mobileorienteering.data.model.ContrastLevel
 import com.mobileorienteering.ui.screen.auth.AuthViewModel
+import com.mobileorienteering.ui.screen.main.runs.ActivityViewModel
 import com.mobileorienteering.ui.screen.main.settings.components.SettingsClickableItem
 import com.mobileorienteering.ui.screen.main.settings.components.SettingsNavigationItem
 import com.mobileorienteering.ui.screen.main.settings.components.SettingsSection
@@ -25,6 +26,7 @@ import com.mobileorienteering.ui.screen.main.settings.components.SettingsSwitchI
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    activityViewModel: ActivityViewModel = hiltViewModel(),
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToEditPassword: () -> Unit = {}
 ) {
@@ -32,6 +34,7 @@ fun SettingsScreen(
     val authModel by authViewModel.authModel.collectAsState()
     var showContrastDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showSyncDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -83,6 +86,7 @@ fun SettingsScreen(
                     icon = R.drawable.ic_contrast,
                     title = "Contrast Level",
                     subtitle = settings.contrastLevel.getLabel(),
+                    showRightArrow = true,
                     onClick = { showContrastDialog = true }
                 )
             }
@@ -146,34 +150,18 @@ fun SettingsScreen(
                 }
             }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            SettingsSection(title = "Advanced") {
+                SettingsClickableItem(
+                    icon = R.drawable.ic_sync,
+                    title = "Sync data with server",
+                    onClick = { showSyncDialog = true }
                 )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showLogoutDialog = true }
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_logout),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
 
-                    Spacer(Modifier.width(16.dp))
-
-                    Text(
-                        "Logout",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                SettingsClickableItem(
+                    icon = R.drawable.ic_logout,
+                    title = "Logout",
+                    onClick = { showLogoutDialog = true }
+                )
             }
         }
     }
@@ -211,6 +199,31 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = { showContrastDialog = false }) {
                     Text("Close")
+                }
+            }
+        )
+    }
+
+    if (showSyncDialog) {
+        AlertDialog(
+            onDismissRequest = { showSyncDialog = false },
+            title = { Text("Sync data") },
+            text = { Text("Are you sure you want to sync data with the server? \n" +
+                    "This may remove your local, unsynced data. \n" +
+                    "Only do this if you logged in on new device!") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        activityViewModel.syncActivitiesFromServer()
+                        showSyncDialog = false
+                    }
+                ) {
+                    Text("Sync", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSyncDialog = false }) {
+                    Text("Cancel")
                 }
             }
         )

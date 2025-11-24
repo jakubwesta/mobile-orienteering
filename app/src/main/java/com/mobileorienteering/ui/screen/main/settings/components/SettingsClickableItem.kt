@@ -22,7 +22,8 @@ import androidx.compose.ui.unit.dp
 fun SettingsClickableItem(
     icon: Int,
     title: String,
-    subtitle: String,
+    subtitle: String? = "",
+    showRightArrow: Boolean = false,
     onClick: () -> Unit
 ) {
     Row(
@@ -40,23 +41,33 @@ fun SettingsClickableItem(
 
         Spacer(Modifier.width(16.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
+        if (subtitle != null && subtitle.isNotEmpty()) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
             )
         }
 
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = "Select",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        if (showRightArrow) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Select",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
-

@@ -19,8 +19,8 @@ enum class ContrastLevel {
 }
 
 data class SettingsModel(
-    val darkMode: Boolean = false,
-    val contrastLevel: ContrastLevel = ContrastLevel.MEDIUM,
+    val darkMode: Boolean = true,
+    val contrastLevel: ContrastLevel = ContrastLevel.LOW,
     val controlPointSound: Boolean = true,
     val controlPointVibration: Boolean = true,
     val gpsAccuracy: Int = 10
