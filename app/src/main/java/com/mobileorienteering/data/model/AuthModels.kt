@@ -18,5 +18,6 @@ data class AuthModel(
     val userId: Long,
     val username: String,
     val token: String,
-    val refreshToken: String
+    val refreshToken: String,
+    val isGoogleLogin: Boolean = false
 )

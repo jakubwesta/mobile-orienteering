@@ -13,8 +13,7 @@ class AuthInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
 
-        if (original.url.encodedPath.contains("/api/auth/") ||
-            original.url.encodedPath.contains("/api/users/me")) {
+        if (original.url.encodedPath.contains("/api/auth/")) {
             return chain.proceed(original)
         }
 

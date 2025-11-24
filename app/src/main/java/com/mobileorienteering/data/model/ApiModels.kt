@@ -43,6 +43,17 @@ data class RefreshTokenResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class UpdateUserRequest(
+    val username: String? = null,
+    val fullName: String? = null,
+    val email: String? = null,
+    val phoneNumber: String? = null,
+    val isPrivate: Boolean? = null,
+    val currentPassword: String? = null,
+    val newPassword: String? = null
+)
+
+@JsonClass(generateAdapter = true)
 data class UserResponse(
     val id: Long,
     val username: String,

@@ -13,6 +13,7 @@ sealed class AppScreen(
     object Register : AppScreen("register")
 
     object EditProfile : AppScreen("edit_profile")
+    object EditPassword : AppScreen("edit_password")
 
     object Map : AppScreen(
         route = "map",

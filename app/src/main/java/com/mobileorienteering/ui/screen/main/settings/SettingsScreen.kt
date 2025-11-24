@@ -29,6 +29,7 @@ fun SettingsScreen(
     onNavigateToEditPassword: () -> Unit = {}
 ) {
     val settings by viewModel.settings.collectAsState()
+    val authModel by authViewModel.authModel.collectAsState()
     var showContrastDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
@@ -57,11 +58,15 @@ fun SettingsScreen(
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
-                SettingsNavigationItem(
-                    icon = R.drawable.ic_lock_filled,
-                    title = "Change Password",
-                    onClick = onNavigateToEditPassword
-                )
+                if (authModel?.isGoogleLogin != true) {
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                    SettingsNavigationItem(
+                        icon = R.drawable.ic_lock_filled,
+                        title = "Change Password",
+                        onClick = onNavigateToEditPassword
+                    )
+                }
             }
 
             SettingsSection(title = "Appearance") {

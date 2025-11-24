@@ -23,7 +23,11 @@ class AuthRepository(
         private val USERNAME = stringPreferencesKey("username")
         private val TOKEN = stringPreferencesKey("token")
         private val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
+        private val IS_GOOGLE_LOGIN = booleanPreferencesKey("is_google_login")
     }
+
+    @Volatile
+    private var pendingToken: String? = null
 
     val isLoggedInFlow: Flow<Boolean> = context.authDataStore.data.map { prefs ->
         val token = prefs[TOKEN]
@@ -36,12 +40,14 @@ class AuthRepository(
         val token = prefs[TOKEN]
         val username = prefs[USERNAME]
         val refreshToken = prefs[REFRESH_TOKEN]
+        val isGoogleLogin = prefs[IS_GOOGLE_LOGIN] ?: false
         if (token != null && username != null && refreshToken != null && userId != null) {
             AuthModel(
                 userId = userId,
                 username = username,
                 token = token,
-                refreshToken = refreshToken
+                refreshToken = refreshToken,
+                isGoogleLogin = isGoogleLogin
             )
         } else null
     }
@@ -55,7 +61,7 @@ class AuthRepository(
                 )
             )
         }.mapCatching { authResponse ->
-            fetchUserAndSaveAuth(authResponse)
+            fetchUserAndSaveAuth(authResponse, isGoogleLogin = false)
         }
     }
 
@@ -63,7 +69,7 @@ class AuthRepository(
         return ApiHelper.safeApiCall("Google login failed") {
             authApi.loginWithGoogle(GoogleLoginRequest(idToken = idToken))
         }.mapCatching { authResponse ->
-            fetchUserAndSaveAuth(authResponse)
+            fetchUserAndSaveAuth(authResponse, isGoogleLogin = true)
         }
     }
 
@@ -80,35 +86,51 @@ class AuthRepository(
                 )
             )
         }.mapCatching { authResponse ->
-            fetchUserAndSaveAuth(authResponse)
+            fetchUserAndSaveAuth(authResponse, isGoogleLogin = false)
         }
     }
 
-    private suspend fun fetchUserAndSaveAuth(authResponse: AuthResponse): AuthModel {
-        saveTokenOnly(authResponse.token, authResponse.refreshToken, authResponse.username)
+    private suspend fun fetchUserAndSaveAuth(
+        authResponse: AuthResponse,
+        isGoogleLogin: Boolean
+    ): AuthModel {
+        pendingToken = authResponse.token
 
-        val userResult = ApiHelper.safeApiCall("Failed to fetch user details") {
-            userApi.getCurrentUser("Bearer ${authResponse.token}")
-        }
+        try {
+            saveTokenOnly(authResponse.token, authResponse.refreshToken, authResponse.username, isGoogleLogin)
 
-        return userResult.getOrThrow().let { userResponse ->
-            val auth = AuthModel(
-                userId = userResponse.id,
-                username = authResponse.username,
-                token = authResponse.token,
-                refreshToken = authResponse.refreshToken
-            )
+            val userResult = ApiHelper.safeApiCall("Failed to fetch user details") {
+                userApi.getCurrentUser()
+            }
 
-            saveAuth(auth)
-            auth
+            return userResult.getOrThrow().let { userResponse ->
+                val auth = AuthModel(
+                    userId = userResponse.id,
+                    username = authResponse.username,
+                    token = authResponse.token,
+                    refreshToken = authResponse.refreshToken,
+                    isGoogleLogin = isGoogleLogin
+                )
+
+                saveAuth(auth)
+                auth
+            }
+        } finally {
+            pendingToken = null
         }
     }
 
-    private suspend fun saveTokenOnly(token: String, refreshToken: String, username: String) {
+    private suspend fun saveTokenOnly(
+        token: String,
+        refreshToken: String,
+        username: String,
+        isGoogleLogin: Boolean
+    ) {
         context.authDataStore.edit { prefs ->
             prefs[TOKEN] = token
             prefs[REFRESH_TOKEN] = refreshToken
             prefs[USERNAME] = username
+            prefs[IS_GOOGLE_LOGIN] = isGoogleLogin
         }
     }
 
@@ -135,21 +157,40 @@ class AuthRepository(
             prefs.remove(TOKEN)
             prefs.remove(USERNAME)
             prefs.remove(REFRESH_TOKEN)
+            prefs.remove(IS_GOOGLE_LOGIN)
         }
     }
 
     suspend fun getCurrentAuth(): AuthModel? {
+        pendingToken?.let { token ->
+            val prefs = context.authDataStore.data.first()
+            val username = prefs[USERNAME]
+            val refreshToken = prefs[REFRESH_TOKEN]
+            val isGoogleLogin = prefs[IS_GOOGLE_LOGIN] ?: false
+            if (username != null && refreshToken != null) {
+                return AuthModel(
+                    userId = 0,  // Temporary
+                    username = username,
+                    token = token,
+                    refreshToken = refreshToken,
+                    isGoogleLogin = isGoogleLogin
+                )
+            }
+        }
+
         val prefs = context.authDataStore.data.first()
         val userId = prefs[USER_ID]
         val token = prefs[TOKEN]
         val username = prefs[USERNAME]
         val refreshToken = prefs[REFRESH_TOKEN]
+        val isGoogleLogin = prefs[IS_GOOGLE_LOGIN] ?: false
         return if (token != null && username != null && refreshToken != null && userId != null) {
             AuthModel(
                 userId = userId,
                 username = username,
                 token = token,
-                refreshToken = refreshToken
+                refreshToken = refreshToken,
+                isGoogleLogin = isGoogleLogin
             )
         } else null
     }
@@ -160,6 +201,13 @@ class AuthRepository(
             prefs[TOKEN] = auth.token
             prefs[USERNAME] = auth.username
             prefs[REFRESH_TOKEN] = auth.refreshToken
+            prefs[IS_GOOGLE_LOGIN] = auth.isGoogleLogin
+        }
+    }
+
+    suspend fun updateUsername(newUsername: String) {
+        context.authDataStore.edit { prefs ->
+            prefs[USERNAME] = newUsername
         }
     }
 }

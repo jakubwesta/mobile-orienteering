@@ -12,6 +12,7 @@ import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.FirstLaunchRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.repository.SettingsRepository
+import com.mobileorienteering.data.repository.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,6 +45,13 @@ object RepositoryModule {
         userApi: UserApiService
     ): AuthRepository =
         AuthRepository(context, authApi, userApi)
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(
+        userApi: UserApiService
+    ): UserRepository =
+        UserRepository(userApi)
 
     @Provides
     @Singleton

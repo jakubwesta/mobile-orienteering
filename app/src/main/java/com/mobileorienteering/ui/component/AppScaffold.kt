@@ -18,6 +18,7 @@ import com.mobileorienteering.ui.screen.main.map.MapScreen
 import com.mobileorienteering.ui.screen.main.map.MapViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mobileorienteering.ui.screen.main.settings.EditPasswordScreen
 import com.mobileorienteering.ui.screen.main.settings.EditProfileScreen
 
 @Composable
@@ -74,8 +75,33 @@ fun AppScaffold(
             }
 
             composable(AppScreen.Runs.route) { RunsScreen() }
-            composable(AppScreen.Settings.route) { SettingsScreen() }
-            composable(AppScreen.EditProfile.route) { EditProfileScreen() }
+
+            composable(AppScreen.Settings.route) {
+                SettingsScreen(
+                    onNavigateToEditProfile = {
+                        navController.navigate(AppScreen.EditProfile.route)
+                    },
+                    onNavigateToEditPassword = {
+                        navController.navigate(AppScreen.EditPassword.route)
+                    }
+                )
+            }
+
+            composable(AppScreen.EditProfile.route) {
+                EditProfileScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(AppScreen.EditPassword.route) {
+                EditPasswordScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
         }
     }
 }
