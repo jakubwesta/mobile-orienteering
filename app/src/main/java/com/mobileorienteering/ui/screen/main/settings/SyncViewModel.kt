@@ -1,0 +1,78 @@
+package com.mobileorienteering.ui.screen.main.settings
+
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.mobileorienteering.data.repository.AuthRepository
+import com.mobileorienteering.data.sync.SyncManager
+import com.mobileorienteering.util.ConnectivityMonitor
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.filter
+import javax.inject.Inject
+
+@HiltViewModel
+class SyncViewModel @Inject constructor(
+    private val syncManager: SyncManager,
+    private val connectivityMonitor: ConnectivityMonitor,
+    private val authRepository: AuthRepository
+) : ViewModel() {
+
+    var isLoading = mutableStateOf(false)
+    var error = mutableStateOf<String?>(null)
+    var successMessage = mutableStateOf<String?>(null)
+
+    fun startConnectivityMonitoring() {
+        viewModelScope.launch {
+            connectivityMonitor.isOnline
+                .filter { it }
+                .collect {
+                    syncIfLoggedIn()
+                }
+        }
+    }
+
+    fun syncAllData() {
+        viewModelScope.launch {
+            isLoading.value = true
+            error.value = null
+            successMessage.value = null
+
+            try {
+                val userId = authRepository.getCurrentAuth()?.userId
+                    ?: throw Exception("User not logged in")
+
+                val result = syncManager.syncAllDataForUser(userId)
+
+                result.onSuccess {
+                    successMessage.value = "Data synced successfully"
+                }.onFailure { e ->
+                    error.value = e.message ?: "Sync failed"
+                }
+            } catch (e: Exception) {
+                error.value = e.message ?: "Sync error"
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    private suspend fun syncIfLoggedIn() {
+        val userId = authRepository.getCurrentAuth()?.userId
+        if (userId != null) {
+            try {
+                syncManager.syncAllDataForUser(userId)
+            } catch (_: Exception) {
+
+            }
+        }
+    }
+
+    fun clearError() {
+        error.value = null
+    }
+
+    fun clearSuccessMessage() {
+        successMessage.value = null
+    }
+}

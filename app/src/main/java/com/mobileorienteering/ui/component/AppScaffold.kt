@@ -20,6 +20,7 @@ import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.ui.screen.main.settings.EditPasswordScreen
 import com.mobileorienteering.ui.screen.main.settings.EditProfileScreen
+import com.mobileorienteering.ui.screen.main.settings.SyncViewModel
 
 @Composable
 fun AppScaffold(
@@ -30,14 +31,20 @@ fun AppScaffold(
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val showBottomBar = currentRoute in AppScreen.mainScreens.map { it.route }
 
-    // Współdzielony MapViewModel na poziomie AppScaffold
     val mapViewModel: MapViewModel = hiltViewModel()
+    val syncViewModel: SyncViewModel = hiltViewModel()
 
     LaunchedEffect(isLoggedIn) {
         if (!isLoggedIn && currentRoute in AppScreen.mainScreens.map { it.route }) {
             navController.navigate(AppScreen.Login.route) {
                 popUpTo(0) { inclusive = true }
             }
+        }
+    }
+
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            syncViewModel.startConnectivityMonitoring()
         }
     }
 

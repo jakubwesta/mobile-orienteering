@@ -20,11 +20,25 @@ object ApiHelper {
     }
 
     fun <T> handleResponse(response: Response<T>, defaultMessage: String): Result<T> {
-        return if (response.isSuccessful && response.body() != null) {
-            Result.success(response.body()!!)
-        } else {
-            val errorMessage = extractErrorMessage(response, defaultMessage)
-            Result.failure(Exception(errorMessage))
+        return when {
+            response.isSuccessful && response.body() != null -> {
+                Result.success(response.body()!!)
+            }
+
+            response.isSuccessful && response.code() == 204 -> {
+                @Suppress("UNCHECKED_CAST")
+                Result.success(Unit as T)
+            }
+
+            response.isSuccessful -> {
+                @Suppress("UNCHECKED_CAST")
+                Result.success(Unit as T)
+            }
+
+            else -> {
+                val errorMessage = extractErrorMessage(response, defaultMessage)
+                Result.failure(Exception(errorMessage))
+            }
         }
     }
 

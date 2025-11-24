@@ -6,6 +6,7 @@ import com.mobileorienteering.data.local.entity.toEntity
 import com.mobileorienteering.data.local.entity.toDomainModel
 import com.mobileorienteering.data.model.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import java.time.Instant
@@ -14,22 +15,6 @@ class ActivityRepository @Inject constructor(
     private val activityApi: ActivityApiService,
     private val activityDao: ActivityDao
 ) {
-
-    fun getActivityByIdFlow(id: Long): Flow<Activity?> {
-        return activityDao.getActivityByIdFlow(id).map { it?.toDomainModel() }
-    }
-
-    fun getActivitiesByUserIdFlow(userId: Long): Flow<List<Activity>> {
-        return activityDao.getActivitiesByUserId(userId).map { list ->
-            list.map { it.toDomainModel() }
-        }
-    }
-
-    fun getActivitiesByMapIdFlow(mapId: Long): Flow<List<Activity>> {
-        return activityDao.getActivitiesByMapId(mapId).map { list ->
-            list.map { it.toDomainModel() }
-        }
-    }
 
     fun getAllActivitiesFlow(): Flow<List<Activity>> {
         return activityDao.getAllActivities().map { list ->
@@ -66,7 +51,7 @@ class ActivityRepository @Inject constructor(
                 activity.toEntity(syncedWithServer = false)
             )
 
-            syncActivityWithServer(activity)
+            uploadActivityToServer(activity)
 
             Result.success(tempId)
         } catch (e: Exception) {
@@ -74,7 +59,70 @@ class ActivityRepository @Inject constructor(
         }
     }
 
-    suspend fun syncActivityWithServer(activity: Activity): Result<Unit> {
+    suspend fun deleteActivity(id: Long): Result<Unit> {
+        // If ID is negative, it's not on server yet
+        if (id < 0) {
+            activityDao.deleteActivityById(id)
+            return Result.success(Unit)
+        }
+
+        return ApiHelper.safeApiCall("Failed to delete activity") {
+            activityApi.deleteActivity(id)
+        }.onSuccess {
+            activityDao.deleteActivityById(id)
+        }.onFailure {
+            activityDao.deleteActivityById(id)
+        }
+    }
+
+    /**
+     * Full sync: uploads unsynced activities, then downloads from server.
+     */
+    suspend fun syncActivities(userId: Long): Result<Unit> {
+        return try {
+            try {
+                uploadAllUnsyncedActivities()
+            } catch (_: Exception) {
+
+            }
+
+            downloadActivitiesFromServer(userId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Uploads all unsynced activities to the server.
+     */
+    private suspend fun uploadAllUnsyncedActivities(): Result<Unit> {
+        return try {
+            val unsyncedActivities = getUnsyncedActivities()
+            var errorOccurred = false
+
+            unsyncedActivities.forEach { activity ->
+                val result = uploadActivityToServer(activity)
+                result.onFailure {
+                    errorOccurred = true
+                }
+            }
+
+            if (errorOccurred) {
+                Result.failure(Exception("Failed to upload activities"))
+            } else {
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Uploads a single local activity to a server.
+     * Deletes local activity (with negative id).
+     * Inserts the synced activity from server (with positive id).
+     */
+    private suspend fun uploadActivityToServer(activity: Activity): Result<Unit> {
         return try {
             val request = CreateActivityRequest(
                 userId = activity.userId,
@@ -103,37 +151,26 @@ class ActivityRepository @Inject constructor(
         }
     }
 
-    suspend fun syncActivitiesForUser(userId: Long): Result<Unit> {
+    /**
+     * Downloads all activities from server and inserts them locally.
+     * Deletes synced, local activities, that are no longer on a server.
+     */
+    private suspend fun downloadActivitiesFromServer(userId: Long): Result<Unit> {
         return ApiHelper.safeApiCall("Failed to sync activities") {
             activityApi.getActivitiesByUserId(userId)
-        }.map { activities ->
-            val entities = activities.map { it.toDomainModel().toEntity(syncedWithServer = true) }
+        }.map { serverActivities ->
+            val serverActivityIds = serverActivities.map { it.id }.toSet()
+
+            val localActivities = activityDao.getActivitiesByUserId(userId).first()
+
+            localActivities
+                .filter { it.syncedWithServer && it.id !in serverActivityIds }
+                .forEach { activityDao.deleteActivityById(it.id) }
+
+            val entities = serverActivities.map {
+                it.toDomainModel().toEntity(syncedWithServer = true)
+            }
             activityDao.insertActivities(entities)
-        }
-    }
-
-    suspend fun syncActivitiesForMap(mapId: Long): Result<Unit> {
-        return ApiHelper.safeApiCall("Failed to sync map activities") {
-            activityApi.getActivitiesByMapId(mapId)
-        }.map { activities ->
-            val entities = activities.map { it.toDomainModel().toEntity(syncedWithServer = true) }
-            activityDao.insertActivities(entities)
-        }
-    }
-
-    suspend fun deleteActivity(id: Long): Result<Unit> {
-        // If ID is negative, it's not on server yet
-        if (id < 0) {
-            activityDao.deleteActivityById(id)
-            return Result.success(Unit)
-        }
-
-        return ApiHelper.safeApiCall("Failed to delete activity") {
-            activityApi.deleteActivity(id)
-        }.onSuccess {
-            activityDao.deleteActivityById(id)
-        }.onFailure {
-            activityDao.deleteActivityById(id)
         }
     }
 

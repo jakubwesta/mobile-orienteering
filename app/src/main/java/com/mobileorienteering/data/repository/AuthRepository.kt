@@ -9,6 +9,8 @@ import com.mobileorienteering.data.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private val Context.authDataStore by preferencesDataStore("auth")
 
@@ -28,6 +30,8 @@ class AuthRepository(
 
     @Volatile
     private var pendingToken: String? = null
+
+    private val refreshMutex = Mutex()
 
     val isLoggedInFlow: Flow<Boolean> = context.authDataStore.data.map { prefs ->
         val token = prefs[TOKEN]
@@ -135,19 +139,21 @@ class AuthRepository(
     }
 
     suspend fun refreshToken(): Result<String> {
-        val currentAuth = getCurrentAuth()
-        if (currentAuth?.refreshToken == null) {
-            return Result.failure(Exception("No refresh token available"))
-        }
-
-        return ApiHelper.safeApiCall("Token refresh failed") {
-            authApi.refreshToken(RefreshTokenRequest(refreshToken = currentAuth.refreshToken))
-        }.mapCatching { tokenResponse ->
-            context.authDataStore.edit { prefs ->
-                prefs[TOKEN] = tokenResponse.accessToken
-                prefs[REFRESH_TOKEN] = tokenResponse.refreshToken
+        return refreshMutex.withLock {
+            val currentAuth = getCurrentAuth()
+            if (currentAuth?.refreshToken == null) {
+                return@withLock Result.failure(Exception("No refresh token available"))
             }
-            tokenResponse.accessToken
+
+            ApiHelper.safeApiCall("Token refresh failed") {
+                authApi.refreshToken(RefreshTokenRequest(refreshToken = currentAuth.refreshToken))
+            }.mapCatching { tokenResponse ->
+                context.authDataStore.edit { prefs ->
+                    prefs[TOKEN] = tokenResponse.accessToken
+                    prefs[REFRESH_TOKEN] = tokenResponse.refreshToken
+                }
+                tokenResponse.accessToken
+            }
         }
     }
 

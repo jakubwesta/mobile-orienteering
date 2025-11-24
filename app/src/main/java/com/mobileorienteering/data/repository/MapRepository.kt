@@ -6,6 +6,7 @@ import com.mobileorienteering.data.local.entity.toEntity
 import com.mobileorienteering.data.local.entity.toDomainModel
 import com.mobileorienteering.data.model.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import java.time.Instant
@@ -15,16 +16,6 @@ class MapRepository @Inject constructor(
     private val mapApi: MapApiService,
     private val mapDao: MapDao
 ) {
-
-    fun getMapByIdFlow(id: Long): Flow<OrienteeringMap?> {
-        return mapDao.getMapByIdFlow(id).map { it?.toDomainModel() }
-    }
-
-    fun getMapsByUserIdFlow(userId: Long): Flow<List<OrienteeringMap>> {
-        return mapDao.getMapsByUserId(userId).map { list ->
-            list.map { it.toDomainModel() }
-        }
-    }
 
     fun getAllMapsFlow(): Flow<List<OrienteeringMap>> {
         return mapDao.getAllMaps().map { list ->
@@ -53,9 +44,11 @@ class MapRepository @Inject constructor(
                 createdAt = Instant.now()
             )
 
-            mapDao.insertMap(map.toEntity(syncedWithServer = false))
+            mapDao.insertMap(
+                map.toEntity(syncedWithServer = false)
+            )
 
-            syncMapWithServer(map)
+            uploadMapToServer(map)
 
             Result.success(tempId)
         } catch (e: Exception) {
@@ -63,7 +56,70 @@ class MapRepository @Inject constructor(
         }
     }
 
-    suspend fun syncMapWithServer(map: OrienteeringMap): Result<Unit> {
+    suspend fun deleteMap(id: Long): Result<Unit> {
+        // If ID is negative, it's not on server yet
+        if (id < 0) {
+            mapDao.deleteMapById(id)
+            return Result.success(Unit)
+        }
+
+        return ApiHelper.safeApiCall("Failed to delete map") {
+            mapApi.deleteMap(id)
+        }.onSuccess {
+            mapDao.deleteMapById(id)
+        }.onFailure {
+            mapDao.deleteMapById(id)
+        }
+    }
+
+    /**
+     * Full sync: uploads unsynced maps, then downloads from server.
+     */
+    suspend fun syncMaps(userId: Long): Result<Unit> {
+        return try {
+            try {
+                uploadAllUnsyncedMaps()
+            } catch (_: Exception) {
+
+            }
+
+            downloadMapsFromServer(userId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Uploads all unsynced maps to the server.
+     */
+    private suspend fun uploadAllUnsyncedMaps(): Result<Unit> {
+        return try {
+            val unsyncedMaps = getUnsyncedMaps()
+            var errorOccurred = false
+
+            unsyncedMaps.forEach { map ->
+                val result = uploadMapToServer(map)
+                result.onFailure {
+                    errorOccurred = true
+                }
+            }
+
+            if (errorOccurred) {
+                Result.failure(Exception("Failed to upload maps"))
+            } else {
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Uploads a single local map to a server.
+     * Deletes local map (with negative id).
+     * Inserts the synced map from server (with positive id).
+     */
+    private suspend fun uploadMapToServer(map: OrienteeringMap): Result<Unit> {
         return try {
             val request = CreateMapRequest(
                 userId = map.userId,
@@ -79,35 +135,38 @@ class MapRepository @Inject constructor(
 
             result.map { response ->
                 mapDao.deleteMapById(map.id)
+
                 val syncedMap = map.copy(id = response.id)
-                mapDao.insertMap(syncedMap.toEntity(syncedWithServer = true))
+                mapDao.insertMap(
+                    syncedMap.toEntity(syncedWithServer = true)
+                )
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun syncMapsForUser(userId: Long): Result<Unit> {
+    /**
+     * Downloads all maps from server and inserts them locally.
+     * Deletes synced, local maps, that are no longer on a server.
+     */
+    private suspend fun downloadMapsFromServer(userId: Long): Result<Unit> {
         return ApiHelper.safeApiCall("Failed to sync maps") {
             mapApi.getMapsByUserId(userId)
-        }.map { maps ->
-            val entities = maps.map { it.toDomainModel().toEntity(syncedWithServer = true) }
+        }.map { serverMaps ->
+            val serverMapIds = serverMaps.map { it.id }.toSet()
+
+            val localMaps = mapDao.getMapsByUserId(userId).first()
+
+            localMaps
+                .filter { it.syncedWithServer && it.id !in serverMapIds }
+                .forEach { mapDao.deleteMapById(it.id) }
+
+            val entities = serverMaps.map {
+                it.toDomainModel().toEntity(syncedWithServer = true)
+            }
+
             mapDao.insertMaps(entities)
-        }
-    }
-
-    suspend fun deleteMap(id: Long): Result<Unit> {
-        if (id < 0) {
-            mapDao.deleteMapById(id)
-            return Result.success(Unit)
-        }
-
-        return ApiHelper.safeApiCall("Failed to delete map") {
-            mapApi.deleteMap(id)
-        }.onSuccess {
-            mapDao.deleteMapById(id)
-        }.onFailure {
-            mapDao.deleteMapById(id)
         }
     }
 

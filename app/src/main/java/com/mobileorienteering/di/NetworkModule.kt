@@ -6,7 +6,7 @@ import com.mobileorienteering.data.api.AuthApiService
 import com.mobileorienteering.data.api.AuthInterceptor
 import com.mobileorienteering.data.api.MapApiService
 import com.mobileorienteering.data.api.TokenAuthenticator
-import com.mobileorienteering.data.api.UserApiService  // ADD THIS
+import com.mobileorienteering.data.api.UserApiService
 import com.mobileorienteering.data.local.converter.InstantAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory

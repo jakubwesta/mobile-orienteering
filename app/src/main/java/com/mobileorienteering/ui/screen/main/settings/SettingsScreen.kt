@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
@@ -26,7 +25,7 @@ import com.mobileorienteering.ui.screen.main.settings.components.SettingsSwitchI
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
-    activityViewModel: ActivityViewModel = hiltViewModel(),
+    syncViewModel: SyncViewModel = hiltViewModel(),
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToEditPassword: () -> Unit = {}
 ) {
@@ -214,7 +213,7 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        activityViewModel.syncActivitiesFromServer()
+                        syncViewModel.syncAllData()
                         showSyncDialog = false
                     }
                 ) {

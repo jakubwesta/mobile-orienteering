@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.LoginModel
 import com.mobileorienteering.data.model.RegisterModel
+import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
+import com.mobileorienteering.data.repository.MapRepository
+import com.mobileorienteering.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -14,7 +17,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val repo: AuthRepository
+    private val repo: AuthRepository,
+    private val activityRepository: ActivityRepository,
+    private val mapRepository: MapRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     val isLoggedIn = repo.isLoggedInFlow.stateIn(
@@ -49,8 +55,9 @@ class AuthViewModel @Inject constructor(
                         password = password.value
                     )
                 )
-                result.onSuccess {
+                result.onSuccess { authModel ->
                     error.value = null
+                    syncDataForUser(authModel.userId)
                 }.onFailure { e ->
                     error.value = e.message ?: "Login failed"
                 }
@@ -67,8 +74,9 @@ class AuthViewModel @Inject constructor(
             isGoogleSignInLoading.value = true
             try {
                 val result = repo.loginWithGoogle(idToken)
-                result.onSuccess {
+                result.onSuccess { authModel ->
                     error.value = null
+                    syncDataForUser(authModel.userId)
                 }.onFailure { e ->
                     error.value = e.message ?: "Google login failed"
                 }
@@ -93,8 +101,9 @@ class AuthViewModel @Inject constructor(
                         phoneNumber = phoneNumber.value
                     )
                 )
-                result.onSuccess {
+                result.onSuccess { authModel ->
                     error.value = null
+                    syncDataForUser(authModel.userId)
                 }.onFailure { e ->
                     error.value = e.message ?: "Registration failed"
                 }
@@ -108,7 +117,17 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            activityRepository.clearLocalActivities()
+            mapRepository.clearLocalMaps()
             repo.logout()
+        }
+    }
+
+    private suspend fun syncDataForUser(userId: Long) {
+        try {
+            syncManager.syncAllDataForUser(userId)
+        } catch (_: Exception) {
+
         }
     }
 

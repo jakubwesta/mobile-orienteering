@@ -12,21 +12,30 @@ class SyncManager @Inject constructor(
     private val activityRepository: ActivityRepository,
     private val mapRepository: MapRepository
 ) {
-    suspend fun syncAllPendingData() = withContext(Dispatchers.IO) {
-        try {
-            activityRepository.getUnsyncedActivities().forEach { activity ->
-                activityRepository.syncActivityWithServer(activity)
-            }
-        } catch (_: Exception) { }
 
+    /**
+     * Full sync: uploads all unsynced data, then downloads from server.
+     */
+    suspend fun syncAllDataForUser(userId: Long): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            mapRepository.getUnsyncedMaps().forEach { map ->
-                mapRepository.syncMapWithServer(map)
+            val activityResult = activityRepository.syncActivities(userId)
+            val mapResult = mapRepository.syncMaps(userId)
+
+            when {
+                activityResult.isFailure && mapResult.isFailure ->
+                    Result.failure(Exception("Both syncs failed"))
+                activityResult.isFailure ->
+                    Result.failure(Exception("Activity sync failed: ${activityResult.exceptionOrNull()?.message}"))
+                mapResult.isFailure ->
+                    Result.failure(Exception("Map sync failed: ${mapResult.exceptionOrNull()?.message}"))
+                else -> Result.success(Unit)
             }
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    suspend fun hasPendingSync(): Boolean = withContext(Dispatchers.IO) {
+    suspend fun hasAnyPendingSync(): Boolean = withContext(Dispatchers.IO) {
         val unsyncedActivities = activityRepository.getUnsyncedActivities()
         val unsyncedMaps = mapRepository.getUnsyncedMaps()
         unsyncedActivities.isNotEmpty() || unsyncedMaps.isNotEmpty()
