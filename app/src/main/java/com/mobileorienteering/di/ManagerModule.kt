@@ -3,8 +3,10 @@ package com.mobileorienteering.di
 import android.content.Context
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.MapRepository
+import com.mobileorienteering.data.repository.SettingsRepository
 import com.mobileorienteering.data.sync.SyncManager
 import com.mobileorienteering.util.ConnectivityMonitor
+import com.mobileorienteering.util.FeedbackManager
 import com.mobileorienteering.util.LocationManager
 import dagger.Module
 import dagger.Provides
@@ -33,4 +35,12 @@ object LocationModule {
         activityRepository: ActivityRepository,
         mapRepository: MapRepository
     ): SyncManager = SyncManager(activityRepository, mapRepository)
+
+
+    @Provides
+    @Singleton
+    fun provideFeedbackManager(
+        @ApplicationContext context: Context,
+        settingsRepository: SettingsRepository
+    ): FeedbackManager = FeedbackManager(context, settingsRepository)
 }
