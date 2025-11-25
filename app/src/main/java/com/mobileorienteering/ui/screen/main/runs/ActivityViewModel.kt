@@ -43,6 +43,10 @@ class ActivityViewModel @Inject constructor(
         }
     }
 
+    fun getActivity(activityId: Long): Flow<Activity?> {
+        return activityRepository.getActivityByIdFlow(activityId)
+    }
+
     fun createActivity(
         userId: Long,
         mapId: Long,

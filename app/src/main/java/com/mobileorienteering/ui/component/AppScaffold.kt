@@ -18,6 +18,9 @@ import com.mobileorienteering.ui.screen.main.map.MapScreen
 import com.mobileorienteering.ui.screen.main.map.MapViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.mobileorienteering.ui.screen.main.runs.RunDetailsScreen
 import com.mobileorienteering.ui.screen.main.settings.EditPasswordScreen
 import com.mobileorienteering.ui.screen.main.settings.EditProfileScreen
 import com.mobileorienteering.ui.screen.main.settings.SyncViewModel
@@ -83,7 +86,22 @@ fun AppScaffold(
                 )
             }
 
-            composable(AppScreen.Runs.route) { RunsScreen() }
+            composable(AppScreen.Runs.route) {
+                RunsScreen(navController = navController)
+            }
+
+            composable(
+                route = AppScreen.RunDetails.route,
+                arguments = listOf(
+                    navArgument("activityId") { type = NavType.LongType }
+                )
+            ) { backStackEntry ->
+                val activityId = backStackEntry.arguments?.getLong("activityId") ?: return@composable
+                RunDetailsScreen(
+                    activityId = activityId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
 
             composable(AppScreen.Settings.route) {
                 SettingsScreen(

@@ -36,6 +36,10 @@ sealed class AppScreen(
         iconOutlined = R.drawable.ic_runs_outlined
     )
 
+    object RunDetails : AppScreen("run_details/{activityId}") {
+        fun createRoute(activityId: Long) = "run_details/$activityId"
+    }
+
     object Settings : AppScreen(
         route = "settings",
         label = "Settings",

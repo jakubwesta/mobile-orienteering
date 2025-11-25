@@ -17,12 +17,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.component.ActivityCard
+import com.mobileorienteering.ui.navigation.AppScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RunsScreen(
+    navController: NavController,
     viewModel: ActivityViewModel = hiltViewModel()
 ) {
     val activities by viewModel.filteredActivities.collectAsState()
@@ -245,7 +248,12 @@ fun RunsScreen(
                             activity = activity,
                             mapName = activityMap?.name,
                             controlPointCount = activityMap?.controlPoints?.size,
-                            onDelete = { viewModel.deleteActivity(activity.id) }
+                            onDelete = {
+                                viewModel.deleteActivity(activity.id)
+                            },
+                            onClick = {
+                                navController.navigate(AppScreen.RunDetails.createRoute(activity.id))
+                            }
                         )
                     }
                 }

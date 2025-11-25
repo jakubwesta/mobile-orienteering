@@ -1,5 +1,6 @@
 package com.mobileorienteering.ui.component
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -10,22 +11,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
 import com.mobileorienteering.data.model.Activity
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import com.mobileorienteering.util.formatDate
+import com.mobileorienteering.util.formatDistance
+import com.mobileorienteering.util.formatDuration
+import com.mobileorienteering.util.formatTime
 
 @Composable
 fun ActivityCard(
     activity: Activity,
     mapName: String?,
     controlPointCount: Int?,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -161,38 +166,5 @@ fun ActivityCard(
                 }
             }
         )
-    }
-}
-
-private fun formatDate(instant: java.time.Instant): String {
-    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
-        .withZone(ZoneId.systemDefault())
-    return formatter.format(instant)
-}
-
-private fun formatTime(instant: java.time.Instant): String {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        .withZone(ZoneId.systemDefault())
-    return formatter.format(instant)
-}
-
-private fun formatDistance(distance: Double): String {
-    return String.format(Locale.US, "%.2f km", distance)
-}
-
-private fun formatDuration(durationString: String): String {
-    return try {
-        val duration = java.time.Duration.parse(durationString)
-        val hours = duration.toHours()
-        val minutes = duration.toMinutes() % 60
-        val seconds = duration.seconds % 60
-
-        when {
-            hours > 0 -> String.format(Locale.US, "%dh %02dm", hours, minutes)
-            minutes > 0 -> String.format(Locale.US, "%dm %02ds", minutes, seconds)
-            else -> String.format(Locale.US, "%ds", seconds)
-        }
-    } catch (e: Exception) {
-        durationString
     }
 }

@@ -22,6 +22,10 @@ class ActivityRepository @Inject constructor(
         }
     }
 
+    fun getActivityByIdFlow(activityId: Long): Flow<Activity?> {
+        return activityDao.getActivityByIdFlow(activityId).map { it?.toDomainModel() }
+    }
+
     suspend fun createActivity(
         userId: Long,
         mapId: Long,
