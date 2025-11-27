@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.Activity
 import com.mobileorienteering.data.model.PathPoint
 import com.mobileorienteering.data.repository.ActivityRepository
+import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,10 +17,19 @@ import javax.inject.Inject
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
     private val activityRepository: ActivityRepository,
-    private val mapRepository: MapRepository
+    private val mapRepository: MapRepository,
+    private val authRepository: AuthRepository  // NOWE - potrzebne do filtrowania po userId
 ) : ViewModel() {
 
-    val activities: StateFlow<List<Activity>> = activityRepository.getAllActivitiesFlow()
+    // Pobierz aktywności tylko dla zalogowanego użytkownika
+    val activities: StateFlow<List<Activity>> = authRepository.authModelFlow
+        .flatMapLatest { auth ->
+            if (auth != null) {
+                activityRepository.getActivitiesByUserIdFlow(auth.userId)
+            } else {
+                flowOf(emptyList())
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     var isLoading = mutableStateOf(false)

@@ -76,24 +76,35 @@ fun AppScaffold(
             composable(AppScreen.Login.route) { LoginScreen(navController) }
             composable(AppScreen.Register.route) { RegisterScreen(navController) }
 
-            // MapScreen z opcjonalnym mapId
+            // MapScreen z opcjonalnym mapId i startRun
             composable(
-                route = "${AppScreen.Map.route}?mapId={mapId}",
+                route = "${AppScreen.Map.route}?mapId={mapId}&startRun={startRun}",
                 arguments = listOf(
                     navArgument("mapId") {
                         type = NavType.LongType
                         defaultValue = -1L
+                    },
+                    navArgument("startRun") {
+                        type = NavType.BoolType
+                        defaultValue = false
                     }
                 )
             ) { backStackEntry ->
                 val mapId = backStackEntry.arguments?.getLong("mapId") ?: -1L
-                MapScreen(initialMapId = if (mapId != -1L) mapId else null)
+                val startRun = backStackEntry.arguments?.getBoolean("startRun") ?: false
+                MapScreen(
+                    initialMapId = if (mapId != -1L) mapId else null,
+                    startRun = startRun
+                )
             }
 
             composable(AppScreen.Library.route) {
                 LibraryScreen(
                     onEditMap = { mapId ->
                         navController.navigate("${AppScreen.Map.route}?mapId=$mapId")
+                    },
+                    onStartRun = { mapId ->
+                        navController.navigate("${AppScreen.Map.route}?mapId=$mapId&startRun=true")
                     }
                 )
             }

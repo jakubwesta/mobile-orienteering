@@ -27,7 +27,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "mobile_orienteering_db"
         )
-            .fallbackToDestructiveMigration()
+            .addMigrations(AppDatabase.MIGRATION_1_2)
             .build()
     }
 

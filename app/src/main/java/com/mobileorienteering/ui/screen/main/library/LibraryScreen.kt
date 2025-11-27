@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,7 +21,8 @@ import com.mobileorienteering.data.model.Map as OrienteeringMap
 @Composable
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
-    onEditMap: (Long) -> Unit = {}
+    onEditMap: (Long) -> Unit = {},
+    onStartRun: (Long) -> Unit = {}  // NOWY callback
 ) {
     val maps by viewModel.maps.collectAsState()
 
@@ -54,7 +56,8 @@ fun LibraryScreen(
                     MapCard(
                         map = map,
                         onEdit = { onEditMap(map.id) },
-                        onDelete = { viewModel.deleteMap(map.id) }
+                        onDelete = { viewModel.deleteMap(map.id) },
+                        onStartRun = { onStartRun(map.id) }  // NOWY
                     )
                 }
             }
@@ -66,7 +69,8 @@ fun LibraryScreen(
 private fun MapCard(
     map: OrienteeringMap,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onStartRun: () -> Unit  // NOWY
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -130,6 +134,25 @@ private fun MapCard(
                         )
                     }
                 }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // NOWY - Przycisk Start Run
+            Button(
+                onClick = onStartRun,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Start Run")
             }
         }
     }

@@ -13,8 +13,21 @@ data class Activity(
     val duration: String,
     val distance: Double,
     val pathData: List<PathPoint>,
-    val createdAt: Instant
-)
+    val createdAt: Instant,
+
+    val status: ActivityStatus = ActivityStatus.COMPLETED,
+    val visitedCheckpoints: List<VisitedCheckpoint> = emptyList(),
+    val totalCheckpoints: Int = 0
+) {
+    val isCompleted: Boolean
+        get() = status == ActivityStatus.COMPLETED
+
+    val completedCheckpointsCount: Int
+        get() = visitedCheckpoints.size
+
+    val progress: Float
+        get() = if (totalCheckpoints > 0) completedCheckpointsCount.toFloat() / totalCheckpoints else 1f
+}
 
 @JsonClass(generateAdapter = true)
 data class PathPoint(
@@ -22,6 +35,21 @@ data class PathPoint(
     val longitude: Double,
     val timestamp: Instant
 )
+
+@JsonClass(generateAdapter = true)
+data class VisitedCheckpoint(
+    val checkpointName: String,
+    val order: Int,
+    val visitedAt: Instant,
+    val latitude: Double,
+    val longitude: Double
+)
+
+enum class ActivityStatus {
+    IN_PROGRESS,
+    COMPLETED,
+    ABANDONED
+}
 
 fun ActivityResponse.toDomainModel(): Activity {
     return Activity(

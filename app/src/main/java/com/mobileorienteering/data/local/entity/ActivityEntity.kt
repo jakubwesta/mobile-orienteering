@@ -5,7 +5,9 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.mobileorienteering.data.local.converter.Converters
 import com.mobileorienteering.data.model.Activity
+import com.mobileorienteering.data.model.ActivityStatus
 import com.mobileorienteering.data.model.PathPoint
+import com.mobileorienteering.data.model.VisitedCheckpoint
 import java.time.Instant
 
 @Entity(tableName = "activities")
@@ -20,7 +22,11 @@ data class ActivityEntity(
     val distance: Double,
     val pathData: List<PathPoint>,
     val createdAt: Instant,
-    val syncedWithServer: Boolean = true
+    val syncedWithServer: Boolean = true,
+
+    val status: ActivityStatus = ActivityStatus.COMPLETED,
+    val visitedCheckpoints: List<VisitedCheckpoint> = emptyList(),
+    val totalCheckpoints: Int = 0
 )
 
 fun ActivityEntity.toDomainModel(): Activity {
@@ -33,7 +39,10 @@ fun ActivityEntity.toDomainModel(): Activity {
         duration = duration,
         distance = distance,
         pathData = pathData,
-        createdAt = createdAt
+        createdAt = createdAt,
+        status = status,
+        visitedCheckpoints = visitedCheckpoints,
+        totalCheckpoints = totalCheckpoints
     )
 }
 
@@ -48,6 +57,9 @@ fun Activity.toEntity(syncedWithServer: Boolean = true): ActivityEntity {
         distance = distance,
         pathData = pathData,
         createdAt = createdAt,
-        syncedWithServer = syncedWithServer
+        syncedWithServer = syncedWithServer,
+        status = status,
+        visitedCheckpoints = visitedCheckpoints,
+        totalCheckpoints = totalCheckpoints
     )
 }

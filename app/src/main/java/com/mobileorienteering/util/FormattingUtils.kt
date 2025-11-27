@@ -18,8 +18,12 @@ fun formatTime(instant: Instant): String {
     return formatter.format(instant)
 }
 
-fun formatDistance(distance: Double): String {
-    return String.format(Locale.US, "%.2f km", distance)
+fun formatDistance(distanceMeters: Double): String {
+    return if (distanceMeters >= 1000) {
+        String.format(Locale.US, "%.2f km", distanceMeters / 1000)
+    } else {
+        String.format(Locale.US, "%.0f m", distanceMeters)
+    }
 }
 
 fun formatDuration(durationString: String): String {

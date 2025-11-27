@@ -2,6 +2,7 @@ package com.mobileorienteering.ui.screen.main.map.models
 
 import android.location.Location
 import org.maplibre.spatialk.geojson.Position
+import java.time.Instant
 
 data class MapState(
     val currentLocation: Location? = null,
@@ -15,7 +16,13 @@ data class MapState(
 
     // Aktualnie załadowana mapa
     val currentMapId: Long? = null,
-    val currentMapName: String? = null
+    val currentMapName: String? = null,
+
+    // Stan aktywnego biegu
+    val isRunActive: Boolean = false,
+    val runStartTime: Instant? = null,
+    val visitedCheckpointIndices: Set<Int> = emptySet(),
+    val runDistance: Double = 0.0
 )
 
 data class Checkpoint(

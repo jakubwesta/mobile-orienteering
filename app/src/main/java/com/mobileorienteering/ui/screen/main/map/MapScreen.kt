@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.ui.screen.main.map.components.*
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,9 +35,11 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun MapScreen(
     viewModel: MapViewModel = hiltViewModel(),
-    initialMapId: Long? = null
+    initialMapId: Long? = null,
+    startRun: Boolean = false
 ) {
     val state by viewModel.state.collectAsState()
+    val finishedRunState by viewModel.finishedRunState.collectAsState()
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
     val coroutineScope = rememberCoroutineScope()
@@ -56,14 +57,19 @@ fun MapScreen(
         }
     }
 
+    // Auto-start biegu gdy startRun=true i mapa jest załadowana
+    LaunchedEffect(startRun, state.checkpoints) {
+        if (startRun && state.checkpoints.isNotEmpty() && !state.isRunActive) {
+            viewModel.startRun()
+        }
+    }
+
     // Permission launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val fineLocationGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
         val coarseLocationGranted = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-
-        android.util.Log.d("MapScreen", "Permission result: fine=$fineLocationGranted, coarse=$coarseLocationGranted")
 
         if (fineLocationGranted || coarseLocationGranted) {
             viewModel.startTracking()
@@ -91,14 +97,16 @@ fun MapScreen(
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
-        sheetPeekHeight = 64.dp,
-        sheetDragHandle = { MapBottomSheetHandle() },
+        sheetPeekHeight = if (state.isRunActive) 0.dp else 64.dp,
+        sheetDragHandle = { if (!state.isRunActive) MapBottomSheetHandle() },
         sheetContent = {
-            CheckpointBottomSheetContent(
-                state = state,
-                viewModel = viewModel,
-                onSaveRoute = { showSaveDialog = true }
-            )
+            if (!state.isRunActive) {
+                CheckpointBottomSheetContent(
+                    state = state,
+                    viewModel = viewModel,
+                    onSaveRoute = { showSaveDialog = true }
+                )
+            }
         }
     ) {
         Box(
@@ -113,71 +121,82 @@ fun MapScreen(
                 baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
                 options = MapOptions(
                     ornamentOptions = OrnamentOptions.AllDisabled,
-                    gestureOptions = if (state.isTracking)
+                    gestureOptions = if (state.isTracking || state.isRunActive)
                         GestureOptions.AllDisabled
                     else
                         GestureOptions.Standard
                 ),
                 onMapClick = { point, _ ->
-                    tapPosition = point
-                    showCheckpointDialog = true
+                    if (!state.isRunActive) {
+                        tapPosition = point
+                        showCheckpointDialog = true
+                    }
                     ClickResult.Pass
                 }
             ) {
-                RenderCheckpoints(state.checkpoints)
+                RenderCheckpoints(
+                    checkpoints = state.checkpoints,
+                    visitedIndices = state.visitedCheckpointIndices,
+                    isRunActive = state.isRunActive
+                )
                 RenderUserLocation(state.currentLocation)
             }
 
-            LocationInfoCard(
-                state = state,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
+            // Panel postępu biegu na górze
+            RunProgressPanel(
+                isVisible = state.isRunActive,
+                startTime = state.runStartTime,
+                visitedCount = state.visitedCheckpointIndices.size,
+                totalCount = state.checkpoints.size,
+                distance = state.runDistance,
+                onStopClick = { viewModel.stopRun() },
+                modifier = Modifier.align(Alignment.TopCenter)
             )
 
-            FloatingActionButton(
-                onClick = {
-                    android.util.Log.d("MapScreen", "Location button clicked, isTracking=${state.isTracking}")
-                    if (state.isTracking) {
-                        viewModel.stopTracking()
-                    } else {
-                        // Sprawdź uprawnienia i poproś jeśli brak
-                        locationPermissionLauncher.launch(
-                            arrayOf(
-                                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                android.Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 16.dp + 64.dp),
-                containerColor = if (state.isTracking)
-                    MaterialTheme.colorScheme.primaryContainer
-                else
-                    MaterialTheme.colorScheme.secondaryContainer
-            ) {
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = if (state.isTracking) "Zatrzymaj tracking" else "Rozpocznij tracking"
-                )
-            }
-
-            if (state.currentLocation != null) {
+            // Ukryj przyciski podczas biegu
+            if (!state.isRunActive) {
                 FloatingActionButton(
                     onClick = {
-                        state.currentLocation?.let { location ->
-                            tapPosition = Position(location.longitude, location.latitude)
-                            showCheckpointDialog = true
+                        if (state.isTracking) {
+                            viewModel.stopTracking()
+                        } else {
+                            locationPermissionLauncher.launch(
+                                arrayOf(
+                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
                         }
                     },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 88.dp + 64.dp),
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        .padding(end = 16.dp, bottom = 16.dp + 64.dp),
+                    containerColor = if (state.isTracking)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else
+                        MaterialTheme.colorScheme.secondaryContainer
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Dodaj checkpoint w obecnej lokalizacji")
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = if (state.isTracking) "Zatrzymaj tracking" else "Rozpocznij tracking"
+                    )
+                }
+
+                if (state.currentLocation != null) {
+                    FloatingActionButton(
+                        onClick = {
+                            state.currentLocation?.let { location ->
+                                tapPosition = Position(location.longitude, location.latitude)
+                                showCheckpointDialog = true
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 16.dp, bottom = 88.dp + 64.dp),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Dodaj checkpoint w obecnej lokalizacji")
+                    }
                 }
             }
 
@@ -206,12 +225,25 @@ fun MapScreen(
                     }
                 )
             }
+
+            // Dialog zakończenia biegu
+            finishedRunState?.let { run ->
+                RunFinishedDialog(
+                    isCompleted = run.isCompleted,
+                    duration = run.duration,
+                    visitedCount = run.visitedCheckpoints.size,
+                    totalCount = run.totalCheckpoints,
+                    distance = run.distance,
+                    onSave = { viewModel.saveFinishedRun() },
+                    onDiscard = { viewModel.discardFinishedRun() }
+                )
+            }
         }
     }
 
     LaunchedEffect(state.currentLocation) {
         val location = state.currentLocation ?: return@LaunchedEffect
-        if (state.isTracking) {
+        if (state.isTracking || state.isRunActive) {
             coroutineScope.launch {
                 cameraState.animateTo(
                     CameraPosition(
@@ -250,7 +282,11 @@ private fun MapBottomSheetHandle() {
 }
 
 @Composable
-private fun RenderCheckpoints(checkpoints: List<com.mobileorienteering.ui.screen.main.map.models.Checkpoint>) {
+private fun RenderCheckpoints(
+    checkpoints: List<com.mobileorienteering.ui.screen.main.map.models.Checkpoint>,
+    visitedIndices: Set<Int>,
+    isRunActive: Boolean
+) {
     if (checkpoints.isEmpty()) return
 
     checkpoints.forEachIndexed { index, checkpoint ->
@@ -260,11 +296,17 @@ private fun RenderCheckpoints(checkpoints: List<com.mobileorienteering.ui.screen
             )
         )
 
-        // Kółko - checkpoint marker
+        // Kolor zależy od tego czy checkpoint jest odwiedzony (tylko podczas biegu)
+        val color = if (isRunActive && index in visitedIndices) {
+            Color(0xFF4CAF50)  // Zielony - odwiedzony
+        } else {
+            Color(0xFFFF5722)  // Pomarańczowy - nieodwiedzony
+        }
+
         CircleLayer(
             id = "checkpoint-circle-${index}",
             source = source,
-            color = const(Color(0xFFFF5722)),
+            color = const(color),
             radius = const(14.dp),
             strokeColor = const(Color.White),
             strokeWidth = const(2.dp)

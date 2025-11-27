@@ -1,8 +1,10 @@
 package com.mobileorienteering.data.local.converter
 
 import androidx.room.TypeConverter
+import com.mobileorienteering.data.model.ActivityStatus
 import com.mobileorienteering.data.model.ControlPoint
 import com.mobileorienteering.data.model.PathPoint
+import com.mobileorienteering.data.model.VisitedCheckpoint
 import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
@@ -57,6 +59,32 @@ class Converters {
         val type = Types.newParameterizedType(List::class.java, ControlPoint::class.java)
         val adapter = moshi.adapter<List<ControlPoint>>(type)
         return adapter.fromJson(value)
+    }
+
+    @TypeConverter
+    fun fromVisitedCheckpointList(value: List<VisitedCheckpoint>?): String? {
+        if (value == null) return null
+        val type = Types.newParameterizedType(List::class.java, VisitedCheckpoint::class.java)
+        val adapter = moshi.adapter<List<VisitedCheckpoint>>(type)
+        return adapter.toJson(value)
+    }
+
+    @TypeConverter
+    fun toVisitedCheckpointList(value: String?): List<VisitedCheckpoint>? {
+        if (value == null) return null
+        val type = Types.newParameterizedType(List::class.java, VisitedCheckpoint::class.java)
+        val adapter = moshi.adapter<List<VisitedCheckpoint>>(type)
+        return adapter.fromJson(value)
+    }
+
+    @TypeConverter
+    fun fromActivityStatus(value: ActivityStatus?): String? {
+        return value?.name
+    }
+
+    @TypeConverter
+    fun toActivityStatus(value: String?): ActivityStatus? {
+        return value?.let { ActivityStatus.valueOf(it) }
     }
 }
 

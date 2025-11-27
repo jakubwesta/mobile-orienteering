@@ -22,8 +22,55 @@ class ActivityRepository @Inject constructor(
         }
     }
 
+    // NOWE - Pobierz aktywności dla konkretnego użytkownika
+    fun getActivitiesByUserIdFlow(userId: Long): Flow<List<Activity>> {
+        return activityDao.getActivitiesByUserId(userId).map { list ->
+            list.map { it.toDomainModel() }
+        }
+    }
+
     fun getActivityByIdFlow(activityId: Long): Flow<Activity?> {
         return activityDao.getActivityByIdFlow(activityId).map { it?.toDomainModel() }
+    }
+
+    // Tworzenie aktywności z biegu
+    suspend fun createRunActivity(
+        userId: Long,
+        mapId: Long,
+        title: String,
+        duration: String,
+        distance: Double,
+        pathData: List<PathPoint>,
+        status: ActivityStatus,
+        visitedCheckpoints: List<VisitedCheckpoint>,
+        totalCheckpoints: Int
+    ): Result<Long> {
+        return try {
+            val tempId = -(System.currentTimeMillis())
+
+            val activity = Activity(
+                id = tempId,
+                userId = userId,
+                mapId = mapId,
+                title = title,
+                startTime = Instant.now(),
+                duration = duration,
+                distance = distance,
+                pathData = pathData,
+                createdAt = Instant.now(),
+                status = status,
+                visitedCheckpoints = visitedCheckpoints,
+                totalCheckpoints = totalCheckpoints
+            )
+
+            activityDao.insertActivity(
+                activity.toEntity(syncedWithServer = false)
+            )
+
+            Result.success(tempId)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to save run activity: ${e.message}"))
+        }
     }
 
     suspend fun createActivity(

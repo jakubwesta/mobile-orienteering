@@ -117,7 +117,7 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            activityRepository.clearLocalActivities()
+            // activityRepository.clearLocalActivities()
             mapRepository.clearLocalMaps()
             repo.logout()
         }
