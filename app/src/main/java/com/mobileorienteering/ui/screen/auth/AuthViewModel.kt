@@ -8,6 +8,7 @@ import com.mobileorienteering.data.model.RegisterModel
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
+import com.mobileorienteering.data.repository.MapStateRepository
 import com.mobileorienteering.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +21,7 @@ class AuthViewModel @Inject constructor(
     private val repo: AuthRepository,
     private val activityRepository: ActivityRepository,
     private val mapRepository: MapRepository,
+    private val mapStateRepository: MapStateRepository,  // NOWE
     private val syncManager: SyncManager
 ) : ViewModel() {
 
@@ -117,7 +119,7 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            // activityRepository.clearLocalActivities()
+            mapStateRepository.clearState()
             mapRepository.clearLocalMaps()
             repo.logout()
         }

@@ -6,13 +6,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mobileorienteering.R
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
@@ -22,7 +25,7 @@ import com.mobileorienteering.data.model.Map as OrienteeringMap
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
     onEditMap: (Long) -> Unit = {},
-    onStartRun: (Long) -> Unit = {}  // NOWY callback
+    onStartRun: (Long) -> Unit = {}
 ) {
     val maps by viewModel.maps.collectAsState()
 
@@ -57,7 +60,7 @@ fun LibraryScreen(
                         map = map,
                         onEdit = { onEditMap(map.id) },
                         onDelete = { viewModel.deleteMap(map.id) },
-                        onStartRun = { onStartRun(map.id) }  // NOWY
+                        onStartRun = { onStartRun(map.id) }
                     )
                 }
             }
@@ -70,9 +73,10 @@ private fun MapCard(
     map: OrienteeringMap,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onStartRun: () -> Unit  // NOWY
+    onStartRun: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -86,7 +90,7 @@ private fun MapCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -117,20 +121,52 @@ private fun MapCard(
                     )
                 }
 
-                Row {
-                    IconButton(onClick = onEdit) {
+                // Rozwijane menu
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
                         Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Edytuj mapę",
-                            tint = MaterialTheme.colorScheme.primary
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More options",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Usuń mapę",
-                            tint = MaterialTheme.colorScheme.error
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        // Edit option
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+
+                        // Delete option
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            onClick = {
+                                showMenu = false
+                                showDeleteDialog = true
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_trash_filled),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            },
+                            colors = MenuDefaults.itemColors(
+                                textColor = MaterialTheme.colorScheme.error
+                            )
                         )
                     }
                 }
@@ -138,7 +174,7 @@ private fun MapCard(
 
             Spacer(Modifier.height(12.dp))
 
-            // NOWY - Przycisk Start Run
+            // Przycisk Start Run
             Button(
                 onClick = onStartRun,
                 modifier = Modifier.fillMaxWidth(),
@@ -160,8 +196,8 @@ private fun MapCard(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Usuń mapę") },
-            text = { Text("Czy na pewno chcesz usunąć mapę \"${map.name}\"?") },
+            title = { Text("Delete Map") },
+            text = { Text("Are you sure you want to delete \"${map.name}\"?") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -169,12 +205,12 @@ private fun MapCard(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("Usuń")
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Anuluj")
+                    Text("Cancel")
                 }
             }
         )
