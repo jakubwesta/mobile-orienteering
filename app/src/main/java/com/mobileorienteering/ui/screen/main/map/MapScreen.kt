@@ -34,7 +34,10 @@ import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
+fun MapScreen(
+    viewModel: MapViewModel = hiltViewModel(),
+    initialMapId: Long? = null
+) {
     val state by viewModel.state.collectAsState()
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
@@ -45,6 +48,13 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
     var showCheckpointDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsState()
+
+    // Wczytaj mapę jeśli przekazano initialMapId
+    LaunchedEffect(initialMapId) {
+        if (initialMapId != null) {
+            viewModel.loadMap(initialMapId)
+        }
+    }
 
     // Permission launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(

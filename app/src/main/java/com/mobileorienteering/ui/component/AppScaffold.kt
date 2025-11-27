@@ -5,9 +5,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.mobileorienteering.ui.navigation.AppScreen
 import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
@@ -15,11 +17,8 @@ import com.mobileorienteering.ui.screen.main.library.LibraryScreen
 import com.mobileorienteering.ui.screen.main.runs.RunsScreen
 import com.mobileorienteering.ui.screen.main.settings.SettingsScreen
 import com.mobileorienteering.ui.screen.main.map.MapScreen
-import com.mobileorienteering.ui.screen.main.map.MapViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import com.mobileorienteering.ui.screen.main.runs.RunDetailsScreen
 import com.mobileorienteering.ui.screen.main.settings.EditPasswordScreen
 import com.mobileorienteering.ui.screen.main.settings.EditProfileScreen
@@ -32,13 +31,17 @@ fun AppScaffold(
     isLoggedIn: Boolean
 ) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val showBottomBar = currentRoute in AppScreen.mainScreens.map { it.route }
+    val showBottomBar = currentRoute != null && AppScreen.mainScreens.any {
+        currentRoute.startsWith(it.route)
+    }
 
-    val mapViewModel: MapViewModel = hiltViewModel()
     val syncViewModel: SyncViewModel = hiltViewModel()
 
     LaunchedEffect(isLoggedIn) {
-        if (!isLoggedIn && currentRoute in AppScreen.mainScreens.map { it.route }) {
+        val isOnMainScreen = currentRoute != null && AppScreen.mainScreens.any {
+            currentRoute.startsWith(it.route)
+        }
+        if (!isLoggedIn && isOnMainScreen) {
             navController.navigate(AppScreen.Login.route) {
                 popUpTo(0) { inclusive = true }
             }
@@ -73,15 +76,24 @@ fun AppScaffold(
             composable(AppScreen.Login.route) { LoginScreen(navController) }
             composable(AppScreen.Register.route) { RegisterScreen(navController) }
 
-            composable(AppScreen.Map.route) {
-                MapScreen(viewModel = mapViewModel)
+            // MapScreen z opcjonalnym mapId
+            composable(
+                route = "${AppScreen.Map.route}?mapId={mapId}",
+                arguments = listOf(
+                    navArgument("mapId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
+                val mapId = backStackEntry.arguments?.getLong("mapId") ?: -1L
+                MapScreen(initialMapId = if (mapId != -1L) mapId else null)
             }
 
             composable(AppScreen.Library.route) {
                 LibraryScreen(
                     onEditMap = { mapId ->
-                        mapViewModel.loadMap(mapId)
-                        navController.navigate(AppScreen.Map.route)
+                        navController.navigate("${AppScreen.Map.route}?mapId=$mapId")
                     }
                 )
             }

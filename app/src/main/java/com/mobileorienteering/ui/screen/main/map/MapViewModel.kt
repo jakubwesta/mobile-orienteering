@@ -6,10 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.ControlPoint
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
+import com.mobileorienteering.data.repository.MapStateRepository
 import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
 import com.mobileorienteering.ui.screen.main.map.models.MapState
 import com.mobileorienteering.util.LocationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.maplibre.spatialk.geojson.Position
@@ -20,16 +22,53 @@ import com.mobileorienteering.data.model.Map as OrienteeringMap
 class MapViewModel @Inject constructor(
     private val locationManager: LocationManager,
     private val mapRepository: MapRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val mapStateRepository: MapStateRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MapState())
     val state: StateFlow<MapState> = _state.asStateFlow()
 
     private var lastLocation: Location? = null
+    private var trackingJob: Job? = null
+    private var isInitialized = false
 
     private val _shouldMoveCamera = MutableStateFlow(false)
     val shouldMoveCamera: StateFlow<Boolean> = _shouldMoveCamera.asStateFlow()
+
+    init {
+        // Odczytaj zapisany stan przy starcie
+        restoreSavedState()
+    }
+
+    private fun restoreSavedState() {
+        viewModelScope.launch {
+            val savedState = mapStateRepository.getSavedState()
+
+            _state.update {
+                it.copy(
+                    checkpoints = savedState.checkpoints,
+                    currentMapId = savedState.currentMapId,
+                    currentMapName = savedState.currentMapName,
+                    distanceTraveled = savedState.distanceTraveled,
+                    hasPermission = locationManager.hasLocationPermission()
+                )
+            }
+
+            // Jeśli było włączone śledzenie, wznów je
+            if (savedState.isTracking && locationManager.hasLocationPermission()) {
+                android.util.Log.d("MapViewModel", "Restoring tracking state...")
+                resumeTracking()
+            }
+
+            // Jeśli są checkpointy, przesuń kamerę
+            if (savedState.checkpoints.isNotEmpty()) {
+                _shouldMoveCamera.value = true
+            }
+
+            isInitialized = true
+        }
+    }
 
     fun cameraMoved() {
         _shouldMoveCamera.value = false
@@ -62,7 +101,31 @@ class MapViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
+        // Zapisz stan śledzenia
+        saveTrackingState(true)
+
+        startLocationUpdates()
+    }
+
+    /**
+     * Wznawia śledzenie bez resetowania historii
+     */
+    private fun resumeTracking() {
+        android.util.Log.d("MapViewModel", "resumeTracking() called")
+
+        _state.update {
+            it.copy(
+                isTracking = true,
+                error = null
+            )
+        }
+
+        startLocationUpdates()
+    }
+
+    private fun startLocationUpdates() {
+        trackingJob?.cancel()
+        trackingJob = viewModelScope.launch {
             android.util.Log.d("MapViewModel", "Requesting location updates...")
             locationManager.getLocationUpdates(
                 intervalMillis = 2000L,
@@ -76,6 +139,7 @@ class MapViewModel @Inject constructor(
                             error = "Błąd śledzenia: ${e.message}"
                         )
                     }
+                    saveTrackingState(false)
                 }
                 .collectLatest { location ->
                     android.util.Log.d("MapViewModel", "Got location: ${location.latitude}, ${location.longitude}")
@@ -96,12 +160,22 @@ class MapViewModel @Inject constructor(
         }
 
         lastLocation = location
+
+        // Zapisz dystans okresowo
+        viewModelScope.launch {
+            mapStateRepository.saveDistance(_state.value.distanceTraveled)
+        }
     }
 
     fun stopTracking() {
+        trackingJob?.cancel()
+        trackingJob = null
+
         _state.update {
             it.copy(isTracking = false)
         }
+
+        saveTrackingState(false)
     }
 
     fun getCurrentLocation() {
@@ -133,18 +207,26 @@ class MapViewModel @Inject constructor(
         _state.update {
             it.copy(checkpoints = it.checkpoints + checkpoint)
         }
+        saveCheckpoints()
     }
 
     fun removeCheckpoint(id: String) {
         _state.update {
             it.copy(checkpoints = it.checkpoints.filter { checkpoint -> checkpoint.id != id })
         }
+        saveCheckpoints()
     }
 
     fun clearCheckpoints() {
         _state.update {
-            it.copy(checkpoints = emptyList())
+            it.copy(
+                checkpoints = emptyList(),
+                currentMapId = null,
+                currentMapName = null
+            )
         }
+        saveCheckpoints()
+        saveCurrentMapInfo()
     }
 
     fun updateCheckpointName(id: String, newName: String) {
@@ -159,6 +241,7 @@ class MapViewModel @Inject constructor(
                 }
             )
         }
+        saveCheckpoints()
     }
 
     fun moveCheckpointUp(id: String) {
@@ -168,6 +251,7 @@ class MapViewModel @Inject constructor(
             val item = list.removeAt(index)
             list.add(index - 1, item)
             _state.update { it.copy(checkpoints = list) }
+            saveCheckpoints()
         }
     }
 
@@ -178,6 +262,7 @@ class MapViewModel @Inject constructor(
             val item = list.removeAt(index)
             list.add(index + 1, item)
             _state.update { it.copy(checkpoints = list) }
+            saveCheckpoints()
         }
     }
 
@@ -186,6 +271,11 @@ class MapViewModel @Inject constructor(
             MapState(hasPermission = it.hasPermission)
         }
         lastLocation = null
+
+        // Wyczyść zapisany stan
+        viewModelScope.launch {
+            mapStateRepository.clearState()
+        }
     }
 
     fun saveCurrentMap(name: String, description: String = "", location: String = "") {
@@ -244,11 +334,38 @@ class MapViewModel @Inject constructor(
                 )
             }
             _shouldMoveCamera.value = true
+
+            // Zapisz stan
+            saveCheckpoints()
+            saveCurrentMapInfo()
+        }
+    }
+
+    // ==================== POMOCNICZE METODY ZAPISU ====================
+
+    private fun saveCheckpoints() {
+        viewModelScope.launch {
+            mapStateRepository.saveCheckpoints(_state.value.checkpoints)
+        }
+    }
+
+    private fun saveCurrentMapInfo() {
+        viewModelScope.launch {
+            mapStateRepository.saveCurrentMap(
+                _state.value.currentMapId,
+                _state.value.currentMapName
+            )
+        }
+    }
+
+    private fun saveTrackingState(isTracking: Boolean) {
+        viewModelScope.launch {
+            mapStateRepository.saveTrackingState(isTracking)
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        stopTracking()
+        trackingJob?.cancel()
     }
 }

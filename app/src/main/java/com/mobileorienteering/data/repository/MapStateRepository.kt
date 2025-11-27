@@ -1,0 +1,152 @@
+package com.mobileorienteering.data.repository
+
+import android.content.Context
+import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.preferencesDataStore
+import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
+
+private val Context.mapStateDataStore by preferencesDataStore("map_state")
+
+/**
+ * Stan mapy do zapisania/odczytania
+ */
+data class SavedMapState(
+    val checkpoints: List<Checkpoint> = emptyList(),
+    val currentMapId: Long? = null,
+    val currentMapName: String? = null,
+    val isTracking: Boolean = false,
+    val distanceTraveled: Float = 0f,
+    val locationHistoryJson: String = "[]"  // Zapisujemy jako JSON string
+)
+
+@Singleton
+class MapStateRepository @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    private val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+
+    private val checkpointListType = Types.newParameterizedType(
+        List::class.java,
+        CheckpointDto::class.java
+    )
+    private val checkpointAdapter = moshi.adapter<List<CheckpointDto>>(checkpointListType)
+
+    companion object {
+        private val CHECKPOINTS_JSON = stringPreferencesKey("checkpoints_json")
+        private val CURRENT_MAP_ID = longPreferencesKey("current_map_id")
+        private val CURRENT_MAP_NAME = stringPreferencesKey("current_map_name")
+        private val IS_TRACKING = booleanPreferencesKey("is_tracking")
+        private val DISTANCE_TRAVELED = floatPreferencesKey("distance_traveled")
+        private val LOCATION_HISTORY_JSON = stringPreferencesKey("location_history_json")
+    }
+
+    val savedStateFlow: Flow<SavedMapState> = context.mapStateDataStore.data.map { prefs ->
+        val checkpointsJson = prefs[CHECKPOINTS_JSON] ?: "[]"
+        val checkpoints = try {
+            checkpointAdapter.fromJson(checkpointsJson)?.map { it.toCheckpoint() } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        SavedMapState(
+            checkpoints = checkpoints,
+            currentMapId = prefs[CURRENT_MAP_ID],
+            currentMapName = prefs[CURRENT_MAP_NAME],
+            isTracking = prefs[IS_TRACKING] ?: false,
+            distanceTraveled = prefs[DISTANCE_TRAVELED] ?: 0f,
+            locationHistoryJson = prefs[LOCATION_HISTORY_JSON] ?: "[]"
+        )
+    }
+
+    suspend fun getSavedState(): SavedMapState {
+        return savedStateFlow.first()
+    }
+
+    suspend fun saveCheckpoints(checkpoints: List<Checkpoint>) {
+        val dtos = checkpoints.map { it.toDto() }
+        val json = checkpointAdapter.toJson(dtos)
+        context.mapStateDataStore.edit { prefs ->
+            prefs[CHECKPOINTS_JSON] = json
+        }
+    }
+
+    suspend fun saveCurrentMap(mapId: Long?, mapName: String?) {
+        context.mapStateDataStore.edit { prefs ->
+            if (mapId != null) {
+                prefs[CURRENT_MAP_ID] = mapId
+            } else {
+                prefs.remove(CURRENT_MAP_ID)
+            }
+            if (mapName != null) {
+                prefs[CURRENT_MAP_NAME] = mapName
+            } else {
+                prefs.remove(CURRENT_MAP_NAME)
+            }
+        }
+    }
+
+    suspend fun saveTrackingState(isTracking: Boolean) {
+        context.mapStateDataStore.edit { prefs ->
+            prefs[IS_TRACKING] = isTracking
+        }
+    }
+
+    suspend fun saveDistance(distance: Float) {
+        context.mapStateDataStore.edit { prefs ->
+            prefs[DISTANCE_TRAVELED] = distance
+        }
+    }
+
+    suspend fun saveLocationHistory(locationsJson: String) {
+        context.mapStateDataStore.edit { prefs ->
+            prefs[LOCATION_HISTORY_JSON] = locationsJson
+        }
+    }
+
+    suspend fun clearState() {
+        context.mapStateDataStore.edit { prefs ->
+            prefs.clear()
+        }
+    }
+}
+
+/**
+ * DTO do serializacji Checkpoint (bez Position który nie jest serializowalny)
+ */
+data class CheckpointDto(
+    val id: String,
+    val longitude: Double,
+    val latitude: Double,
+    val name: String,
+    val timestamp: Long
+)
+
+fun Checkpoint.toDto(): CheckpointDto {
+    return CheckpointDto(
+        id = id,
+        longitude = position.longitude,
+        latitude = position.latitude,
+        name = name,
+        timestamp = timestamp
+    )
+}
+
+fun CheckpointDto.toCheckpoint(): Checkpoint {
+    return Checkpoint(
+        id = id,
+        position = org.maplibre.spatialk.geojson.Position(longitude, latitude),
+        name = name,
+        timestamp = timestamp
+    )
+}
