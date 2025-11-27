@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.ui.screen.main.map.components.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
@@ -43,6 +45,20 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
     var showCheckpointDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsState()
+
+    // Permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        android.util.Log.d("MapScreen", "Permission result: fine=$fineLocationGranted, coarse=$coarseLocationGranted")
+
+        if (fineLocationGranted || coarseLocationGranted) {
+            viewModel.startTracking()
+        }
+    }
 
     // Przesunięcie kamery tylko przy wczytaniu trasy
     LaunchedEffect(shouldMoveCamera) {
@@ -111,8 +127,18 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
 
             FloatingActionButton(
                 onClick = {
-                    if (state.isTracking) viewModel.stopTracking()
-                    else viewModel.startTracking()
+                    android.util.Log.d("MapScreen", "Location button clicked, isTracking=${state.isTracking}")
+                    if (state.isTracking) {
+                        viewModel.stopTracking()
+                    } else {
+                        // Sprawdź uprawnienia i poproś jeśli brak
+                        locationPermissionLauncher.launch(
+                            arrayOf(
+                                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -166,7 +192,7 @@ fun MapScreen(viewModel: MapViewModel = hiltViewModel()) {
                 SaveRouteDialog(
                     onDismiss = { showSaveDialog = false },
                     onSave = { name ->
-                        viewModel.saveCurrentRoute(name)
+                        viewModel.saveCurrentMap(name)
                     }
                 )
             }
@@ -215,6 +241,8 @@ private fun MapBottomSheetHandle() {
 
 @Composable
 private fun RenderCheckpoints(checkpoints: List<com.mobileorienteering.ui.screen.main.map.models.Checkpoint>) {
+    if (checkpoints.isEmpty()) return
+
     checkpoints.forEachIndexed { index, checkpoint ->
         val source = rememberGeoJsonSource(
             data = GeoJsonData.Features(
@@ -222,11 +250,12 @@ private fun RenderCheckpoints(checkpoints: List<com.mobileorienteering.ui.screen
             )
         )
 
+        // Kółko - checkpoint marker
         CircleLayer(
-            id = "checkpoint-${checkpoint.id}",
+            id = "checkpoint-circle-${index}",
             source = source,
             color = const(Color(0xFFFF5722)),
-            radius = const(12.dp),
+            radius = const(14.dp),
             strokeColor = const(Color.White),
             strokeWidth = const(2.dp)
         )

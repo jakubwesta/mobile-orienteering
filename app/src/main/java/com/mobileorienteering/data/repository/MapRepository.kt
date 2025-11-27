@@ -23,6 +23,16 @@ class MapRepository @Inject constructor(
         }
     }
 
+    fun getMapsForUserFlow(userId: Long): Flow<List<OrienteeringMap>> {
+        return mapDao.getMapsByUserId(userId).map { list ->
+            list.map { it.toDomainModel() }
+        }
+    }
+
+    suspend fun getMapById(mapId: Long): OrienteeringMap? {
+        return mapDao.getMapById(mapId)?.toDomainModel()
+    }
+
     suspend fun createMap(
         userId: Long,
         name: String,

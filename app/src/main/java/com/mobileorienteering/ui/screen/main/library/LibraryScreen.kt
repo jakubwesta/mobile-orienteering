@@ -12,16 +12,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.mobileorienteering.data.model.Route
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.*
+import com.mobileorienteering.data.model.Map as OrienteeringMap
 
 @Composable
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
-    onEditRoute: (String) -> Unit = {}
+    onEditMap: (Long) -> Unit = {}
 ) {
-    val routes by viewModel.routes.collectAsState()
+    val maps by viewModel.maps.collectAsState()
 
     Column(
         modifier = Modifier
@@ -29,18 +30,18 @@ fun LibraryScreen(
             .padding(16.dp)
     ) {
         Text(
-            "Zapisane trasy",
+            "Moje mapy",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        if (routes.isEmpty()) {
+        if (maps.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Brak zapisanych tras",
+                    "Brak zapisanych map.\nUtwórz nową mapę w zakładce Map.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -49,11 +50,11 @@ fun LibraryScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(routes, key = { it.id }) { route ->
-                    RouteCard(
-                        route = route,
-                        onEdit = { onEditRoute(route.id) },
-                        onDelete = { viewModel.deleteRoute(route.id) }
+                items(maps, key = { it.id }) { map ->
+                    MapCard(
+                        map = map,
+                        onEdit = { onEditMap(map.id) },
+                        onDelete = { viewModel.deleteMap(map.id) }
                     )
                 }
             }
@@ -62,8 +63,8 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun RouteCard(
-    route: Route,
+private fun MapCard(
+    map: OrienteeringMap,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -85,20 +86,28 @@ private fun RouteCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        route.name,
+                        map.name,
                         style = MaterialTheme.typography.titleLarge
                     )
 
                     Spacer(Modifier.height(4.dp))
 
                     Text(
-                        "${route.checkpoints.size} checkpointów",
+                        "${map.controlPoints.size} punktów kontrolnych",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
+                    if (map.location.isNotBlank()) {
+                        Text(
+                            map.location,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                     Text(
-                        formatDate(route.createdAt),
+                        formatDate(map.createdAt),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -108,7 +117,7 @@ private fun RouteCard(
                     IconButton(onClick = onEdit) {
                         Icon(
                             Icons.Default.Edit,
-                            contentDescription = "Edytuj trasę",
+                            contentDescription = "Edytuj mapę",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -116,7 +125,7 @@ private fun RouteCard(
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Usuń trasę",
+                            contentDescription = "Usuń mapę",
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -128,8 +137,8 @@ private fun RouteCard(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Usuń trasę") },
-            text = { Text("Czy na pewno chcesz usunąć trasę \"${route.name}\"?") },
+            title = { Text("Usuń mapę") },
+            text = { Text("Czy na pewno chcesz usunąć mapę \"${map.name}\"?") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -149,7 +158,7 @@ private fun RouteCard(
     }
 }
 
-private fun formatDate(timestamp: Long): String {
+private fun formatDate(instant: Instant): String {
     val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-    return sdf.format(Date(timestamp))
+    return sdf.format(Date.from(instant))
 }

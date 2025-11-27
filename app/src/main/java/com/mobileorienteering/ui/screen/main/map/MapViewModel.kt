@@ -3,9 +3,9 @@ package com.mobileorienteering.ui.screen.main.map
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.Route
-import com.mobileorienteering.data.model.RouteCheckpoint
-import com.mobileorienteering.data.repository.RouteRepository
+import com.mobileorienteering.data.model.ControlPoint
+import com.mobileorienteering.data.repository.AuthRepository
+import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
 import com.mobileorienteering.ui.screen.main.map.models.MapState
 import com.mobileorienteering.util.LocationManager
@@ -14,11 +14,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.maplibre.spatialk.geojson.Position
 import javax.inject.Inject
+import com.mobileorienteering.data.model.Map as OrienteeringMap
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val locationManager: LocationManager,
-    private val routeRepository: RouteRepository
+    private val mapRepository: MapRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MapState())
@@ -40,11 +42,16 @@ class MapViewModel @Inject constructor(
     }
 
     fun startTracking() {
+        android.util.Log.d("MapViewModel", "startTracking() called")
+        android.util.Log.d("MapViewModel", "hasLocationPermission: ${locationManager.hasLocationPermission()}")
+
         if (!locationManager.hasLocationPermission()) {
+            android.util.Log.e("MapViewModel", "No location permission!")
             _state.update { it.copy(error = "Brak uprawnień do lokalizacji") }
             return
         }
 
+        android.util.Log.d("MapViewModel", "Permission OK, starting tracking...")
         _state.update {
             it.copy(
                 isTracking = true,
@@ -56,11 +63,13 @@ class MapViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            android.util.Log.d("MapViewModel", "Requesting location updates...")
             locationManager.getLocationUpdates(
                 intervalMillis = 2000L,
                 minimalDistance = 5f
             )
                 .catch { e ->
+                    android.util.Log.e("MapViewModel", "Location error: ${e.message}", e)
                     _state.update {
                         it.copy(
                             isTracking = false,
@@ -69,6 +78,7 @@ class MapViewModel @Inject constructor(
                     }
                 }
                 .collectLatest { location ->
+                    android.util.Log.d("MapViewModel", "Got location: ${location.latitude}, ${location.longitude}")
                     updateLocation(location)
                 }
         }
@@ -178,37 +188,63 @@ class MapViewModel @Inject constructor(
         lastLocation = null
     }
 
-    fun saveCurrentRoute(name: String) {
-        val route = Route(
-            name = name,
-            checkpoints = _state.value.checkpoints.mapIndexed { index, cp ->
-                RouteCheckpoint(
-                    longitude = cp.position.longitude,
+    fun saveCurrentMap(name: String, description: String = "", location: String = "") {
+        viewModelScope.launch {
+            val auth = authRepository.getCurrentAuth()
+            if (auth == null) {
+                _state.update { it.copy(error = "Musisz być zalogowany aby zapisać mapę") }
+                return@launch
+            }
+
+            val controlPoints = _state.value.checkpoints.mapIndexed { index, cp ->
+                ControlPoint(
+                    id = index.toLong(),
                     latitude = cp.position.latitude,
-                    name = cp.name,
-                    order = index
+                    longitude = cp.position.longitude
                 )
             }
-        )
-        routeRepository.saveRoute(route)
+
+            val result = mapRepository.createMap(
+                userId = auth.userId,
+                name = name,
+                description = description,
+                location = location,
+                controlPoints = controlPoints
+            )
+
+            result.onSuccess {
+                _state.update { it.copy(error = null) }
+                android.util.Log.d("MapViewModel", "Map saved successfully: $name")
+            }.onFailure { e ->
+                _state.update { it.copy(error = "Błąd zapisu: ${e.message}") }
+            }
+        }
     }
 
-    fun loadRoute(routeId: String) {
-        val route = routeRepository.getRoute(routeId) ?: return
+    fun loadMap(mapId: Long) {
+        viewModelScope.launch {
+            val map = mapRepository.getMapById(mapId)
+            if (map == null) {
+                _state.update { it.copy(error = "Nie znaleziono mapy") }
+                return@launch
+            }
 
-        val checkpoints = route.checkpoints
-            .sortedBy { it.order }
-            .map { cp ->
+            val checkpoints = map.controlPoints.mapIndexed { index, cp ->
                 Checkpoint(
                     position = Position(cp.longitude, cp.latitude),
-                    name = cp.name
+                    name = "Punkt ${index + 1}"
                 )
             }
 
-        _state.update {
-            it.copy(checkpoints = checkpoints)
+            _state.update {
+                it.copy(
+                    checkpoints = checkpoints,
+                    currentMapId = mapId,
+                    currentMapName = map.name
+                )
+            }
+            _shouldMoveCamera.value = true
         }
-        _shouldMoveCamera.value = true
     }
 
     override fun onCleared() {

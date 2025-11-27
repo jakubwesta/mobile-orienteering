@@ -11,7 +11,11 @@ data class MapState(
     val locationHistory: List<Location> = emptyList(),
     val distanceTraveled: Float = 0f,
     val trackingStartTime: Long = 0L,
-    val checkpoints: List<Checkpoint> = emptyList()
+    val checkpoints: List<Checkpoint> = emptyList(),
+
+    // Aktualnie załadowana mapa
+    val currentMapId: Long? = null,
+    val currentMapName: String? = null
 )
 
 data class Checkpoint(

@@ -79,8 +79,8 @@ fun AppScaffold(
 
             composable(AppScreen.Library.route) {
                 LibraryScreen(
-                    onEditRoute = { routeId ->
-                        mapViewModel.loadRoute(routeId)
+                    onEditMap = { mapId ->
+                        mapViewModel.loadMap(mapId)
                         navController.navigate(AppScreen.Map.route)
                     }
                 )
