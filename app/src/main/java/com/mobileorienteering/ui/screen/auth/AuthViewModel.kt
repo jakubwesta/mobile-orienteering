@@ -21,7 +21,7 @@ class AuthViewModel @Inject constructor(
     private val repo: AuthRepository,
     private val activityRepository: ActivityRepository,
     private val mapRepository: MapRepository,
-    private val mapStateRepository: MapStateRepository,  // NOWE
+    private val mapStateRepository: MapStateRepository,
     private val syncManager: SyncManager
 ) : ViewModel() {
 
@@ -120,6 +120,7 @@ class AuthViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             mapStateRepository.clearState()
+            activityRepository.clearLocalActivities()
             mapRepository.clearLocalMaps()
             repo.logout()
         }

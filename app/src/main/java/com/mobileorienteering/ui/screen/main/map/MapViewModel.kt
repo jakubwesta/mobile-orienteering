@@ -1,6 +1,7 @@
 package com.mobileorienteering.ui.screen.main.map
 
 import android.location.Location
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.ActivityStatus
@@ -466,7 +467,7 @@ class MapViewModel @Inject constructor(
 
     fun loadMap(mapId: Long) {
         viewModelScope.launch {
-            val map = mapRepository.getMapById(mapId)
+            val map = mapRepository.getMapByIdFlow(mapId).first()
             if (map == null) {
                 _state.update { it.copy(error = "Nie znaleziono mapy") }
                 return@launch

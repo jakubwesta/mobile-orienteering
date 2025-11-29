@@ -1,26 +1,29 @@
 package com.mobileorienteering.ui.screen.main.library
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
-import java.text.SimpleDateFormat
-import java.time.Instant
-import java.util.*
-import com.mobileorienteering.data.model.Map as OrienteeringMap
+import com.mobileorienteering.util.formatDate
+import com.mobileorienteering.data.model.Map
+import com.mobileorienteering.ui.component.MapCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
@@ -28,196 +31,201 @@ fun LibraryScreen(
     onStartRun: (Long) -> Unit = {}
 ) {
     val maps by viewModel.maps.collectAsState()
+    val isLoading by remember { viewModel.isLoading }
+    val error by remember { viewModel.error }
+    val searchQuery by remember { viewModel.searchQuery }
+    val sortOrder by remember { viewModel.sortOrder }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            "Moje mapy",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+    var isSearchExpanded by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
-        if (maps.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "Brak zapisanych map.\nUtwórz nową mapę w zakładce Map.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(maps, key = { it.id }) { map ->
-                    MapCard(
-                        map = map,
-                        onEdit = { onEditMap(map.id) },
-                        onDelete = { viewModel.deleteMap(map.id) },
-                        onStartRun = { onStartRun(map.id) }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MapCard(
-    map: OrienteeringMap,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
-    onStartRun: () -> Unit
-) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var showMenu by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        map.name,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-
-                    Spacer(Modifier.height(4.dp))
-
-                    Text(
-                        "${map.controlPoints.size} punktów kontrolnych",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (map.location.isNotBlank()) {
-                        Text(
-                            map.location,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    AnimatedContent(
+                        targetState = isSearchExpanded,
+                        label = "search_animation"
+                    ) { expanded ->
+                        if (expanded) {
+                            TextField(
+                                value = searchQuery,
+                                onValueChange = { viewModel.updateSearchQuery(it) },
+                                placeholder = { Text("Search maps...") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester),
+                                singleLine = true,
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    focusedIndicatorColor = MaterialTheme.colorScheme.background,
+                                    unfocusedIndicatorColor = MaterialTheme.colorScheme.background
+                                ),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(
+                                    onSearch = { focusManager.clearFocus() }
+                                )
+                            )
+                        } else {
+                            Text("Maps")
+                        }
                     }
-
-                    Text(
-                        formatDate(map.createdAt),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // Rozwijane menu
-                Box {
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                },
+                navigationIcon = {
+                    if (!isSearchExpanded) {
+                        IconButton(
+                            onClick = { isSearchExpanded = true }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_search),
+                                contentDescription = "Search"
+                            )
+                        }
                     }
-
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        // Edit option
-                        DropdownMenuItem(
-                            text = { Text("Edit") },
+                },
+                actions = {
+                    if (isSearchExpanded) {
+                        IconButton(
                             onClick = {
-                                showMenu = false
-                                onEdit()
-                            },
-                            leadingIcon = {
+                                isSearchExpanded = false
+                                viewModel.updateSearchQuery("")
+                                focusManager.clearFocus()
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_close),
+                                contentDescription = "Close search"
+                            )
+                        }
+                    } else {
+                        Box {
+                            IconButton(onClick = { showSortMenu = true }) {
                                 Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = null
+                                    painter = painterResource(id = R.drawable.ic_sort),
+                                    contentDescription = "Sort"
                                 )
                             }
-                        )
 
-                        // Delete option
-                        DropdownMenuItem(
-                            text = { Text("Delete") },
-                            onClick = {
-                                showMenu = false
-                                showDeleteDialog = true
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_trash_filled),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error
+                            DropdownMenu(
+                                expanded = showSortMenu,
+                                onDismissRequest = { showSortMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Newest first") },
+                                    onClick = {
+                                        viewModel.setSortOrder(SortOrder.DATE_DESC)
+                                        showSortMenu = false
+                                    },
+                                    leadingIcon = {
+                                        if (sortOrder == SortOrder.DATE_DESC) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_check),
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
                                 )
-                            },
-                            colors = MenuDefaults.itemColors(
-                                textColor = MaterialTheme.colorScheme.error
-                            )
+
+                                DropdownMenuItem(
+                                    text = { Text("Oldest first") },
+                                    onClick = {
+                                        viewModel.setSortOrder(SortOrder.DATE_ASC)
+                                        showSortMenu = false
+                                    },
+                                    leadingIcon = {
+                                        if (sortOrder == SortOrder.DATE_ASC) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_check),
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
+                                )
+
+                                HorizontalDivider()
+
+                                DropdownMenuItem(
+                                    text = { Text("Title (A-Z)") },
+                                    onClick = {
+                                        viewModel.setSortOrder(SortOrder.TITLE_ASC)
+                                        showSortMenu = false
+                                    },
+                                    leadingIcon = {
+                                        if (sortOrder == SortOrder.TITLE_ASC) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_check),
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = remember { SnackbarHostState() }.apply {
+                    LaunchedEffect(error) {
+                        error?.let {
+                            showSnackbar(it)
+                            viewModel.clearError()
+                        }
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            else if (maps.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No maps yet.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(maps, key = { it.id }) { map ->
+                        MapCard(
+                            map = map,
+                            onEdit = { onEditMap(map.id) },
+                            onDelete = { viewModel.deleteMap(map.id) },
+                            onStartRun = { onStartRun(map.id) }
                         )
                     }
                 }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // Przycisk Start Run
-            Button(
-                onClick = onStartRun,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("Start Run")
             }
         }
     }
 
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Map") },
-            text = { Text("Are you sure you want to delete \"${map.name}\"?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete()
-                        showDeleteDialog = false
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
+    LaunchedEffect(isSearchExpanded) {
+        if (isSearchExpanded) {
+            focusRequester.requestFocus()
+        }
     }
-}
-
-private fun formatDate(instant: Instant): String {
-    val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-    return sdf.format(Date.from(instant))
 }

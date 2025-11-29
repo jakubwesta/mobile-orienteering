@@ -10,27 +10,27 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import java.time.Instant
-import com.mobileorienteering.data.model.Map as OrienteeringMap
+import com.mobileorienteering.data.model.Map
 
 class MapRepository @Inject constructor(
     private val mapApi: MapApiService,
     private val mapDao: MapDao
 ) {
 
-    fun getAllMapsFlow(): Flow<List<OrienteeringMap>> {
+    fun getAllMapsFlow(): Flow<List<Map>> {
         return mapDao.getAllMaps().map { list ->
             list.map { it.toDomainModel() }
         }
     }
 
-    fun getMapsForUserFlow(userId: Long): Flow<List<OrienteeringMap>> {
+    fun getMapsForUserFlow(userId: Long): Flow<List<Map>> {
         return mapDao.getMapsByUserId(userId).map { list ->
             list.map { it.toDomainModel() }
         }
     }
 
-    suspend fun getMapById(mapId: Long): OrienteeringMap? {
-        return mapDao.getMapById(mapId)?.toDomainModel()
+    fun getMapByIdFlow(mapId: Long): Flow<Map?> {
+        return mapDao.getMapByIdFlow(mapId).map { it?.toDomainModel() }
     }
 
     suspend fun createMap(
@@ -44,7 +44,7 @@ class MapRepository @Inject constructor(
             // Temporary negative ID for offline data
             val tempId = -(System.currentTimeMillis())
 
-            val map = OrienteeringMap(
+            val map = Map(
                 id = tempId,
                 userId = userId,
                 name = name,
@@ -129,7 +129,7 @@ class MapRepository @Inject constructor(
      * Deletes local map (with negative id).
      * Inserts the synced map from server (with positive id).
      */
-    private suspend fun uploadMapToServer(map: OrienteeringMap): Result<Unit> {
+    private suspend fun uploadMapToServer(map: Map): Result<Unit> {
         return try {
             val request = CreateMapRequest(
                 userId = map.userId,
@@ -180,7 +180,7 @@ class MapRepository @Inject constructor(
         }
     }
 
-    suspend fun getUnsyncedMaps(): List<OrienteeringMap> {
+    suspend fun getUnsyncedMaps(): List<Map> {
         return mapDao.getUnsyncedMaps().map { it.toDomainModel() }
     }
 

@@ -22,8 +22,7 @@ class ActivityRepository @Inject constructor(
         }
     }
 
-    // NOWE - Pobierz aktywności dla konkretnego użytkownika
-    fun getActivitiesByUserIdFlow(userId: Long): Flow<List<Activity>> {
+    fun getActivitiesForUserFlow(userId: Long): Flow<List<Activity>> {
         return activityDao.getActivitiesByUserId(userId).map { list ->
             list.map { it.toDomainModel() }
         }
@@ -33,7 +32,6 @@ class ActivityRepository @Inject constructor(
         return activityDao.getActivityByIdFlow(activityId).map { it?.toDomainModel() }
     }
 
-    // Tworzenie aktywności z biegu
     suspend fun createRunActivity(
         userId: Long,
         mapId: Long,

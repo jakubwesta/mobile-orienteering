@@ -156,6 +156,8 @@ fun SettingsScreen(
                     onClick = { showSyncDialog = true }
                 )
 
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
                 SettingsClickableItem(
                     icon = R.drawable.ic_logout,
                     title = "Logout",
