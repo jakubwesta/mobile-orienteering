@@ -214,51 +214,49 @@ fun RunsScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-            if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else if (activities.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "No runs yet",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (activities.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "No runs yet",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(activities, key = { it.id }) { activity ->
+                    val activityMap = maps.find { it.id == activity.mapId }
+                    ActivityCard(
+                        activity = activity,
+                        mapName = activityMap?.name,
+                        controlPointCount = activityMap?.controlPoints?.size,
+                        onDelete = {
+                            viewModel.deleteActivity(activity.id)
+                        },
+                        onClick = {
+                            navController.navigate(AppScreen.RunDetails.createRoute(activity.id))
+                        }
                     )
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(activities, key = { it.id }) { activity ->
-                        val activityMap = maps.find { it.id == activity.mapId }
-                        ActivityCard(
-                            activity = activity,
-                            mapName = activityMap?.name,
-                            controlPointCount = activityMap?.controlPoints?.size,
-                            onDelete = {
-                                viewModel.deleteActivity(activity.id)
-                            },
-                            onClick = {
-                                navController.navigate(AppScreen.RunDetails.createRoute(activity.id))
-                            }
-                        )
-                    }
                 }
             }
         }
+
     }
 
     LaunchedEffect(isSearchExpanded) {

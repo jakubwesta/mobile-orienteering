@@ -181,46 +181,44 @@ fun LibraryScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-            if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-            else if (maps.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "No maps yet.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+        }
+        else if (maps.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "No maps yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(maps, key = { it.id }) { map ->
+                    MapCard(
+                        map = map,
+                        onEdit = { onEditMap(map.id) },
+                        onDelete = { viewModel.deleteMap(map.id) },
+                        onStartRun = { onStartRun(map.id) }
                     )
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(maps, key = { it.id }) { map ->
-                        MapCard(
-                            map = map,
-                            onEdit = { onEditMap(map.id) },
-                            onDelete = { viewModel.deleteMap(map.id) },
-                            onStartRun = { onStartRun(map.id) }
-                        )
-                    }
                 }
             }
         }
+
     }
 
     LaunchedEffect(isSearchExpanded) {

@@ -77,10 +77,7 @@ fun ActivityCard(
                 }
 
                 Box {
-                    IconButton(
-                        onClick = { showMenu = true },
-                        modifier = Modifier.size(24.dp)
-                    ) {
+                    IconButton(onClick = { showMenu = true }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_menu_dots_vertical),
                             contentDescription = "More options",
