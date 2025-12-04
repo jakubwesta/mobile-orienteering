@@ -13,8 +13,7 @@ import java.time.Instant
 
 class ActivityRepository @Inject constructor(
     private val activityApi: ActivityApiService,
-    private val activityDao: ActivityDao,
-    private val mapRepository: MapRepository
+    private val activityDao: ActivityDao
 ) {
 
     fun getAllActivitiesFlow(): Flow<List<Activity>> {
