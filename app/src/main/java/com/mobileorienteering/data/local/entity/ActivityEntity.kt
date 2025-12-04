@@ -7,7 +7,7 @@ import com.mobileorienteering.data.local.converter.Converters
 import com.mobileorienteering.data.model.Activity
 import com.mobileorienteering.data.model.ActivityStatus
 import com.mobileorienteering.data.model.PathPoint
-import com.mobileorienteering.data.model.VisitedCheckpoint
+import com.mobileorienteering.data.model.VisitedControlPoint
 import java.time.Instant
 
 @Entity(tableName = "activities")
@@ -25,7 +25,7 @@ data class ActivityEntity(
     val syncedWithServer: Boolean = true,
 
     val status: ActivityStatus = ActivityStatus.COMPLETED,
-    val visitedCheckpoints: List<VisitedCheckpoint> = emptyList(),
+    val visitedControlPoints: List<VisitedControlPoint> = emptyList(),
     val totalCheckpoints: Int = 0
 )
 
@@ -41,8 +41,8 @@ fun ActivityEntity.toDomainModel(): Activity {
         pathData = pathData,
         createdAt = createdAt,
         status = status,
-        visitedCheckpoints = visitedCheckpoints,
-        totalCheckpoints = totalCheckpoints
+        visitedControlPoints = visitedControlPoints,
+        totalControlPoints = totalCheckpoints
     )
 }
 
@@ -59,7 +59,7 @@ fun Activity.toEntity(syncedWithServer: Boolean = true): ActivityEntity {
         createdAt = createdAt,
         syncedWithServer = syncedWithServer,
         status = status,
-        visitedCheckpoints = visitedCheckpoints,
-        totalCheckpoints = totalCheckpoints
+        visitedControlPoints = visitedControlPoints,
+        totalCheckpoints = totalControlPoints
     )
 }

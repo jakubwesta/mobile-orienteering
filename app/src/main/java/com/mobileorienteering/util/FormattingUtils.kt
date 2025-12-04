@@ -42,3 +42,16 @@ fun formatDuration(durationString: String): String {
         durationString
     }
 }
+
+fun formatDurationFromInstants(start: Instant, end: Instant): String {
+    val duration = Duration.between(start, end)
+    val hours = duration.toHours()
+    val minutes = duration.toMinutes() % 60
+    val seconds = duration.seconds % 60
+
+    return when {
+        hours > 0 -> String.format(Locale.US, "%dh %02dm %02ds", hours, minutes, seconds)
+        minutes > 0 -> String.format(Locale.US, "%dm %02ds", minutes, seconds)
+        else -> String.format(Locale.US, "%ds", seconds)
+    }
+}

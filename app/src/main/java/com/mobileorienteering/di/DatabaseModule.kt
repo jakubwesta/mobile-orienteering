@@ -28,6 +28,7 @@ object DatabaseModule {
             "mobile_orienteering_db"
         )
             .addMigrations(AppDatabase.MIGRATION_1_2)
+            .fallbackToDestructiveMigration()
             .build()
     }
 

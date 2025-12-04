@@ -13,7 +13,7 @@ import com.mobileorienteering.data.local.entity.MapEntity
 
 @Database(
     entities = [ActivityEntity::class, MapEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -23,10 +23,10 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE activities ADD COLUMN status TEXT NOT NULL DEFAULT 'COMPLETED'")
-                database.execSQL("ALTER TABLE activities ADD COLUMN visitedCheckpoints TEXT NOT NULL DEFAULT '[]'")
-                database.execSQL("ALTER TABLE activities ADD COLUMN totalCheckpoints INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE activities ADD COLUMN status TEXT NOT NULL DEFAULT 'COMPLETED'")
+                db.execSQL("ALTER TABLE activities ADD COLUMN visitedCheckpoints TEXT NOT NULL DEFAULT '[]'")
+                db.execSQL("ALTER TABLE activities ADD COLUMN totalCheckpoints INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

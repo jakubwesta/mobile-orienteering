@@ -231,7 +231,7 @@ fun MapScreen(
                 RunFinishedDialog(
                     isCompleted = run.isCompleted,
                     duration = run.duration,
-                    visitedCount = run.visitedCheckpoints.size,
+                    visitedCount = run.visitedControlPoints.size,
                     totalCount = run.totalCheckpoints,
                     distance = run.distance,
                     onSave = { viewModel.saveFinishedRun() },

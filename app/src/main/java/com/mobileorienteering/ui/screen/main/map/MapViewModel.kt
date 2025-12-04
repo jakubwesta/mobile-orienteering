@@ -1,12 +1,11 @@
 package com.mobileorienteering.ui.screen.main.map
 
 import android.location.Location
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.ActivityStatus
 import com.mobileorienteering.data.model.ControlPoint
-import com.mobileorienteering.data.model.VisitedCheckpoint
+import com.mobileorienteering.data.model.VisitedControlPoint
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
@@ -22,7 +21,6 @@ import org.maplibre.spatialk.geojson.Position
 import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
-import com.mobileorienteering.data.model.Map as OrienteeringMap
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
@@ -47,7 +45,7 @@ class MapViewModel @Inject constructor(
     data class FinishedRunState(
         val isCompleted: Boolean,
         val duration: String,
-        val visitedCheckpoints: List<VisitedCheckpoint>,
+        val visitedControlPoints: List<VisitedControlPoint>,
         val totalCheckpoints: Int,
         val distance: Double,
         val mapId: Long,
@@ -128,10 +126,10 @@ class MapViewModel @Inject constructor(
             Duration.between(it, Instant.now())
         } ?: Duration.ZERO
 
-        val visitedCheckpoints = state.visitedCheckpointIndices.map { index ->
+        val visitedControlPoints = state.visitedCheckpointIndices.map { index ->
             val checkpoint = state.checkpoints[index]
-            VisitedCheckpoint(
-                checkpointName = checkpoint.name,
+            VisitedControlPoint(
+                controlPointName = checkpoint.name,
                 order = index + 1,
                 visitedAt = Instant.now(),
                 latitude = checkpoint.position.latitude,
@@ -144,7 +142,7 @@ class MapViewModel @Inject constructor(
         _finishedRunState.value = FinishedRunState(
             isCompleted = isCompleted,
             duration = formatDurationString(duration.seconds),
-            visitedCheckpoints = visitedCheckpoints,
+            visitedControlPoints = visitedControlPoints,
             totalCheckpoints = state.checkpoints.size,
             distance = state.runDistance,
             mapId = state.currentMapId ?: 0L,
@@ -180,7 +178,7 @@ class MapViewModel @Inject constructor(
                 distance = finishedRun.distance,
                 pathData = emptyList(),
                 status = if (finishedRun.isCompleted) ActivityStatus.COMPLETED else ActivityStatus.ABANDONED,
-                visitedCheckpoints = finishedRun.visitedCheckpoints,
+                visitedControlPoints = finishedRun.visitedControlPoints,
                 totalCheckpoints = finishedRun.totalCheckpoints
             )
 

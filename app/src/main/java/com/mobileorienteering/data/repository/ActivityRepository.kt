@@ -13,7 +13,8 @@ import java.time.Instant
 
 class ActivityRepository @Inject constructor(
     private val activityApi: ActivityApiService,
-    private val activityDao: ActivityDao
+    private val activityDao: ActivityDao,
+    private val mapRepository: MapRepository
 ) {
 
     fun getAllActivitiesFlow(): Flow<List<Activity>> {
@@ -40,7 +41,7 @@ class ActivityRepository @Inject constructor(
         distance: Double,
         pathData: List<PathPoint>,
         status: ActivityStatus,
-        visitedCheckpoints: List<VisitedCheckpoint>,
+        visitedControlPoints: List<VisitedControlPoint>,
         totalCheckpoints: Int
     ): Result<Long> {
         return try {
@@ -57,8 +58,8 @@ class ActivityRepository @Inject constructor(
                 pathData = pathData,
                 createdAt = Instant.now(),
                 status = status,
-                visitedCheckpoints = visitedCheckpoints,
-                totalCheckpoints = totalCheckpoints
+                visitedControlPoints = visitedControlPoints,
+                totalControlPoints = totalCheckpoints
             )
 
             activityDao.insertActivity(

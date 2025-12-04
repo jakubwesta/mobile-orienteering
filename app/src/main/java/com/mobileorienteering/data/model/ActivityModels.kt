@@ -16,17 +16,18 @@ data class Activity(
     val createdAt: Instant,
 
     val status: ActivityStatus = ActivityStatus.COMPLETED,
-    val visitedCheckpoints: List<VisitedCheckpoint> = emptyList(),
-    val totalCheckpoints: Int = 0
+    val visitedControlPoints: List<VisitedControlPoint> = emptyList(),
+    val totalControlPoints: Int = 0
 ) {
     val isCompleted: Boolean
         get() = status == ActivityStatus.COMPLETED
 
-    val completedCheckpointsCount: Int
-        get() = visitedCheckpoints.size
+    val visitedControlPointCount: Int
+        get() = visitedControlPoints.size
 
-    val progress: Float
-        get() = if (totalCheckpoints > 0) completedCheckpointsCount.toFloat() / totalCheckpoints else 1f
+    val progress: Float get() =
+        if (totalControlPoints > 0) visitedControlPointCount.toFloat() / totalControlPoints
+        else 0f
 }
 
 @JsonClass(generateAdapter = true)
@@ -37,8 +38,8 @@ data class PathPoint(
 )
 
 @JsonClass(generateAdapter = true)
-data class VisitedCheckpoint(
-    val checkpointName: String,
+data class VisitedControlPoint(
+    val controlPointName: String,
     val order: Int,
     val visitedAt: Instant,
     val latitude: Double,

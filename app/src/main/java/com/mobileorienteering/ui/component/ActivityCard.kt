@@ -57,7 +57,7 @@ fun ActivityCard(
                         )
 
                         // NOWE - Status badge
-                        if (activity.totalCheckpoints > 0) {
+                        if (activity.totalControlPoints > 0) {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = if (activity.isCompleted) {
@@ -166,7 +166,7 @@ fun ActivityCard(
                 )
             }
 
-            if (activity.totalCheckpoints > 0) {
+            if (activity.totalControlPoints > 0) {
                 Spacer(Modifier.height(8.dp))
 
                 Row(
@@ -181,7 +181,7 @@ fun ActivityCard(
                             .clip(RoundedCornerShape(3.dp))
                     )
                     Text(
-                        "${activity.completedCheckpointsCount}/${activity.totalCheckpoints}",
+                        "${activity.visitedControlPointCount}/${activity.totalControlPoints}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
