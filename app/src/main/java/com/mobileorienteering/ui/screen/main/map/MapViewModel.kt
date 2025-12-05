@@ -516,6 +516,7 @@ class MapViewModel @Inject constructor(
             }
             currentState.copy(checkpoints = updatedCheckpoints)
         }
+        saveCheckpoints()
     }
 
     // ==================== POMOCNICZE METODY ZAPISU ====================
