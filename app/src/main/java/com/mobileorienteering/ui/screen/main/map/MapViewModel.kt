@@ -17,6 +17,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.maplibre.android.geometry.LatLng
 import org.maplibre.spatialk.geojson.Position
 import java.time.Duration
 import java.time.Instant
@@ -501,6 +502,19 @@ class MapViewModel @Inject constructor(
 
             saveCheckpoints()
             saveCurrentMapInfo()
+        }
+    }
+
+    fun moveCheckpoint(index: Int, newLongitude: Double, newLatitude: Double) {
+        _state.update { currentState ->
+            val updatedCheckpoints = currentState.checkpoints.toMutableList()
+            if (index in updatedCheckpoints.indices) {
+                val oldCheckpoint = updatedCheckpoints[index]
+                updatedCheckpoints[index] = oldCheckpoint.copy(
+                    position = Position(newLongitude, newLatitude)
+                )
+            }
+            currentState.copy(checkpoints = updatedCheckpoints)
         }
     }
 
