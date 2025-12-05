@@ -19,8 +19,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
-import com.mobileorienteering.util.formatDate
-import com.mobileorienteering.data.model.Map
 import com.mobileorienteering.ui.component.MapCard
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -100,7 +100,7 @@ class MapViewModel @Inject constructor(
 
     fun startRun() {
         if (_state.value.checkpoints.isEmpty()) {
-            _state.update { it.copy(error = "Brak checkpointów do biegu") }
+            _state.update { it.copy(error = "No control points to run") }
             return
         }
 
@@ -110,6 +110,7 @@ class MapViewModel @Inject constructor(
                 runStartTime = Instant.now(),
                 visitedCheckpointIndices = emptySet(),
                 runDistance = 0.0,
+                nextCheckpointIndex = 0,  // Zaczynamy od pierwszego
                 error = null
             )
         }
@@ -166,7 +167,7 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             val auth = authRepository.getCurrentAuth()
             if (auth == null) {
-                _state.update { it.copy(error = "Musisz być zalogowany") }
+                _state.update { it.copy(error = "You must be logged in") }
                 return@launch
             }
 
@@ -190,30 +191,41 @@ class MapViewModel @Inject constructor(
         _finishedRunState.value = null
     }
 
+    /**
+     * Sprawdza czy użytkownik jest w pobliżu NASTĘPNEGO checkpointu w kolejności.
+     * Checkpointy muszą być zaliczane po kolei (1→2→3→...).
+     */
     private fun checkCheckpointVisit(location: Location) {
         if (!_state.value.isRunActive) return
 
         val checkpoints = _state.value.checkpoints
-        val visited = _state.value.visitedCheckpointIndices.toMutableSet()
+        val nextIndex = _state.value.nextCheckpointIndex
 
-        checkpoints.forEachIndexed { index, checkpoint ->
-            if (index !in visited) {
-                val distance = calculateDistance(
-                    location.latitude, location.longitude,
-                    checkpoint.position.latitude, checkpoint.position.longitude
+        // Sprawdź czy wszystkie checkpointy już zaliczone
+        if (nextIndex >= checkpoints.size) return
+
+        val nextCheckpoint = checkpoints[nextIndex]
+        val distance = calculateDistance(
+            location.latitude, location.longitude,
+            nextCheckpoint.position.latitude, nextCheckpoint.position.longitude
+        )
+
+        // Promień zaliczenia: 25 metrów
+        if (distance <= 25.0) {
+            val newVisited = _state.value.visitedCheckpointIndices + nextIndex
+            val newNextIndex = nextIndex + 1
+
+            android.util.Log.d("MapViewModel", "Checkpoint ${nextIndex + 1} visited! Next: ${newNextIndex + 1}")
+
+            _state.update {
+                it.copy(
+                    visitedCheckpointIndices = newVisited,
+                    nextCheckpointIndex = newNextIndex
                 )
-                if (distance <= 25.0) { // 25 metrów promień
-                    visited.add(index)
-                    android.util.Log.d("MapViewModel", "Checkpoint ${index + 1} visited!")
-                }
             }
-        }
-
-        if (visited != _state.value.visitedCheckpointIndices) {
-            _state.update { it.copy(visitedCheckpointIndices = visited) }
 
             // Auto-zakończenie gdy wszystkie checkpointy odwiedzone
-            if (visited.size == checkpoints.size) {
+            if (newNextIndex >= checkpoints.size) {
                 stopRun()
             }
         }
@@ -243,7 +255,7 @@ class MapViewModel @Inject constructor(
 
         if (!locationManager.hasLocationPermission()) {
             android.util.Log.e("MapViewModel", "No location permission!")
-            _state.update { it.copy(error = "Brak uprawnień do lokalizacji") }
+            _state.update { it.copy(error = "Location permission required") }
             return
         }
 
@@ -282,7 +294,7 @@ class MapViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             isTracking = false,
-                            error = "Błąd śledzenia: ${e.message}"
+                            error = "Tracking error: ${e.message}"
                         )
                     }
                     saveTrackingState(false)
@@ -333,7 +345,7 @@ class MapViewModel @Inject constructor(
     fun getCurrentLocation() {
         viewModelScope.launch {
             if (!locationManager.hasLocationPermission()) {
-                _state.update { it.copy(error = "Brak uprawnień do lokalizacji") }
+                _state.update { it.copy(error = "Location permission required") }
                 return@launch
             }
 
@@ -341,7 +353,7 @@ class MapViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     currentLocation = location,
-                    error = if (location == null) "Nie udało się pobrać lokalizacji" else null
+                    error = if (location == null) "Failed to get location" else null
                 )
             }
         }
@@ -356,7 +368,7 @@ class MapViewModel @Inject constructor(
     fun addCheckpoint(longitude: Double, latitude: Double, name: String = "") {
         val checkpoint = Checkpoint(
             position = Position(longitude = longitude, latitude = latitude),
-            name = name.ifEmpty { "Checkpoint ${_state.value.checkpoints.size + 1}" }
+            name = name.ifEmpty { "Control Point ${_state.value.checkpoints.size + 1}" }
         )
         _state.update {
             it.copy(checkpoints = it.checkpoints + checkpoint)
@@ -435,7 +447,7 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             val auth = authRepository.getCurrentAuth()
             if (auth == null) {
-                _state.update { it.copy(error = "Musisz być zalogowany aby zapisać mapę") }
+                _state.update { it.copy(error = "You must be logged in to save map") }
                 return@launch
             }
 
@@ -458,7 +470,7 @@ class MapViewModel @Inject constructor(
             result.onSuccess {
                 _state.update { it.copy(error = null) }
             }.onFailure { e ->
-                _state.update { it.copy(error = "Błąd zapisu: ${e.message}") }
+                _state.update { it.copy(error = "Save error: ${e.message}") }
             }
         }
     }
@@ -467,7 +479,7 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             val map = mapRepository.getMapByIdFlow(mapId).first()
             if (map == null) {
-                _state.update { it.copy(error = "Nie znaleziono mapy") }
+                _state.update { it.copy(error = "Map not found") }
                 return@launch
             }
 

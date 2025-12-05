@@ -1,4 +1,4 @@
-package com.mobileorienteering.ui.screen.main.map.components
+package com.mobileorienteering.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -26,6 +26,7 @@ fun RunProgressPanel(
     visitedCount: Int,
     totalCount: Int,
     distance: Double,
+    nextCheckpointIndex: Int,  // Następny checkpoint do zaliczenia
     onStopClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -88,7 +89,33 @@ fun RunProgressPanel(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Następny checkpoint do zaliczenia
+                if (nextCheckpointIndex < totalCount) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Next: Control Point ${nextCheckpointIndex + 1}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
 
                 // Stats Row
                 Row(

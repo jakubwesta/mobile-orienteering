@@ -1,4 +1,4 @@
-package com.mobileorienteering.ui.screen.main.map.components
+package com.mobileorienteering.ui.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,7 +50,7 @@ fun RunFinishedDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text("Time: $duration")
-                Text("Checkpoints: $visitedCount/$totalCount")
+                Text("Control Points: $visitedCount/$totalCount")
                 Text("Distance: ${formatDistance(distance)}")
 
                 val progress = if (totalCount > 0) visitedCount.toFloat() / totalCount else 0f

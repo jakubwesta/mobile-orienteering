@@ -22,7 +22,10 @@ data class MapState(
     val isRunActive: Boolean = false,
     val runStartTime: Instant? = null,
     val visitedCheckpointIndices: Set<Int> = emptySet(),
-    val runDistance: Double = 0.0
+    val runDistance: Double = 0.0,
+
+    // Kolejność checkpointów - następny do zaliczenia (0 = pierwszy)
+    val nextCheckpointIndex: Int = 0
 )
 
 data class Checkpoint(

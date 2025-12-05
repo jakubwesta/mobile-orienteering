@@ -117,7 +117,7 @@ fun RunDetailsScreen(
                         HorizontalDivider()
 
                         Text(
-                            "No checkpoints visited",
+                            "No control points visited",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -177,7 +177,7 @@ private fun RunTimeline(
             val checkpointLabel = when {
                 isFirst -> "Start"
                 isLast -> "Finish"
-                else -> visitedPoint.controlPointName.ifEmpty { "Checkpoint ${visitedPoint.order}" }
+                else -> visitedPoint.controlPointName.ifEmpty { "Control Point ${visitedPoint.order}" }
             }
 
             Row(
