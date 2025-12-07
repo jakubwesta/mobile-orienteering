@@ -9,10 +9,10 @@ import retrofit2.http.PATCH
 import retrofit2.http.Path
 
 interface UserApiService {
-    @GET("api/users/me")
+    @GET("api/mobile/users/me")
     suspend fun getCurrentUser(): Response<UserResponse>
 
-    @PATCH("api/users/{id}")
+    @PATCH("api/mobile/users/{id}")
     suspend fun updateUser(
         @Path("id") userId: Long,
         @Body request: UpdateUserRequest

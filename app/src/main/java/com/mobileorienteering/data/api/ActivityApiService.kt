@@ -7,18 +7,18 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface ActivityApiService {
-    @POST("api/activities")
+    @POST("api/mobile/activities")
     suspend fun createActivity(@Body request: CreateActivityRequest): Response<CreateActivityResponse>
 
-    @GET("api/activities/{id}")
+    @GET("api/mobile/activities/{id}")
     suspend fun getActivityById(@Path("id") id: Long): Response<ActivityResponse>
 
-    @DELETE("api/activities/{id}")
+    @DELETE("api/mobile/activities/{id}")
     suspend fun deleteActivity(@Path("id") id: Long): Response<Unit>
 
-    @GET("api/activities/user/{userId}")
+    @GET("api/mobile/activities/user/{userId}")
     suspend fun getActivitiesByUserId(@Path("userId") userId: Long): Response<List<ActivityResponse>>
 
-    @GET("api/activities/map/{mapId}")
+    @GET("api/mobile/activities/map/{mapId}")
     suspend fun getActivitiesByMapId(@Path("mapId") mapId: Long): Response<List<ActivityResponse>>
 }

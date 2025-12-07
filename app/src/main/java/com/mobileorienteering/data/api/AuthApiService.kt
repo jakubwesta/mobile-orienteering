@@ -6,15 +6,15 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface AuthApiService {
-    @POST("api/auth/register")
+    @POST("api/mobile/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
 
-    @POST("api/auth/login")
+    @POST("api/mobile/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
-    @POST("api/auth/login/google")
+    @POST("api/mobile/auth/login/google")
     suspend fun loginWithGoogle(@Body request: GoogleLoginRequest): Response<AuthResponse>
 
-    @POST("api/auth/refresh")
+    @POST("api/mobile/auth/refresh")
     suspend fun refreshToken(@Body request: RefreshTokenRequest): Response<RefreshTokenResponse>
 }
