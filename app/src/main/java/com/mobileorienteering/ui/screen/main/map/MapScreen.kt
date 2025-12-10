@@ -160,6 +160,13 @@ fun MapScreen(
                     }
                 }
             ) {
+                // Trasa GPS podczas biegu
+                RoutePathLayer(
+                    pathData = state.runPathData,
+                    color = androidx.compose.ui.graphics.Color(0xFF2196F3),
+                    width = 4f
+                )
+
                 CheckpointsLayer(
                     checkpoints = state.checkpoints,
                     visitedIndices = state.visitedCheckpointIndices,

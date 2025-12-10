@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.ActivityStatus
 import com.mobileorienteering.data.model.ControlPoint
+import com.mobileorienteering.data.model.PathPoint
 import com.mobileorienteering.data.model.VisitedControlPoint
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
@@ -50,7 +51,9 @@ class MapViewModel @Inject constructor(
         val totalCheckpoints: Int,
         val distance: Double,
         val mapId: Long,
-        val mapName: String
+        val mapName: String,
+        val pathData: List<PathPoint>,
+        val startTime: Instant
     )
 
     private val _finishedRunState = MutableStateFlow<FinishedRunState?>(null)
@@ -112,6 +115,7 @@ class MapViewModel @Inject constructor(
                 visitedCheckpointIndices = emptySet(),
                 runDistance = 0.0,
                 nextCheckpointIndex = 0,  // Zaczynamy od pierwszego
+                runPathData = emptyList(), // Reset trasy GPS
                 error = null
             )
         }
@@ -148,13 +152,16 @@ class MapViewModel @Inject constructor(
             totalCheckpoints = state.checkpoints.size,
             distance = state.runDistance,
             mapId = state.currentMapId ?: 0L,
-            mapName = state.currentMapName ?: "Unknown"
+            mapName = state.currentMapName ?: "Unknown",
+            pathData = state.runPathData,
+            startTime = state.runStartTime ?: Instant.now()
         )
 
         _state.update {
             it.copy(
                 isRunActive = false,
-                isTracking = false
+                isTracking = false,
+                runPathData = emptyList() // Czyścimy trasę po zakończeniu
             )
         }
 
@@ -176,9 +183,10 @@ class MapViewModel @Inject constructor(
                 userId = auth.userId,
                 mapId = finishedRun.mapId,
                 title = "Run: ${finishedRun.mapName}",
+                startTime = finishedRun.startTime,
                 duration = finishedRun.duration,
                 distance = finishedRun.distance,
-                pathData = emptyList(),
+                pathData = finishedRun.pathData,
                 status = if (finishedRun.isCompleted) ActivityStatus.COMPLETED else ActivityStatus.ABANDONED,
                 visitedControlPoints = finishedRun.visitedControlPoints,
                 totalCheckpoints = finishedRun.totalCheckpoints
@@ -310,6 +318,17 @@ class MapViewModel @Inject constructor(
         val distance = lastLocation?.distanceTo(location) ?: 0f
 
         _state.update { currentState ->
+            // Dodaj punkt do trasy jeśli bieg jest aktywny
+            val newPathData = if (currentState.isRunActive) {
+                currentState.runPathData + PathPoint(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    timestamp = Instant.now()
+                )
+            } else {
+                currentState.runPathData
+            }
+
             currentState.copy(
                 currentLocation = location,
                 locationHistory = currentState.locationHistory + location,
@@ -318,7 +337,8 @@ class MapViewModel @Inject constructor(
                     currentState.runDistance + distance
                 } else {
                     currentState.runDistance
-                }
+                },
+                runPathData = newPathData
             )
         }
 

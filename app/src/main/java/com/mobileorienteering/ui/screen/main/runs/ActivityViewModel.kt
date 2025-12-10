@@ -161,6 +161,16 @@ class ActivityViewModel @Inject constructor(
         return mapRepository.getAllMapsFlow()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
+
+    fun getMapForActivity(activityId: Long): Flow<Map?> {
+        return getActivity(activityId).flatMapLatest { activity ->
+            if (activity != null) {
+                mapRepository.getMapByIdFlow(activity.mapId)
+            } else {
+                flowOf(null)
+            }
+        }
+    }
 }
 
 enum class SortOrder {

@@ -1,6 +1,7 @@
 package com.mobileorienteering.ui.screen.main.map.models
 
 import android.location.Location
+import com.mobileorienteering.data.model.PathPoint
 import org.maplibre.spatialk.geojson.Position
 import java.time.Instant
 
@@ -25,7 +26,10 @@ data class MapState(
     val runDistance: Double = 0.0,
 
     // Kolejność checkpointów - następny do zaliczenia (0 = pierwszy)
-    val nextCheckpointIndex: Int = 0
+    val nextCheckpointIndex: Int = 0,
+
+    // Trasa GPS podczas biegu
+    val runPathData: List<PathPoint> = emptyList()
 )
 
 data class Checkpoint(
