@@ -21,7 +21,7 @@ import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
-
+import androidx.compose.ui.graphics.Color
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
@@ -163,7 +163,7 @@ fun MapScreen(
                 // Trasa GPS podczas biegu
                 RoutePathLayer(
                     pathData = state.runPathData,
-                    color = androidx.compose.ui.graphics.Color(0xFF2196F3),
+                    color = Color(0xFF2196F3),
                     width = 4f
                 )
 

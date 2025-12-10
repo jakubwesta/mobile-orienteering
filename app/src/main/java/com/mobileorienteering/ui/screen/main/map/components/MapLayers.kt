@@ -197,32 +197,3 @@ fun RoutePathLayer(
         width = const(width.dp)
     )
 }
-
-/**
- * Renderuje statyczną trasę z PathPoint (do wyświetlania w szczegółach biegu)
- */
-@Composable
-fun StaticRouteLayer(
-    pathData: List<PathPoint>,
-    checkpoints: List<Checkpoint>,
-    visitedIndices: Set<Int>
-) {
-    // Rysuj trasę
-    RoutePathLayer(
-        pathData = pathData,
-        color = Color(0xFF4CAF50), // Zielony dla ukończonej trasy
-        width = 3f
-    )
-
-    // Rysuj checkpointy
-    if (checkpoints.isNotEmpty()) {
-        CheckpointsLayer(
-            checkpoints = checkpoints,
-            visitedIndices = visitedIndices,
-            nextCheckpointIndex = checkpoints.size, // Wszystkie zaliczone
-            isRunActive = false,
-            draggingIndex = null,
-            onCheckpointLongClick = {}
-        )
-    }
-}

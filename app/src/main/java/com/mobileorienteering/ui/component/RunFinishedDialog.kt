@@ -39,7 +39,7 @@ fun RunFinishedDialog(
         },
         title = {
             Text(
-                if (isCompleted) "Run Completed! 🎉" else "Run Stopped",
+                if (isCompleted) "Run Completed!" else "Run Stopped",
                 fontWeight = FontWeight.Bold
             )
         },

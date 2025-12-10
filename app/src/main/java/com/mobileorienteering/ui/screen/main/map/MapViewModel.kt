@@ -18,7 +18,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.maplibre.android.geometry.LatLng
 import org.maplibre.spatialk.geojson.Position
 import java.time.Duration
 import java.time.Instant
