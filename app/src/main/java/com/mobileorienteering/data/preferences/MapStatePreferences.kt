@@ -1,4 +1,4 @@
-package com.mobileorienteering.data.repository
+package com.mobileorienteering.data.preferences
 
 import android.content.Context
 import androidx.datastore.preferences.core.*
@@ -11,26 +11,24 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import org.maplibre.spatialk.geojson.Position
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.mapStateDataStore by preferencesDataStore("map_state")
 
-/**
- * Stan mapy do zapisania/odczytania
- */
 data class SavedMapState(
     val checkpoints: List<Checkpoint> = emptyList(),
     val currentMapId: Long? = null,
     val currentMapName: String? = null,
     val isTracking: Boolean = false,
     val distanceTraveled: Float = 0f,
-    val locationHistoryJson: String = "[]"  // Zapisujemy jako JSON string
+    val locationHistoryJson: String = "[]"
 )
 
 @Singleton
-class MapStateRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+class MapStatePreferences @Inject constructor(
+    @param:ApplicationContext private val context: Context
 ) {
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -55,7 +53,7 @@ class MapStateRepository @Inject constructor(
         val checkpointsJson = prefs[CHECKPOINTS_JSON] ?: "[]"
         val checkpoints = try {
             checkpointAdapter.fromJson(checkpointsJson)?.map { it.toCheckpoint() } ?: emptyList()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
 
@@ -74,8 +72,8 @@ class MapStateRepository @Inject constructor(
     }
 
     suspend fun saveCheckpoints(checkpoints: List<Checkpoint>) {
-        val dtos = checkpoints.map { it.toDto() }
-        val json = checkpointAdapter.toJson(dtos)
+        val dtoList = checkpoints.map { it.toDto() }
+        val json = checkpointAdapter.toJson(dtoList)
         context.mapStateDataStore.edit { prefs ->
             prefs[CHECKPOINTS_JSON] = json
         }
@@ -108,12 +106,6 @@ class MapStateRepository @Inject constructor(
         }
     }
 
-    suspend fun saveLocationHistory(locationsJson: String) {
-        context.mapStateDataStore.edit { prefs ->
-            prefs[LOCATION_HISTORY_JSON] = locationsJson
-        }
-    }
-
     suspend fun clearState() {
         context.mapStateDataStore.edit { prefs ->
             prefs.clear()
@@ -121,9 +113,6 @@ class MapStateRepository @Inject constructor(
     }
 }
 
-/**
- * DTO do serializacji Checkpoint (bez Position który nie jest serializowalny)
- */
 data class CheckpointDto(
     val id: String,
     val longitude: Double,
@@ -145,7 +134,7 @@ fun Checkpoint.toDto(): CheckpointDto {
 fun CheckpointDto.toCheckpoint(): Checkpoint {
     return Checkpoint(
         id = id,
-        position = org.maplibre.spatialk.geojson.Position(longitude, latitude),
+        position = Position(longitude, latitude),
         name = name,
         timestamp = timestamp
     )

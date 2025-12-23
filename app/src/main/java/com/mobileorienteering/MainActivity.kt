@@ -33,7 +33,6 @@ class MainActivity : ComponentActivity() {
 
             AppTheme(
                 darkTheme = settings.darkMode,
-                dynamicColor = false,
                 contrastLevel = settings.contrastLevel.toTheme()
             ) {
                 AppScaffold(navController, isFirstLaunch, isLoggedIn)

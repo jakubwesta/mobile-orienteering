@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.ContrastLevel
 import com.mobileorienteering.data.model.SettingsModel
-import com.mobileorienteering.data.repository.SettingsRepository
+import com.mobileorienteering.data.preferences.SettingsPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repo: SettingsRepository
+    private val repo: SettingsPreferences
 ) : ViewModel() {
 
     val settings = repo.settingsFlow.stateIn(

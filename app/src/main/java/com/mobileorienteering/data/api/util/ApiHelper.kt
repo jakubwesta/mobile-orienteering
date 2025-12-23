@@ -1,4 +1,4 @@
-package com.mobileorienteering.data.repository
+package com.mobileorienteering.data.api.util
 
 import retrofit2.Response
 import java.io.IOException
@@ -12,7 +12,7 @@ object ApiHelper {
         return try {
             val response = apiCall()
             handleResponse(response, errorPrefix)
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             Result.failure(Exception("Network error. Please check your connection."))
         } catch (e: Exception) {
             Result.failure(Exception("$errorPrefix: ${e.message ?: "Unknown error"}"))
@@ -65,7 +65,7 @@ object ApiHelper {
                 response.code() >= 500 -> "Server error. Please try again later"
                 else -> "$defaultMessage (${response.code()})"
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             "$defaultMessage (${response.code()})"
         }
     }

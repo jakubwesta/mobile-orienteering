@@ -11,7 +11,9 @@ import com.google.android.gms.tasks.Tasks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class GoogleSignInHelper(private val context: Context) {
+class GoogleSignInHelper(
+    context: Context
+) {
 
     private val signInClient: SignInClient = Identity.getSignInClient(context)
 

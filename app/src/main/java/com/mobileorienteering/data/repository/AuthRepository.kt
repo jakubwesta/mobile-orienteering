@@ -5,17 +5,22 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.mobileorienteering.data.api.AuthApiService
 import com.mobileorienteering.data.api.UserApiService
+import com.mobileorienteering.data.api.util.ApiHelper
 import com.mobileorienteering.data.model.*
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val Context.authDataStore by preferencesDataStore("auth")
 
-class AuthRepository(
-    private val context: Context,
+@Singleton
+class AuthRepository @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val authApi: AuthApiService,
     private val userApi: UserApiService
 ) {

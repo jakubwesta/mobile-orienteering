@@ -10,10 +10,10 @@ import com.mobileorienteering.data.model.VisitedControlPoint
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
-import com.mobileorienteering.data.repository.MapStateRepository
+import com.mobileorienteering.data.preferences.MapStatePreferences
 import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
 import com.mobileorienteering.ui.screen.main.map.models.MapState
-import com.mobileorienteering.util.LocationManager
+import com.mobileorienteering.util.manager.LocationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -28,7 +28,7 @@ class MapViewModel @Inject constructor(
     private val locationManager: LocationManager,
     private val mapRepository: MapRepository,
     private val authRepository: AuthRepository,
-    private val mapStateRepository: MapStateRepository,
+    private val mapStatePreferences: MapStatePreferences,
     private val activityRepository: ActivityRepository  // NOWE
 ) : ViewModel() {
 
@@ -64,7 +64,7 @@ class MapViewModel @Inject constructor(
 
     private fun restoreSavedState() {
         viewModelScope.launch {
-            val savedState = mapStateRepository.getSavedState()
+            val savedState = mapStatePreferences.getSavedState()
 
             _state.update {
                 it.copy(
@@ -347,7 +347,7 @@ class MapViewModel @Inject constructor(
         checkCheckpointVisit(location)
 
         viewModelScope.launch {
-            mapStateRepository.saveDistance(_state.value.distanceTraveled)
+            mapStatePreferences.saveDistance(_state.value.distanceTraveled)
         }
     }
 
@@ -459,7 +459,7 @@ class MapViewModel @Inject constructor(
         lastLocation = null
 
         viewModelScope.launch {
-            mapStateRepository.clearState()
+            mapStatePreferences.clearState()
         }
     }
 
@@ -542,13 +542,13 @@ class MapViewModel @Inject constructor(
 
     private fun saveCheckpoints() {
         viewModelScope.launch {
-            mapStateRepository.saveCheckpoints(_state.value.checkpoints)
+            mapStatePreferences.saveCheckpoints(_state.value.checkpoints)
         }
     }
 
     private fun saveCurrentMapInfo() {
         viewModelScope.launch {
-            mapStateRepository.saveCurrentMap(
+            mapStatePreferences.saveCurrentMap(
                 _state.value.currentMapId,
                 _state.value.currentMapName
             )
@@ -557,7 +557,7 @@ class MapViewModel @Inject constructor(
 
     private fun saveTrackingState(isTracking: Boolean) {
         viewModelScope.launch {
-            mapStateRepository.saveTrackingState(isTracking)
+            mapStatePreferences.saveTrackingState(isTracking)
         }
     }
 

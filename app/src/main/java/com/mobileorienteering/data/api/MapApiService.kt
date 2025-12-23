@@ -8,9 +8,6 @@ interface MapApiService {
     @POST("api/mobile/maps")
     suspend fun createMap(@Body request: CreateMapRequest): Response<CreateMapResponse>
 
-    @GET("api/mobile/maps/{id}")
-    suspend fun getMapById(@Path("id") id: Long): Response<MapResponse>
-
     @DELETE("api/mobile/maps/{id}")
     suspend fun deleteMap(@Path("id") id: Long): Response<Unit>
 

@@ -1,10 +1,13 @@
 package com.mobileorienteering.data.repository
 
 import com.mobileorienteering.data.api.UserApiService
+import com.mobileorienteering.data.api.util.ApiHelper
 import com.mobileorienteering.data.model.UpdateUserRequest
 import com.mobileorienteering.data.model.UserResponse
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class UserRepository @Inject constructor(
     private val userApi: UserApiService
 ) {

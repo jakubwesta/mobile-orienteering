@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.ui.navigation.AppScreen
 import com.mobileorienteering.ui.screen.auth.LoginScreen
 import com.mobileorienteering.ui.screen.auth.RegisterScreen
@@ -18,11 +19,11 @@ import com.mobileorienteering.ui.screen.main.runs.RunsScreen
 import com.mobileorienteering.ui.screen.main.settings.SettingsScreen
 import com.mobileorienteering.ui.screen.main.map.MapScreen
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.ui.screen.main.runs.RunDetailsScreen
 import com.mobileorienteering.ui.screen.main.settings.EditPasswordScreen
 import com.mobileorienteering.ui.screen.main.settings.EditProfileScreen
 import com.mobileorienteering.ui.screen.main.settings.SyncViewModel
+import com.mobileorienteering.ui.screen.welcome.FirstLaunchViewModel
 
 @Composable
 fun AppScaffold(
@@ -36,6 +37,7 @@ fun AppScaffold(
     }
 
     val syncViewModel: SyncViewModel = hiltViewModel()
+    val firstLaunchViewModel: FirstLaunchViewModel = hiltViewModel()
 
     LaunchedEffect(isLoggedIn) {
         val isOnMainScreen = currentRoute != null && AppScreen.mainScreens.any {
@@ -70,13 +72,21 @@ fun AppScaffold(
         ) {
             composable(AppScreen.Welcome.route) {
                 FirstLaunchScreen(
-                    onContinue = { navController.navigate(AppScreen.Login.route) }
+                    onContinue = {
+                        firstLaunchViewModel.markAsSeen()
+                        navController.navigate(AppScreen.Login.route)
+                    }
                 )
             }
-            composable(AppScreen.Login.route) { LoginScreen(navController) }
-            composable(AppScreen.Register.route) { RegisterScreen(navController) }
 
-            // MapScreen z opcjonalnym mapId i startRun
+            composable(AppScreen.Login.route) {
+                LoginScreen(navController)
+            }
+
+            composable(AppScreen.Register.route) {
+                RegisterScreen(navController)
+            }
+
             composable(
                 route = "${AppScreen.Map.route}?mapId={mapId}&startRun={startRun}",
                 arguments = listOf(

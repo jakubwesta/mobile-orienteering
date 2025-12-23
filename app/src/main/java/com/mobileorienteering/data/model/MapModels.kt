@@ -2,7 +2,6 @@ package com.mobileorienteering.data.model
 
 import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.JsonClass
-import org.maplibre.android.geometry.LatLng
 import java.time.Instant
 
 data class Map(
@@ -20,9 +19,7 @@ data class ControlPoint(
     val id: Long,
     val latitude: Double,
     val longitude: Double
-) {
-    fun toLatLng(): LatLng = LatLng(latitude, longitude)
-}
+)
 
 fun MapResponse.toDomainModel(): Map {
     return Map(

@@ -1,6 +1,7 @@
 package com.mobileorienteering.data.repository
 
 import com.mobileorienteering.data.api.ActivityApiService
+import com.mobileorienteering.data.api.util.ApiHelper
 import com.mobileorienteering.data.local.dao.ActivityDao
 import com.mobileorienteering.data.local.entity.toEntity
 import com.mobileorienteering.data.local.entity.toDomainModel
@@ -10,7 +11,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import java.time.Instant
+import javax.inject.Singleton
 
+@Singleton
 class ActivityRepository @Inject constructor(
     private val activityApi: ActivityApiService,
     private val activityDao: ActivityDao
@@ -18,12 +21,6 @@ class ActivityRepository @Inject constructor(
 
     fun getAllActivitiesFlow(): Flow<List<Activity>> {
         return activityDao.getAllActivities().map { list ->
-            list.map { it.toDomainModel() }
-        }
-    }
-
-    fun getActivitiesForUserFlow(userId: Long): Flow<List<Activity>> {
-        return activityDao.getActivitiesByUserId(userId).map { list ->
             list.map { it.toDomainModel() }
         }
     }

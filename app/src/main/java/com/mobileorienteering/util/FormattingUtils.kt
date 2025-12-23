@@ -57,10 +57,10 @@ fun formatDurationFromInstants(start: Instant, end: Instant): String {
 }
 
 /**
- * Oblicza tempo (pace) w min/km
- * @param distanceMeters dystans w metrach
- * @param durationSeconds czas w sekundach
- * @return tempo jako String (np. "5:30 min/km")
+ * Calculates pace in min/km
+ * @param distanceMeters distance in meters
+ * @param durationSeconds time in seconds
+ * @return pace as String ("5:30 min/km")
  */
 fun calculatePace(distanceMeters: Double, durationSeconds: Long): String {
     if (distanceMeters <= 0 || durationSeconds <= 0) return "-"
@@ -74,9 +74,6 @@ fun calculatePace(distanceMeters: Double, durationSeconds: Long): String {
     return String.format(Locale.US, "%d:%02d min/km", paceMinutes, paceSeconds)
 }
 
-/**
- * Oblicza tempo między dwoma punktami w czasie
- */
 fun calculatePaceBetweenInstants(
     distanceMeters: Double,
     start: Instant,
@@ -84,17 +81,4 @@ fun calculatePaceBetweenInstants(
 ): String {
     val durationSeconds = Duration.between(start, end).seconds
     return calculatePace(distanceMeters, durationSeconds)
-}
-
-/**
- * Oblicza średnią prędkość w km/h
- */
-fun calculateSpeed(distanceMeters: Double, durationSeconds: Long): String {
-    if (distanceMeters <= 0 || durationSeconds <= 0) return "-"
-
-    val distanceKm = distanceMeters / 1000.0
-    val hours = durationSeconds / 3600.0
-    val speedKmh = distanceKm / hours
-
-    return String.format(Locale.US, "%.1f km/h", speedKmh)
 }

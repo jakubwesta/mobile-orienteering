@@ -7,14 +7,14 @@ import java.time.ZoneOffset
 fun String.toInstantOrNull(): Instant? {
     return try {
         Instant.parse(this)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         try {
             val localDateTime = LocalDateTime.parse(this)
             localDateTime.toInstant(ZoneOffset.UTC)
-        } catch (e2: Exception) {
+        } catch (_: Exception) {
             try {
                 Instant.parse("${this}Z")
-            } catch (e3: Exception) {
+            } catch (_: Exception) {
                 null
             }
         }

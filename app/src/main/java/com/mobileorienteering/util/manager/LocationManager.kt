@@ -1,12 +1,10 @@
-package com.mobileorienteering.util
+package com.mobileorienteering.util.manager
 
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.Build
 import android.os.Looper
-import android.util.Log
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
@@ -20,11 +18,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 
-private const val TAG = "LocationManager"
-
 @Singleton
 class LocationManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @field:ApplicationContext private val context: Context
 ) {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
@@ -43,50 +39,26 @@ class LocationManager @Inject constructor(
         return hasFineLocation || hasCoarseLocation
     }
 
-    fun hasBackgroundLocationPermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
-    }
-
     @Suppress("MissingPermission")
     suspend fun getCurrentLocation(): Location? {
         if (!hasLocationPermission()) {
-            Log.e(TAG, "No location permission")
             return null
         }
 
         return try {
-            Log.d(TAG, "Requesting current location")
-
-            // Najpierw próbuj pobrać aktualną lokalizację
             val currentLocation = suspendCancellableCoroutine { continuation ->
                 fusedLocationClient.getCurrentLocation(
                     Priority.PRIORITY_HIGH_ACCURACY,
                     null
                 ).addOnSuccessListener { location ->
-                    Log.d(TAG, "Current location success: $location")
                     continuation.resume(location)
-                }.addOnFailureListener { exception ->
-                    Log.e(TAG, "Current location failed", exception)
+                }.addOnFailureListener { _ ->
                     continuation.resume(null)
                 }
             }
 
-            // Jeśli nie udało się, spróbuj ostatniej znanej lokalizacji
-            if (currentLocation == null) {
-                Log.d(TAG, "Trying last known location")
-                fusedLocationClient.lastLocation.await()
-            } else {
-                currentLocation
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting current location", e)
+            currentLocation ?: fusedLocationClient.lastLocation.await()
+        } catch (_: Exception) {
             null
         }
     }
@@ -97,7 +69,6 @@ class LocationManager @Inject constructor(
         minimalDistance: Float = 10f
     ): Flow<Location> = callbackFlow {
         if (!hasLocationPermission()) {
-            Log.e(TAG, "No location permission for updates")
             close(IllegalStateException("Location permission not granted"))
             return@callbackFlow
         }
@@ -107,51 +78,37 @@ class LocationManager @Inject constructor(
             intervalMillis
         ).apply {
             setMinUpdateDistanceMeters(minimalDistance)
-            setWaitForAccurateLocation(false) // Nie czekaj na super dokładną lokalizację
+            setWaitForAccurateLocation(false)
             setMaxUpdateDelayMillis(intervalMillis)
-            setMinUpdateIntervalMillis(intervalMillis / 2) // Pozwól na szybsze update
+            setMinUpdateIntervalMillis(intervalMillis / 2)
         }.build()
 
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.locations.forEach { location ->
-                    Log.d(TAG, "Location update: lat=${location.latitude}, lon=${location.longitude}, accuracy=${location.accuracy}")
                     trySend(location).isSuccess
-                }
-            }
-
-            override fun onLocationAvailability(availability: LocationAvailability) {
-                Log.d(TAG, "Location availability changed: ${availability.isLocationAvailable}")
-                if (!availability.isLocationAvailable) {
-                    Log.w(TAG, "Location is not available")
                 }
             }
         }
 
-        Log.d(TAG, "Requesting location updates")
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
             Looper.getMainLooper()
-        ).addOnSuccessListener {
-            Log.d(TAG, "Location updates request successful")
-        }.addOnFailureListener { exception ->
-            Log.e(TAG, "Failed to request location updates", exception)
+        ).addOnFailureListener { exception ->
             close(exception)
         }
 
         awaitClose {
-            Log.d(TAG, "Removing location updates")
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
     }
 }
 
-suspend fun <T> Task<T>.await(): T? {
+fun <T> Task<T>.await(): T? {
     return try {
         Tasks.await(this)
-    } catch (e: Exception) {
-        Log.e(TAG, "Task await failed", e)
+    } catch (_: Exception) {
         null
     }
 }

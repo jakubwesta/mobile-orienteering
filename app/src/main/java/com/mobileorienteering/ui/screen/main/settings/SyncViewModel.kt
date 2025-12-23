@@ -4,8 +4,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.repository.AuthRepository
-import com.mobileorienteering.data.sync.SyncManager
-import com.mobileorienteering.util.ConnectivityMonitor
+import com.mobileorienteering.util.manager.SyncManager
+import com.mobileorienteering.util.manager.ConnectivityManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.filter
@@ -14,7 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SyncViewModel @Inject constructor(
     private val syncManager: SyncManager,
-    private val connectivityMonitor: ConnectivityMonitor,
+    private val connectivityManager: ConnectivityManager,
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
@@ -24,7 +24,7 @@ class SyncViewModel @Inject constructor(
 
     fun startConnectivityMonitoring() {
         viewModelScope.launch {
-            connectivityMonitor.isOnline
+            connectivityManager.isOnline
                 .filter { it }
                 .collect {
                     syncIfLoggedIn()

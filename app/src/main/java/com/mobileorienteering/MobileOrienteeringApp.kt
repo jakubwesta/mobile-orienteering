@@ -8,7 +8,6 @@ import org.maplibre.android.MapLibre
 class MobileOrienteeringApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Inicjalizacja MapLibre z domyślnym tile serverem
         MapLibre.getInstance(this)
     }
 }

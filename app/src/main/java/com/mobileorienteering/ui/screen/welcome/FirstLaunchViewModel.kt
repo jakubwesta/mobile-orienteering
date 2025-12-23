@@ -2,7 +2,7 @@ package com.mobileorienteering.ui.screen.welcome
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.repository.FirstLaunchRepository
+import com.mobileorienteering.data.preferences.FirstLaunchPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FirstLaunchViewModel @Inject constructor(
-    private val repo: FirstLaunchRepository
+    private val repo: FirstLaunchPreferences
 ) : ViewModel() {
 
     val isFirstLaunch = repo.isFirstLaunchFlow.stateIn(

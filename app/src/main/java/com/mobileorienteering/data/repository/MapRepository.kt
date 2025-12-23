@@ -1,6 +1,7 @@
 package com.mobileorienteering.data.repository
 
 import com.mobileorienteering.data.api.MapApiService
+import com.mobileorienteering.data.api.util.ApiHelper
 import com.mobileorienteering.data.local.dao.MapDao
 import com.mobileorienteering.data.local.entity.toEntity
 import com.mobileorienteering.data.local.entity.toDomainModel
@@ -11,7 +12,9 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import java.time.Instant
 import com.mobileorienteering.data.model.Map
+import javax.inject.Singleton
 
+@Singleton
 class MapRepository @Inject constructor(
     private val mapApi: MapApiService,
     private val mapDao: MapDao
@@ -19,12 +22,6 @@ class MapRepository @Inject constructor(
 
     fun getAllMapsFlow(): Flow<List<Map>> {
         return mapDao.getAllMaps().map { list ->
-            list.map { it.toDomainModel() }
-        }
-    }
-
-    fun getMapsForUserFlow(userId: Long): Flow<List<Map>> {
-        return mapDao.getMapsByUserId(userId).map { list ->
             list.map { it.toDomainModel() }
         }
     }

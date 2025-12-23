@@ -1,4 +1,4 @@
-package com.mobileorienteering.util
+package com.mobileorienteering.util.manager
 
 import android.content.Context
 import android.media.SoundPool
@@ -8,17 +8,19 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import com.mobileorienteering.R
 import com.mobileorienteering.data.model.SettingsModel
-import com.mobileorienteering.data.repository.SettingsRepository
+import com.mobileorienteering.data.preferences.SettingsPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class FeedbackManager @Inject constructor(
-    @field:ApplicationContext private val context: Context,
-    private val settingsRepository: SettingsRepository
+    @param:ApplicationContext private val context: Context,
+    settingsPreferences: SettingsPreferences
 ) {
     private val soundPool = SoundPool.Builder()
         .setMaxStreams(4)
@@ -36,7 +38,7 @@ class FeedbackManager @Inject constructor(
         context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
 
-    private val settingsFlow = settingsRepository.settingsFlow.stateIn(
+    private val settingsFlow = settingsPreferences.settingsFlow.stateIn(
         CoroutineScope(Dispatchers.Default),
         SharingStarted.Eagerly,
         SettingsModel()
