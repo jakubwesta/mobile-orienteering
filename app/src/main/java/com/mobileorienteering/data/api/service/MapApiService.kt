@@ -1,8 +1,14 @@
-package com.mobileorienteering.data.api
+package com.mobileorienteering.data.api.service
 
-import com.mobileorienteering.data.model.*
+import com.mobileorienteering.data.model.network.request.CreateMapRequest
+import com.mobileorienteering.data.model.network.response.CreateMapResponse
+import com.mobileorienteering.data.model.network.response.MapResponse
 import retrofit2.Response
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface MapApiService {
     @POST("api/mobile/maps")

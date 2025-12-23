@@ -6,6 +6,10 @@ import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import com.mobileorienteering.R
 
+/**
+ * File generated with https://material-foundation.github.io/material-theme-builder/
+ */
+
 val provider = GoogleFont.Provider(
     providerAuthority = "com.google.android.gms.fonts",
     providerPackage = "com.google.android.gms",

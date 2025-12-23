@@ -4,8 +4,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.mobileorienteering.data.local.converter.Converters
-import com.mobileorienteering.data.model.ControlPoint
-import com.mobileorienteering.data.model.Map
+import com.mobileorienteering.data.model.domain.ControlPoint
+import com.mobileorienteering.data.model.domain.OrienteeringMap
 import java.time.Instant
 
 @Entity(tableName = "maps")
@@ -21,8 +21,8 @@ data class MapEntity(
     val syncedWithServer: Boolean = true
 )
 
-fun MapEntity.toDomainModel(): Map {
-    return Map(
+fun MapEntity.toDomainModel(): OrienteeringMap {
+    return OrienteeringMap(
         id = id,
         userId = userId,
         name = name,
@@ -33,7 +33,7 @@ fun MapEntity.toDomainModel(): Map {
     )
 }
 
-fun Map.toEntity(syncedWithServer: Boolean = true): MapEntity {
+fun OrienteeringMap.toEntity(syncedWithServer: Boolean = true): MapEntity {
     return MapEntity(
         id = id,
         userId = userId,

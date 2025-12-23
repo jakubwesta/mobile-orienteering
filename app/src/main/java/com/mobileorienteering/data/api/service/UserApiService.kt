@@ -1,7 +1,7 @@
-package com.mobileorienteering.data.api
+package com.mobileorienteering.data.api.service
 
-import com.mobileorienteering.data.model.UpdateUserRequest
-import com.mobileorienteering.data.model.UserResponse
+import com.mobileorienteering.data.model.network.request.UpdateUserRequest
+import com.mobileorienteering.data.model.network.response.UserResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

@@ -1,10 +1,10 @@
 package com.mobileorienteering.data.local.converter
 
 import androidx.room.TypeConverter
-import com.mobileorienteering.data.model.ActivityStatus
-import com.mobileorienteering.data.model.ControlPoint
-import com.mobileorienteering.data.model.PathPoint
-import com.mobileorienteering.data.model.VisitedControlPoint
+import com.mobileorienteering.data.model.domain.ActivityStatus
+import com.mobileorienteering.data.model.domain.ControlPoint
+import com.mobileorienteering.data.model.domain.PathPoint
+import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi

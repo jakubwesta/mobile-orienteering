@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mobileorienteering.data.model.PathPoint
+import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.format

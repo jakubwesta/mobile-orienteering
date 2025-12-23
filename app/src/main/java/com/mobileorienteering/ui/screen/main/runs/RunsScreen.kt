@@ -20,7 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.component.ActivityCard
-import com.mobileorienteering.ui.navigation.AppScreen
+import com.mobileorienteering.ui.core.AppScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

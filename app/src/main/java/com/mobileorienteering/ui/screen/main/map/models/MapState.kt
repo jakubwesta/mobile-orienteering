@@ -1,7 +1,7 @@
 package com.mobileorienteering.ui.screen.main.map.models
 
 import android.location.Location
-import com.mobileorienteering.data.model.PathPoint
+import com.mobileorienteering.data.model.domain.PathPoint
 import org.maplibre.spatialk.geojson.Position
 import java.time.Instant
 

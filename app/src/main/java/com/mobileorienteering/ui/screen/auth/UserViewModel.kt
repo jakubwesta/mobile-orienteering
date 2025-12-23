@@ -3,7 +3,7 @@ package com.mobileorienteering.ui.screen.auth
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.UserResponse
+import com.mobileorienteering.data.model.network.response.UserResponse
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

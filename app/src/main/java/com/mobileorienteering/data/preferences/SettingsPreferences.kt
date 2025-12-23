@@ -3,8 +3,8 @@ package com.mobileorienteering.data.preferences
 import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
-import com.mobileorienteering.data.model.ContrastLevel
-import com.mobileorienteering.data.model.SettingsModel
+import com.mobileorienteering.data.model.domain.ContrastLevel
+import com.mobileorienteering.data.model.domain.SettingsModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

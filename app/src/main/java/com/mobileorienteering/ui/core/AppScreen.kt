@@ -1,4 +1,4 @@
-package com.mobileorienteering.ui.navigation
+package com.mobileorienteering.ui.core
 
 import com.mobileorienteering.R
 

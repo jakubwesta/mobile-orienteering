@@ -1,4 +1,4 @@
-package com.mobileorienteering.data.model
+package com.mobileorienteering.data.model.domain
 
 data class LoginModel(
     val username: String,

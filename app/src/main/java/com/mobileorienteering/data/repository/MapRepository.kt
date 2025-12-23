@@ -1,17 +1,18 @@
 package com.mobileorienteering.data.repository
 
-import com.mobileorienteering.data.api.MapApiService
-import com.mobileorienteering.data.api.util.ApiHelper
+import com.mobileorienteering.data.api.service.MapApiService
+import com.mobileorienteering.data.api.ApiHelper
 import com.mobileorienteering.data.local.dao.MapDao
 import com.mobileorienteering.data.local.entity.toEntity
 import com.mobileorienteering.data.local.entity.toDomainModel
-import com.mobileorienteering.data.model.*
+import com.mobileorienteering.data.model.domain.*
+import com.mobileorienteering.data.model.network.request.*
+import com.mobileorienteering.data.model.network.response.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import java.time.Instant
-import com.mobileorienteering.data.model.Map
 import javax.inject.Singleton
 
 @Singleton
@@ -20,13 +21,13 @@ class MapRepository @Inject constructor(
     private val mapDao: MapDao
 ) {
 
-    fun getAllMapsFlow(): Flow<List<Map>> {
+    fun getAllMapsFlow(): Flow<List<OrienteeringMap>> {
         return mapDao.getAllMaps().map { list ->
             list.map { it.toDomainModel() }
         }
     }
 
-    fun getMapByIdFlow(mapId: Long): Flow<Map?> {
+    fun getMapByIdFlow(mapId: Long): Flow<OrienteeringMap?> {
         return mapDao.getMapByIdFlow(mapId).map { it?.toDomainModel() }
     }
 
@@ -41,7 +42,7 @@ class MapRepository @Inject constructor(
             // Temporary negative ID for offline data
             val tempId = -(System.currentTimeMillis())
 
-            val map = Map(
+            val map = OrienteeringMap(
                 id = tempId,
                 userId = userId,
                 name = name,
@@ -126,7 +127,7 @@ class MapRepository @Inject constructor(
      * Deletes local map (with negative id).
      * Inserts the synced map from server (with positive id).
      */
-    private suspend fun uploadMapToServer(map: Map): Result<Unit> {
+    private suspend fun uploadMapToServer(map: OrienteeringMap): Result<Unit> {
         return try {
             val request = CreateMapRequest(
                 userId = map.userId,
@@ -177,7 +178,7 @@ class MapRepository @Inject constructor(
         }
     }
 
-    suspend fun getUnsyncedMaps(): List<Map> {
+    suspend fun getUnsyncedMaps(): List<OrienteeringMap> {
         return mapDao.getUnsyncedMaps().map { it.toDomainModel() }
     }
 

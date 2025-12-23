@@ -7,7 +7,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import com.mobileorienteering.R
-import com.mobileorienteering.data.model.SettingsModel
+import com.mobileorienteering.data.model.domain.SettingsModel
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope

@@ -3,8 +3,8 @@ package com.mobileorienteering.ui.screen.auth
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.LoginModel
-import com.mobileorienteering.data.model.RegisterModel
+import com.mobileorienteering.data.model.domain.LoginModel
+import com.mobileorienteering.data.model.domain.RegisterModel
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository

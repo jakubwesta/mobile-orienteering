@@ -3,10 +3,12 @@ package com.mobileorienteering.data.repository
 import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
-import com.mobileorienteering.data.api.AuthApiService
-import com.mobileorienteering.data.api.UserApiService
-import com.mobileorienteering.data.api.util.ApiHelper
-import com.mobileorienteering.data.model.*
+import com.mobileorienteering.data.api.service.AuthApiService
+import com.mobileorienteering.data.api.service.UserApiService
+import com.mobileorienteering.data.api.ApiHelper
+import com.mobileorienteering.data.model.domain.*
+import com.mobileorienteering.data.model.network.request.*
+import com.mobileorienteering.data.model.network.response.*
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

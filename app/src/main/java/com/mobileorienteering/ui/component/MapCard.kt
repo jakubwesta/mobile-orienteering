@@ -33,12 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
-import com.mobileorienteering.data.model.Map
+import com.mobileorienteering.data.model.domain.OrienteeringMap
 import com.mobileorienteering.util.formatDate
 
 @Composable
 fun MapCard(
-    map: Map,
+    map: OrienteeringMap,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onStartRun: () -> Unit

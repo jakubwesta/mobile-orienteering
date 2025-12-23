@@ -1,6 +1,5 @@
-package com.mobileorienteering.data.model
+package com.mobileorienteering.data.model.domain
 
-import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.JsonClass
 import java.time.Instant
 
@@ -14,7 +13,6 @@ data class Activity(
     val distance: Double,
     val pathData: List<PathPoint>,
     val createdAt: Instant,
-
     val status: ActivityStatus = ActivityStatus.COMPLETED,
     val visitedControlPoints: List<VisitedControlPoint> = emptyList(),
     val totalControlPoints: Int = 0
@@ -50,34 +48,4 @@ enum class ActivityStatus {
     IN_PROGRESS,
     COMPLETED,
     ABANDONED
-}
-
-fun ActivityResponse.toDomainModel(): Activity {
-    return Activity(
-        id = id,
-        userId = userId,
-        mapId = mapId,
-        title = title,
-        startTime = startTime.toInstant(),
-        duration = duration,
-        distance = distance,
-        pathData = pathData.map { it.toDomainModel() },
-        createdAt = createdAt.toInstant()
-    )
-}
-
-fun PathPointDto.toDomainModel(): PathPoint {
-    return PathPoint(
-        latitude = latitude,
-        longitude = longitude,
-        timestamp = timestamp.toInstant()
-    )
-}
-
-fun PathPoint.toDto(): PathPointDto {
-    return PathPointDto(
-        latitude = latitude,
-        longitude = longitude,
-        timestamp = timestamp.toString()
-    )
 }

@@ -12,7 +12,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
-import com.mobileorienteering.data.model.Activity
+import com.mobileorienteering.data.model.domain.Activity
 import com.mobileorienteering.util.formatDate
 import com.mobileorienteering.util.formatDistance
 import com.mobileorienteering.util.formatDuration

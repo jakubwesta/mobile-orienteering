@@ -17,8 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
-import com.mobileorienteering.data.model.PathPoint
-import com.mobileorienteering.data.model.VisitedControlPoint
+import com.mobileorienteering.data.model.domain.PathPoint
+import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import com.mobileorienteering.ui.screen.main.map.components.RoutePathLayer
 import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
 import com.mobileorienteering.util.calculateDistanceBetweenPoints

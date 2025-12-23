@@ -13,7 +13,7 @@ import androidx.navigation.NavHostController
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.component.AuthPasswordField
 import com.mobileorienteering.ui.component.AuthTextField
-import com.mobileorienteering.ui.navigation.AppScreen
+import com.mobileorienteering.ui.core.AppScreen
 
 @Composable
 fun RegisterScreen(

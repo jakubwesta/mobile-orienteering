@@ -1,11 +1,13 @@
 package com.mobileorienteering.data.repository
 
-import com.mobileorienteering.data.api.ActivityApiService
-import com.mobileorienteering.data.api.util.ApiHelper
+import com.mobileorienteering.data.api.service.ActivityApiService
+import com.mobileorienteering.data.api.ApiHelper
 import com.mobileorienteering.data.local.dao.ActivityDao
 import com.mobileorienteering.data.local.entity.toEntity
 import com.mobileorienteering.data.local.entity.toDomainModel
-import com.mobileorienteering.data.model.*
+import com.mobileorienteering.data.model.domain.*
+import com.mobileorienteering.data.model.network.request.*
+import com.mobileorienteering.data.model.network.response.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map

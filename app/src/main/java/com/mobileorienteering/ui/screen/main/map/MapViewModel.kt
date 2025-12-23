@@ -3,10 +3,10 @@ package com.mobileorienteering.ui.screen.main.map
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.ActivityStatus
-import com.mobileorienteering.data.model.ControlPoint
-import com.mobileorienteering.data.model.PathPoint
-import com.mobileorienteering.data.model.VisitedControlPoint
+import com.mobileorienteering.data.model.domain.ActivityStatus
+import com.mobileorienteering.data.model.domain.ControlPoint
+import com.mobileorienteering.data.model.domain.PathPoint
+import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository

@@ -20,7 +20,7 @@ import kotlin.coroutines.resume
 
 @Singleton
 class LocationManager @Inject constructor(
-    @field:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)

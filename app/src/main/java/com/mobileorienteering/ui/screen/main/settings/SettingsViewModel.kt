@@ -2,8 +2,8 @@ package com.mobileorienteering.ui.screen.main.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.ContrastLevel
-import com.mobileorienteering.data.model.SettingsModel
+import com.mobileorienteering.data.model.domain.ContrastLevel
+import com.mobileorienteering.data.model.domain.SettingsModel
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted

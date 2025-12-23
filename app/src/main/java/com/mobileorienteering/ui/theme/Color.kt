@@ -2,6 +2,10 @@ package com.mobileorienteering.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+/**
+ * File generated with https://material-foundation.github.io/material-theme-builder/
+ */
+
 val primaryLight = Color(0xFF7F5610)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFFFDDB3)

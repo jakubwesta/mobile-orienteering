@@ -1,6 +1,11 @@
-package com.mobileorienteering.data.api
+package com.mobileorienteering.data.api.service
 
-import com.mobileorienteering.data.model.*
+import com.mobileorienteering.data.model.network.response.AuthResponse
+import com.mobileorienteering.data.model.network.request.GoogleLoginRequest
+import com.mobileorienteering.data.model.network.request.LoginRequest
+import com.mobileorienteering.data.model.network.request.RefreshTokenRequest
+import com.mobileorienteering.data.model.network.response.RefreshTokenResponse
+import com.mobileorienteering.data.model.network.request.RegisterRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST

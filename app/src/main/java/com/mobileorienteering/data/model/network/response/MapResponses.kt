@@ -1,28 +1,41 @@
-package com.mobileorienteering.data.model
+package com.mobileorienteering.data.model.network.response
 
+import com.mobileorienteering.data.model.domain.ControlPoint
+import com.mobileorienteering.data.model.domain.OrienteeringMap
 import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.JsonClass
-import java.time.Instant
 
-data class Map(
+@JsonClass(generateAdapter = true)
+data class ControlPointDto(
+    val latitude: Double,
+    val longitude: Double,
+    val id: Long
+)
+
+@JsonClass(generateAdapter = true)
+data class MapDataDto(
+    val controlPoints: List<ControlPointDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class CreateMapResponse(
+    val id: Long
+)
+
+@JsonClass(generateAdapter = true)
+data class MapResponse(
     val id: Long,
     val userId: Long,
     val name: String,
     val description: String,
     val location: String,
-    val controlPoints: List<ControlPoint>,
-    val createdAt: Instant
+    val mapData: MapDataDto,
+    val createdAt: String
 )
 
-@JsonClass(generateAdapter = true)
-data class ControlPoint(
-    val id: Long,
-    val latitude: Double,
-    val longitude: Double
-)
-
-fun MapResponse.toDomainModel(): Map {
-    return Map(
+// Mapper functions
+fun MapResponse.toDomainModel(): OrienteeringMap {
+    return OrienteeringMap(
         id = id,
         userId = userId,
         name = name,

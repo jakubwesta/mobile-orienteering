@@ -3,11 +3,11 @@ package com.mobileorienteering.ui.screen.main.runs
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.Activity
-import com.mobileorienteering.data.model.PathPoint
+import com.mobileorienteering.data.model.domain.Activity
+import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.MapRepository
-import com.mobileorienteering.data.model.Map
+import com.mobileorienteering.data.model.domain.OrienteeringMap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -157,12 +157,12 @@ class ActivityViewModel @Inject constructor(
         )
     }
 
-    fun getAllMaps(): StateFlow<List<Map>> {
+    fun getAllMaps(): StateFlow<List<OrienteeringMap>> {
         return mapRepository.getAllMapsFlow()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
 
-    fun getMapForActivity(activityId: Long): Flow<Map?> {
+    fun getMapForActivity(activityId: Long): Flow<OrienteeringMap?> {
         return getActivity(activityId).flatMapLatest { activity ->
             if (activity != null) {
                 mapRepository.getMapByIdFlow(activity.mapId)

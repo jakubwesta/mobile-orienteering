@@ -120,10 +120,8 @@ dependencies {
     implementation(libs.moshi)
     ksp(libs.moshi.codegen)
 
-    // MapLibre Android
+    // MapLibre
     implementation(libs.maplibre.compose)
-    // Usuń linię poniżej jeśli wywołuje błędy
-    // implementation(libs.maplibre.composeMaterial3)
 
     // Room
     implementation(libs.androidx.room.runtime)

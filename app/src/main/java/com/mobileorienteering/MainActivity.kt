@@ -8,7 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
-import com.mobileorienteering.ui.component.AppScaffold
+import com.mobileorienteering.ui.core.AppScaffold
 import com.mobileorienteering.ui.screen.auth.AuthViewModel
 import com.mobileorienteering.ui.screen.main.settings.SettingsViewModel
 import com.mobileorienteering.ui.screen.welcome.FirstLaunchViewModel
@@ -35,7 +35,11 @@ class MainActivity : ComponentActivity() {
                 darkTheme = settings.darkMode,
                 contrastLevel = settings.contrastLevel.toTheme()
             ) {
-                AppScaffold(navController, isFirstLaunch, isLoggedIn)
+                AppScaffold(
+                    navController = navController,
+                    isFirstLaunch = isFirstLaunch,
+                    isLoggedIn = isLoggedIn
+                )
             }
         }
     }

@@ -1,9 +1,9 @@
 package com.mobileorienteering.data.repository
 
-import com.mobileorienteering.data.api.UserApiService
-import com.mobileorienteering.data.api.util.ApiHelper
-import com.mobileorienteering.data.model.UpdateUserRequest
-import com.mobileorienteering.data.model.UserResponse
+import com.mobileorienteering.data.api.service.UserApiService
+import com.mobileorienteering.data.api.ApiHelper
+import com.mobileorienteering.data.model.network.request.UpdateUserRequest
+import com.mobileorienteering.data.model.network.response.UserResponse
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -3,6 +3,10 @@ package com.mobileorienteering.data.preferences
 import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.mobileorienteering.data.model.domain.CheckpointDto
+import com.mobileorienteering.data.model.domain.SavedMapState
+import com.mobileorienteering.data.model.domain.toCheckpoint
+import com.mobileorienteering.data.model.domain.toDto
 import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -11,20 +15,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import org.maplibre.spatialk.geojson.Position
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.mapStateDataStore by preferencesDataStore("map_state")
-
-data class SavedMapState(
-    val checkpoints: List<Checkpoint> = emptyList(),
-    val currentMapId: Long? = null,
-    val currentMapName: String? = null,
-    val isTracking: Boolean = false,
-    val distanceTraveled: Float = 0f,
-    val locationHistoryJson: String = "[]"
-)
 
 @Singleton
 class MapStatePreferences @Inject constructor(
@@ -111,31 +105,4 @@ class MapStatePreferences @Inject constructor(
             prefs.clear()
         }
     }
-}
-
-data class CheckpointDto(
-    val id: String,
-    val longitude: Double,
-    val latitude: Double,
-    val name: String,
-    val timestamp: Long
-)
-
-fun Checkpoint.toDto(): CheckpointDto {
-    return CheckpointDto(
-        id = id,
-        longitude = position.longitude,
-        latitude = position.latitude,
-        name = name,
-        timestamp = timestamp
-    )
-}
-
-fun CheckpointDto.toCheckpoint(): Checkpoint {
-    return Checkpoint(
-        id = id,
-        position = Position(longitude, latitude),
-        name = name,
-        timestamp = timestamp
-    )
 }

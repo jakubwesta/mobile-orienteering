@@ -4,10 +4,10 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.mobileorienteering.data.local.converter.Converters
-import com.mobileorienteering.data.model.Activity
-import com.mobileorienteering.data.model.ActivityStatus
-import com.mobileorienteering.data.model.PathPoint
-import com.mobileorienteering.data.model.VisitedControlPoint
+import com.mobileorienteering.data.model.domain.Activity
+import com.mobileorienteering.data.model.domain.ActivityStatus
+import com.mobileorienteering.data.model.domain.PathPoint
+import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import java.time.Instant
 
 @Entity(tableName = "activities")

@@ -8,14 +8,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.mobileorienteering.data.model.Map
+import com.mobileorienteering.data.model.domain.OrienteeringMap
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val mapRepository: MapRepository
 ) : ViewModel() {
 
-    val maps: StateFlow<List<Map>> = mapRepository.getAllMapsFlow()
+    val maps: StateFlow<List<OrienteeringMap>> = mapRepository.getAllMapsFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     var isLoading = mutableStateOf(false)
@@ -28,8 +28,8 @@ class LibraryViewModel @Inject constructor(
     var sortOrder = mutableStateOf(SortOrder.DATE_DESC)
         private set
 
-    private val _filteredMaps = MutableStateFlow<List<Map>>(emptyList())
-    val filteredMaps: StateFlow<List<Map>> = _filteredMaps.asStateFlow()
+    private val _filteredMaps = MutableStateFlow<List<OrienteeringMap>>(emptyList())
+    val filteredMaps: StateFlow<List<OrienteeringMap>> = _filteredMaps.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -39,7 +39,7 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    fun getMap(mapId: Long): Flow<Map?> {
+    fun getMap(mapId: Long): Flow<OrienteeringMap?> {
         return mapRepository.getMapByIdFlow(mapId)
     }
 
@@ -82,7 +82,7 @@ class LibraryViewModel @Inject constructor(
         successMessage.value = null
     }
 
-    private fun updateFilteredMaps(allMaps: List<Map>) {
+    private fun updateFilteredMaps(allMaps: List<OrienteeringMap>) {
         var filtered = allMaps
 
         val query = searchQuery.value
@@ -101,7 +101,7 @@ class LibraryViewModel @Inject constructor(
         _filteredMaps.value = filtered
     }
 
-    fun getAllMaps(): StateFlow<List<Map>> {
+    fun getAllMaps(): StateFlow<List<OrienteeringMap>> {
         return mapRepository.getAllMapsFlow()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
