@@ -21,19 +21,13 @@ import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 
-/**
- * Status checkpointu określający jego wygląd
- */
 enum class CheckpointStatus {
-    INACTIVE,   // Bieg nieaktywny - pomarańczowy
-    VISITED,    // Zaliczony - zielony
-    NEXT,       // Następny do zaliczenia - niebieski
-    PENDING     // Oczekujący - szary
+    INACTIVE,
+    VISITED,
+    NEXT,
+    PENDING
 }
 
-/**
- * Renderuje wszystkie checkpointy na mapie
- */
 @Composable
 fun CheckpointsLayer(
     checkpoints: List<Checkpoint>,
@@ -64,9 +58,6 @@ fun CheckpointsLayer(
     }
 }
 
-/**
- * Pojedynczy marker checkpointu (kółko + numer)
- */
 @Composable
 private fun CheckpointMarker(
     index: Int,
@@ -76,22 +67,19 @@ private fun CheckpointMarker(
     isRunActive: Boolean,
     onLongClick: () -> Unit
 ) {
-    // Kolor kółka zależny od statusu
     val circleColor = when (status) {
-        CheckpointStatus.VISITED -> Color(0xFF4CAF50)    // Zielony
-        CheckpointStatus.NEXT -> Color(0xFF2196F3)       // Niebieski
-        CheckpointStatus.PENDING -> Color(0xFF9E9E9E)    // Szary
-        CheckpointStatus.INACTIVE -> Color(0xFFFF5722)   // Pomarańczowy
+        CheckpointStatus.VISITED -> Color(0xFF4CAF50)
+        CheckpointStatus.NEXT -> Color(0xFF2196F3)
+        CheckpointStatus.PENDING -> Color(0xFF9E9E9E)
+        CheckpointStatus.INACTIVE -> Color(0xFFFF5722)
     }
 
-    // Rozmiar kółka
     val circleRadius = when {
         isDragging -> 16.dp
         status == CheckpointStatus.NEXT -> 14.dp
         else -> 12.dp
     }
 
-    // Obramowanie - żółte dla przeciąganego
     val strokeColor = if (isDragging) Color(0xFFFFEB3B) else Color.White
     val strokeWidth = if (isDragging) 3.dp else 2.dp
 
@@ -104,7 +92,6 @@ private fun CheckpointMarker(
         data = GeoJsonData.Features(feature)
     )
 
-    // Kółko
     CircleLayer(
         id = "control-point-circle-$index",
         source = source,
@@ -120,7 +107,6 @@ private fun CheckpointMarker(
         }
     )
 
-    // Numer na wierzchu
     SymbolLayer(
         id = "control-point-label-$index",
         source = source,
@@ -133,9 +119,6 @@ private fun CheckpointMarker(
     )
 }
 
-/**
- * Renderuje lokalizację użytkownika na mapie
- */
 @Composable
 fun UserLocationLayer(location: Location?) {
     location ?: return
@@ -159,9 +142,7 @@ fun UserLocationLayer(location: Location?) {
     )
 }
 
-/**
- * Renderuje trasę GPS na mapie jako polyline
- */
+
 @Composable
 fun RoutePathLayer(
     pathData: List<PathPoint>,
@@ -181,7 +162,6 @@ fun RoutePathLayer(
         data = GeoJsonData.Features(feature)
     )
 
-    // Biała obwódka (tło)
     LineLayer(
         id = "route-path-outline",
         source = source,
@@ -189,7 +169,6 @@ fun RoutePathLayer(
         width = const((width + 2).dp)
     )
 
-    // Główna linia trasy
     LineLayer(
         id = "route-path",
         source = source,

@@ -42,7 +42,6 @@ class MapViewModel @Inject constructor(
     private val _shouldMoveCamera = MutableStateFlow(false)
     val shouldMoveCamera: StateFlow<Boolean> = _shouldMoveCamera.asStateFlow()
 
-    // NOWE - Stan ukończonego biegu
     data class FinishedRunState(
         val isCompleted: Boolean,
         val duration: String,

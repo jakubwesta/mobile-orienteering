@@ -11,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.mobileorienteering.R
 import com.mobileorienteering.ui.screen.main.map.MapViewModel
 import com.mobileorienteering.ui.screen.main.map.models.MapState
 
@@ -27,7 +29,7 @@ fun CheckpointBottomSheetContent(
             .padding(16.dp)
     ) {
         Text(
-            "Punkty kontrolne",
+            "Control points",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -63,7 +65,11 @@ fun CheckpointBottomSheetContent(
                     }
 
                     IconButton(onClick = { viewModel.removeCheckpoint(checkpoint.id) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Usuń")
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_trash_filled),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             }
@@ -80,16 +86,21 @@ fun CheckpointBottomSheetContent(
                     onClick = { viewModel.clearCheckpoints() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_trash_filled),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
                     Spacer(Modifier.width(4.dp))
-                    Text("Usuń wszystkie")
+                    Text("Delete all")
                 }
 
                 Button(
                     onClick = onSaveRoute,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Zapisz trasę")
+                    Text("Save the route")
                 }
             }
         }

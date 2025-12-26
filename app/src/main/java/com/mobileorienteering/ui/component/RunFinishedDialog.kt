@@ -24,7 +24,7 @@ fun RunFinishedDialog(
     onDiscard: () -> Unit
 ) {
     AlertDialog(
-        onDismissRequest = { /* Nie pozwalamy zamknąć bez decyzji */ },
+        onDismissRequest = {},
         icon = {
             Icon(
                 imageVector = if (isCompleted) Icons.Default.Star else Icons.Default.Close,

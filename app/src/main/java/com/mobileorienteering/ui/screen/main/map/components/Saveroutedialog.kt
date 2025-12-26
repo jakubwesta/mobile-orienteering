@@ -14,12 +14,12 @@ fun SaveRouteDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Zapisz trasę") },
+        title = { Text("Save route") },
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nazwa trasy") },
+                label = { Text("Name of the route") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -34,12 +34,12 @@ fun SaveRouteDialog(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text("Zapisz")
+                Text("Save")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Anuluj")
+                Text("Cancel")
             }
         }
     )

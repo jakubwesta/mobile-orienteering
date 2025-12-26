@@ -41,7 +41,6 @@ fun MapScreen(
     var showSaveDialog by remember { mutableStateOf(false) }
     val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsState()
 
-    // Stan dla przesuwania checkpointów
     var draggingCheckpointIndex by remember { mutableStateOf<Int?>(null) }
 
     // Load map if initialMapId provided

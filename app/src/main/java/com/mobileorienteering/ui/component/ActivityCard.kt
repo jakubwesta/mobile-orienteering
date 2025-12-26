@@ -56,7 +56,6 @@ fun ActivityCard(
                             fontWeight = FontWeight.Bold
                         )
 
-                        // NOWE - Status badge
                         if (activity.totalControlPoints > 0) {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
@@ -67,7 +66,7 @@ fun ActivityCard(
                                 }
                             ) {
                                 Text(
-                                    text = if (activity.isCompleted) "✅" else "❌",
+                                    text = if (activity.isCompleted) "Completed" else "Uncompleted",
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall
                                 )

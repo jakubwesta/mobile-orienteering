@@ -15,20 +15,16 @@ data class MapState(
     val trackingStartTime: Long = 0L,
     val checkpoints: List<Checkpoint> = emptyList(),
 
-    // Aktualnie załadowana mapa
     val currentMapId: Long? = null,
     val currentMapName: String? = null,
 
-    // Stan aktywnego biegu
     val isRunActive: Boolean = false,
     val runStartTime: Instant? = null,
     val visitedCheckpointIndices: Set<Int> = emptySet(),
     val runDistance: Double = 0.0,
 
-    // Kolejność checkpointów - następny do zaliczenia (0 = pierwszy)
     val nextCheckpointIndex: Int = 0,
 
-    // Trasa GPS podczas biegu
     val runPathData: List<PathPoint> = emptyList()
 )
 

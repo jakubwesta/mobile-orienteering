@@ -26,14 +26,13 @@ fun RunProgressPanel(
     visitedCount: Int,
     totalCount: Int,
     distance: Double,
-    nextCheckpointIndex: Int,  // Następny checkpoint do zaliczenia
+    nextCheckpointIndex: Int,
     onStopClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var elapsedSeconds by remember { mutableLongStateOf(0L) }
     var showStopDialog by remember { mutableStateOf(false) }
 
-    // Timer
     LaunchedEffect(isVisible, startTime) {
         if (isVisible && startTime != null) {
             while (true) {
@@ -60,7 +59,6 @@ fun RunProgressPanel(
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -91,7 +89,6 @@ fun RunProgressPanel(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Następny checkpoint do zaliczenia
                 if (nextCheckpointIndex < totalCount) {
                     Surface(
                         color = MaterialTheme.colorScheme.primaryContainer,
@@ -117,7 +114,6 @@ fun RunProgressPanel(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Stats Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -138,7 +134,6 @@ fun RunProgressPanel(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Progress
                 val progress = if (totalCount > 0) visitedCount.toFloat() / totalCount else 0f
                 LinearProgressIndicator(
                     progress = { progress },
@@ -160,7 +155,6 @@ fun RunProgressPanel(
         }
     }
 
-    // Stop confirmation dialog
     if (showStopDialog) {
         AlertDialog(
             onDismissRequest = { showStopDialog = false },

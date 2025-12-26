@@ -17,15 +17,15 @@ fun CheckpointDialog(
 
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text("Dodaj punkt kontrolny") },
+            title = { Text("Add control point") },
             text = {
                 Column {
-                    Text("Wprowadź nazwę punktu:")
+                    Text("Enter the name of the point:")
                     TextField(
                         value = nameText,
                         onValueChange = { nameText = it },
                         singleLine = true,
-                        placeholder = { Text("Nazwa (opcjonalna)") }
+                        placeholder = { Text("Name of the point (optional)") }
                     )
                 }
             },
@@ -36,12 +36,12 @@ fun CheckpointDialog(
                         onDismiss()
                     }
                 ) {
-                    Text("Dodaj")
+                    Text("Add")
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("Anuluj")
+                    Text("Cancel")
                 }
             }
         )
