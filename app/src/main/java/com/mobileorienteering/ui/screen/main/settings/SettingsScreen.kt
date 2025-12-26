@@ -106,9 +106,9 @@ fun SettingsScreen(
                     checked = settings.controlPointVibration,
                     onCheckedChange = { viewModel.updateControlPointVibration(it) }
                 )
-            }
 
-            SettingsSection(title = "GPS") {
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -129,7 +129,7 @@ fun SettingsScreen(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "GPS Accuracy",
+                                "Detection Radius",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
@@ -143,7 +143,49 @@ fun SettingsScreen(
                     Slider(
                         value = settings.gpsAccuracy.toFloat(),
                         onValueChange = { viewModel.updateGpsAccuracy(it.toInt()) },
-                        valueRange = 1f..50f,
+                        valueRange = 5f..50f,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+
+            SettingsSection(title = "GPS") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_search),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(Modifier.width(16.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Map Zoom",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                "${settings.mapZoom}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Slider(
+                        value = settings.mapZoom.toFloat(),
+                        onValueChange = { viewModel.updateMapZoom(it.toInt()) },
+                        valueRange = 12f..20f,
+                        steps = 7,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }

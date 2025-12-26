@@ -42,6 +42,10 @@ class SettingsViewModel @Inject constructor(
         repo.updateGpsAccuracy(value)
     }
 
+    fun updateMapZoom(value: Int) = viewModelScope.launch {
+        repo.updateMapZoom(value)
+    }
+
     fun updateAll(settings: SettingsModel) = viewModelScope.launch {
         repo.updateSettings(settings)
     }

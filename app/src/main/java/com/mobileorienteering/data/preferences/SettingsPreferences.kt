@@ -24,6 +24,7 @@ class SettingsPreferences @Inject constructor(
         private val CONTROL_POINT_SOUND = booleanPreferencesKey("control_point_sound")
         private val CONTROL_POINT_VIBRATION = booleanPreferencesKey("control_point_vibration")
         private val GPS_ACCURACY = intPreferencesKey("gps_accuracy")
+        private val MAP_ZOOM = intPreferencesKey("map_zoom")
     }
 
     val settingsFlow: Flow<SettingsModel> = context.settingsDataStore.data.map { prefs ->
@@ -34,7 +35,8 @@ class SettingsPreferences @Inject constructor(
             } ?: SettingsModel().contrastLevel,
             controlPointSound = prefs[CONTROL_POINT_SOUND] ?: SettingsModel().controlPointSound,
             controlPointVibration = prefs[CONTROL_POINT_VIBRATION] ?: SettingsModel().controlPointVibration,
-            gpsAccuracy = prefs[GPS_ACCURACY] ?: SettingsModel().gpsAccuracy
+            gpsAccuracy = prefs[GPS_ACCURACY] ?: SettingsModel().gpsAccuracy,
+            mapZoom = prefs[MAP_ZOOM] ?: SettingsModel().mapZoom
         )
     }
 
@@ -45,6 +47,7 @@ class SettingsPreferences @Inject constructor(
             prefs[CONTROL_POINT_SOUND] = settings.controlPointSound
             prefs[CONTROL_POINT_VIBRATION] = settings.controlPointVibration
             prefs[GPS_ACCURACY] = settings.gpsAccuracy
+            prefs[MAP_ZOOM] = settings.mapZoom
         }
     }
 
@@ -62,4 +65,7 @@ class SettingsPreferences @Inject constructor(
 
     suspend fun updateGpsAccuracy(value: Int) =
         context.settingsDataStore.edit { it[GPS_ACCURACY] = value }
+
+    suspend fun updateMapZoom(value: Int) =
+        context.settingsDataStore.edit { it[MAP_ZOOM] = value }
 }

@@ -15,7 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.screen.main.map.MapViewModel
-import com.mobileorienteering.ui.screen.main.map.models.MapState
+import com.mobileorienteering.data.model.domain.MapState
 
 @Composable
 fun CheckpointBottomSheetContent(

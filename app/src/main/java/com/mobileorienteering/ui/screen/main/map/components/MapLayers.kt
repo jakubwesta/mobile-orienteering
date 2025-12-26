@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobileorienteering.data.model.domain.PathPoint
-import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
+import com.mobileorienteering.data.model.domain.Checkpoint
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.format
 import org.maplibre.compose.expressions.dsl.span
@@ -165,12 +165,12 @@ fun NextCheckpointLineLayer(
     LineLayer(
         id = "next-checkpoint-line",
         source = source,
-        color = const(Color(0xFFFF5722)),  // pomarańczowy
-        opacity = const(0.4f),             // półprzezroczystość
+        color = const(Color(0xFFFF5722)),
+        opacity = const(0.6f),
         width = const(2.dp),
-        dasharray = const(listOf(8f, 4f))  // linia przerywana
     )
 }
+
 
 @Composable
 fun RoutePathLayer(

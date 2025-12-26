@@ -11,8 +11,10 @@ import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.preferences.MapStatePreferences
-import com.mobileorienteering.ui.screen.main.map.models.Checkpoint
-import com.mobileorienteering.ui.screen.main.map.models.MapState
+import com.mobileorienteering.data.preferences.SettingsPreferences
+import com.mobileorienteering.data.model.domain.Checkpoint
+import com.mobileorienteering.data.model.domain.MapState
+import com.mobileorienteering.util.manager.FeedbackManager
 import com.mobileorienteering.util.manager.LocationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -29,7 +31,9 @@ class MapViewModel @Inject constructor(
     private val mapRepository: MapRepository,
     private val authRepository: AuthRepository,
     private val mapStatePreferences: MapStatePreferences,
-    private val activityRepository: ActivityRepository  // NOWE
+    private val settingsPreferences: SettingsPreferences,
+    private val feedbackManager: FeedbackManager,
+    private val activityRepository: ActivityRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MapState())
@@ -38,6 +42,11 @@ class MapViewModel @Inject constructor(
     private var lastLocation: Location? = null
     private var trackingJob: Job? = null
     private var isInitialized = false
+
+    private var checkpointRadius: Int = 10
+
+    private val _mapZoom = MutableStateFlow(16.0)
+    val mapZoom: StateFlow<Double> = _mapZoom.asStateFlow()
 
     private val _shouldMoveCamera = MutableStateFlow(false)
     val shouldMoveCamera: StateFlow<Boolean> = _shouldMoveCamera.asStateFlow()
@@ -59,6 +68,16 @@ class MapViewModel @Inject constructor(
 
     init {
         restoreSavedState()
+        observeSettings()
+    }
+
+    private fun observeSettings() {
+        viewModelScope.launch {
+            settingsPreferences.settingsFlow.collect { settings ->
+                checkpointRadius = settings.gpsAccuracy
+                _mapZoom.value = settings.mapZoom.toDouble()
+            }
+        }
     }
 
     private fun restoreSavedState() {
@@ -112,13 +131,12 @@ class MapViewModel @Inject constructor(
                 runStartTime = Instant.now(),
                 visitedCheckpointIndices = emptySet(),
                 runDistance = 0.0,
-                nextCheckpointIndex = 0,  // Zaczynamy od pierwszego
-                runPathData = emptyList(), // Reset trasy GPS
+                nextCheckpointIndex = 0,
+                runPathData = emptyList(),
                 error = null
             )
         }
 
-        // Uruchom śledzenie lokalizacji
         startTracking()
     }
 
@@ -159,7 +177,7 @@ class MapViewModel @Inject constructor(
             it.copy(
                 isRunActive = false,
                 isTracking = false,
-                runPathData = emptyList() // Czyścimy trasę po zakończeniu
+                runPathData = emptyList()
             )
         }
 
@@ -208,7 +226,6 @@ class MapViewModel @Inject constructor(
         val checkpoints = _state.value.checkpoints
         val nextIndex = _state.value.nextCheckpointIndex
 
-        // Sprawdź czy wszystkie checkpointy już zaliczone
         if (nextIndex >= checkpoints.size) return
 
         val nextCheckpoint = checkpoints[nextIndex]
@@ -217,12 +234,11 @@ class MapViewModel @Inject constructor(
             nextCheckpoint.position.latitude, nextCheckpoint.position.longitude
         )
 
-        // Promień zaliczenia: 25 metrów
-        if (distance <= 25.0) {
+        if (distance <= checkpointRadius) {
             val newVisited = _state.value.visitedCheckpointIndices + nextIndex
             val newNextIndex = nextIndex + 1
 
-            android.util.Log.d("MapViewModel", "Checkpoint ${nextIndex + 1} visited! Next: ${newNextIndex + 1}")
+            android.util.Log.d("MapViewModel", "Checkpoint ${nextIndex + 1} visited! (radius: ${checkpointRadius}m) Next: ${newNextIndex + 1}")
 
             _state.update {
                 it.copy(
@@ -231,9 +247,11 @@ class MapViewModel @Inject constructor(
                 )
             }
 
-            // Auto-zakończenie gdy wszystkie checkpointy odwiedzone
             if (newNextIndex >= checkpoints.size) {
+                feedbackManager.playFinishFeedback()
                 stopRun()
+            } else {
+                feedbackManager.playControlPointFeedback()
             }
         }
     }
@@ -316,7 +334,6 @@ class MapViewModel @Inject constructor(
         val distance = lastLocation?.distanceTo(location) ?: 0f
 
         _state.update { currentState ->
-            // Dodaj punkt do trasy jeśli bieg jest aktywny
             val newPathData = if (currentState.isRunActive) {
                 currentState.runPathData + PathPoint(
                     latitude = location.latitude,
@@ -342,7 +359,6 @@ class MapViewModel @Inject constructor(
 
         lastLocation = location
 
-        // Sprawdź czy odwiedzono checkpoint
         checkCheckpointVisit(location)
 
         viewModelScope.launch {

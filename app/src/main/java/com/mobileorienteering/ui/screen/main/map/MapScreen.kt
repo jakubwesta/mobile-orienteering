@@ -31,6 +31,7 @@ fun MapScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val finishedRunState by viewModel.finishedRunState.collectAsState()
+    val mapZoom by viewModel.mapZoom.collectAsState()
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
     val coroutineScope = rememberCoroutineScope()
@@ -43,14 +44,12 @@ fun MapScreen(
 
     var draggingCheckpointIndex by remember { mutableStateOf<Int?>(null) }
 
-    // Load map if initialMapId provided
     LaunchedEffect(initialMapId) {
         if (initialMapId != null) {
             viewModel.loadMap(initialMapId)
         }
     }
 
-    // Auto-start run when startRun=true - only once when entering screen
     var hasAutoStarted by remember { mutableStateOf(false) }
     LaunchedEffect(startRun, state.checkpoints) {
         if (startRun && state.checkpoints.isNotEmpty() && !state.isRunActive && !hasAutoStarted) {
@@ -59,7 +58,6 @@ fun MapScreen(
         }
     }
 
-    // Permission launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -71,7 +69,6 @@ fun MapScreen(
         }
     }
 
-    // Move camera only when loading route
     LaunchedEffect(shouldMoveCamera) {
         if (shouldMoveCamera && state.checkpoints.isNotEmpty()) {
             val firstCheckpoint = state.checkpoints.first()
@@ -90,22 +87,20 @@ fun MapScreen(
         }
     }
 
-    // Follow user location
-    LaunchedEffect(state.currentLocation) {
+    LaunchedEffect(state.currentLocation, mapZoom) {
         val location = state.currentLocation ?: return@LaunchedEffect
         if (state.isTracking || state.isRunActive) {
             coroutineScope.launch {
                 cameraState.animateTo(
                     CameraPosition(
                         target = Position(location.longitude, location.latitude),
-                        zoom = if (cameraState.position.zoom < 14) 16.0 else cameraState.position.zoom
+                        zoom = if (cameraState.position.zoom < mapZoom) mapZoom else cameraState.position.zoom
                     )
                 )
             }
         }
     }
 
-    // Initial camera position
     LaunchedEffect(Unit) {
         cameraState.position = CameraPosition(
             target = Position(21.0122, 52.2297),
@@ -132,7 +127,6 @@ fun MapScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            // Mapa
             MaplibreMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraState = cameraState,
@@ -159,14 +153,12 @@ fun MapScreen(
                     }
                 }
             ) {
-                // Trasa GPS podczas biegu
                 RoutePathLayer(
                     pathData = state.runPathData,
                     color = Color(0xFF2196F3),
                     width = 4f
                 )
 
-                // Linia do następnego checkpointu (podczas biegu)
                 NextCheckpointLineLayer(
                     currentLocation = state.currentLocation,
                     nextCheckpoint = if (state.nextCheckpointIndex < state.checkpoints.size) {
@@ -186,11 +178,9 @@ fun MapScreen(
                     }
                 )
 
-                // Lokalizacja użytkownika
                 UserLocationLayer(location = state.currentLocation)
             }
 
-            // Informacja o trybie przesuwania
             if (draggingCheckpointIndex != null) {
                 DraggingInfoBanner(
                     checkpointNumber = draggingCheckpointIndex!! + 1,
@@ -201,7 +191,6 @@ fun MapScreen(
                 )
             }
 
-            // Panel postępu biegu (ukryty podczas przesuwania)
             if (draggingCheckpointIndex == null) {
                 RunProgressPanel(
                     isVisible = state.isRunActive,
@@ -215,7 +204,6 @@ fun MapScreen(
                 )
             }
 
-            // Przyciski FAB (ukryte podczas biegu i przesuwania)
             if (!state.isRunActive && draggingCheckpointIndex == null) {
                 TrackingButton(
                     isTracking = state.isTracking,
@@ -251,7 +239,6 @@ fun MapScreen(
                 }
             }
 
-            // Dialogi
             if (draggingCheckpointIndex == null) {
                 CheckpointDialog(
                     position = tapPosition,
