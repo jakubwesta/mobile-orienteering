@@ -123,18 +123,18 @@ private fun CheckpointMarker(
 fun UserLocationLayer(location: Location?) {
     location ?: return
 
-    val feature = Feature(
+    val locationFeature = Feature(
         geometry = Point(Position(location.longitude, location.latitude)),
         properties = null
     )
 
-    val source = rememberGeoJsonSource(
-        data = GeoJsonData.Features(feature)
+    val locationSource = rememberGeoJsonSource(
+        data = GeoJsonData.Features(locationFeature)
     )
 
     CircleLayer(
         id = "user-location",
-        source = source,
+        source = locationSource,
         color = const(Color(0xFF2196F3)),
         radius = const(8.dp),
         strokeColor = const(Color.White),
@@ -142,6 +142,35 @@ fun UserLocationLayer(location: Location?) {
     )
 }
 
+@Composable
+fun NextCheckpointLineLayer(
+    currentLocation: Location?,
+    nextCheckpoint: Checkpoint?,
+    isRunActive: Boolean
+) {
+    if (!isRunActive || currentLocation == null || nextCheckpoint == null) return
+
+    val positions = listOf(
+        Position(currentLocation.longitude, currentLocation.latitude),
+        Position(nextCheckpoint.position.longitude, nextCheckpoint.position.latitude)
+    )
+
+    val lineString = LineString(positions)
+    val feature = Feature(geometry = lineString, properties = null)
+
+    val source = rememberGeoJsonSource(
+        data = GeoJsonData.Features(feature)
+    )
+
+    LineLayer(
+        id = "next-checkpoint-line",
+        source = source,
+        color = const(Color(0xFFFF5722)),  // pomarańczowy
+        opacity = const(0.4f),             // półprzezroczystość
+        width = const(2.dp),
+        dasharray = const(listOf(8f, 4f))  // linia przerywana
+    )
+}
 
 @Composable
 fun RoutePathLayer(

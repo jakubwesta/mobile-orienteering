@@ -166,6 +166,15 @@ fun MapScreen(
                     width = 4f
                 )
 
+                // Linia do następnego checkpointu (podczas biegu)
+                NextCheckpointLineLayer(
+                    currentLocation = state.currentLocation,
+                    nextCheckpoint = if (state.nextCheckpointIndex < state.checkpoints.size) {
+                        state.checkpoints[state.nextCheckpointIndex]
+                    } else null,
+                    isRunActive = state.isRunActive
+                )
+
                 CheckpointsLayer(
                     checkpoints = state.checkpoints,
                     visitedIndices = state.visitedCheckpointIndices,
@@ -176,7 +185,9 @@ fun MapScreen(
                         draggingCheckpointIndex = index
                     }
                 )
-                UserLocationLayer(state.currentLocation)
+
+                // Lokalizacja użytkownika
+                UserLocationLayer(location = state.currentLocation)
             }
 
             // Informacja o trybie przesuwania
