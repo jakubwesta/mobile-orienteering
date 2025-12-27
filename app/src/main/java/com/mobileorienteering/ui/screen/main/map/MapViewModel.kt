@@ -95,7 +95,6 @@ class MapViewModel @Inject constructor(
             }
 
             if (savedState.isTracking && locationManager.hasLocationPermission()) {
-                android.util.Log.d("MapViewModel", "Restoring tracking state...")
                 resumeTracking()
             }
 
@@ -176,13 +175,9 @@ class MapViewModel @Inject constructor(
         _state.update {
             it.copy(
                 isRunActive = false,
-                isTracking = false,
                 runPathData = emptyList()
             )
         }
-
-        trackingJob?.cancel()
-        saveTrackingState(false)
     }
 
     fun saveFinishedRun() {

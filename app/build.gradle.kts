@@ -89,6 +89,7 @@ dependencies {
     // Core & lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.datastore.preferences)
 
@@ -127,6 +128,10 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // Media3 (ExoPlayer) for video playback
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
 
     // Google Play Services
     implementation(libs.play.services.location)

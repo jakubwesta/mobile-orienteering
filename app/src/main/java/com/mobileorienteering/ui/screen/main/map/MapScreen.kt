@@ -22,6 +22,8 @@ import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
@@ -29,9 +31,9 @@ fun MapScreen(
     initialMapId: Long? = null,
     startRun: Boolean = false
 ) {
-    val state by viewModel.state.collectAsState()
-    val finishedRunState by viewModel.finishedRunState.collectAsState()
-    val mapZoom by viewModel.mapZoom.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val finishedRunState by viewModel.finishedRunState.collectAsStateWithLifecycle()
+    val mapZoom by viewModel.mapZoom.collectAsStateWithLifecycle()
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
     val coroutineScope = rememberCoroutineScope()
@@ -40,7 +42,7 @@ fun MapScreen(
     var tapPosition by remember { mutableStateOf<Position?>(null) }
     var showCheckpointDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
-    val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsState()
+    val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsStateWithLifecycle()
 
     var draggingCheckpointIndex by remember { mutableStateOf<Int?>(null) }
 

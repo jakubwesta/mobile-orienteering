@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import java.time.Duration
 import java.time.Instant
 import javax.inject.Singleton
 
@@ -178,7 +179,7 @@ class ActivityRepository @Inject constructor(
                 mapId = activity.mapId,
                 title = activity.title,
                 startTime = activity.startTime.toString(),
-                duration = activity.duration,
+                duration = convertToIsoDuration(activity.duration),
                 distance = activity.distance,
                 pathData = activity.pathData.map { it.toDto() }
             )
@@ -229,5 +230,21 @@ class ActivityRepository @Inject constructor(
 
     suspend fun clearLocalActivities() {
         activityDao.deleteAllActivities()
+    }
+
+    /**
+     * Converts duration from display format (MM:SS or H:MM:SS) to ISO-8601 format (PT...S)
+     * Examples: "05:30" -> "PT5M30S", "1:02:03" -> "PT1H2M3S"
+     */
+    private fun convertToIsoDuration(displayDuration: String): String {
+        val parts = displayDuration.split(":").map { it.toIntOrNull() ?: 0 }
+
+        val totalSeconds = when (parts.size) {
+            2 -> parts[0] * 60 + parts[1]  // MM:SS
+            3 -> parts[0] * 3600 + parts[1] * 60 + parts[2]  // H:MM:SS
+            else -> 0
+        }
+
+        return Duration.ofSeconds(totalSeconds.toLong()).toString()
     }
 }

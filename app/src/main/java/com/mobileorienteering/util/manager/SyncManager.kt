@@ -17,30 +17,25 @@ class SyncManager @Inject constructor(
      * Full sync: uploads all unsynced data, then downloads from server.
      */
     suspend fun syncAllDataForUser(userId: Long): Result<Unit> = withContext(Dispatchers.IO) {
-        if (hasAnyPendingSync()) {
-            try {
-                val activityResult = activityRepository.syncActivities(userId)
-                val mapResult = mapRepository.syncMaps(userId)
+        try {
+            val activityResult = activityRepository.syncActivities(userId)
+            val mapResult = mapRepository.syncMaps(userId)
 
-                when {
-                    activityResult.isFailure && mapResult.isFailure ->
-                        Result.failure(Exception("Both syncs failed"))
+            when {
+                activityResult.isFailure && mapResult.isFailure ->
+                    Result.failure(Exception("Both syncs failed"))
 
-                    activityResult.isFailure ->
-                        Result.failure(Exception("Activity sync failed: ${activityResult.exceptionOrNull()?.message}"))
+                activityResult.isFailure ->
+                    Result.failure(Exception("Activity sync failed: ${activityResult.exceptionOrNull()?.message}"))
 
-                    mapResult.isFailure ->
-                        Result.failure(Exception("Map sync failed: ${mapResult.exceptionOrNull()?.message}"))
+                mapResult.isFailure ->
+                    Result.failure(Exception("Map sync failed: ${mapResult.exceptionOrNull()?.message}"))
 
-                    else -> Result.success(Unit)
-                }
-            } catch (e: Exception) {
-                Result.failure(e)
+                else -> Result.success(Unit)
             }
-        } else {
-            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
     }
 
     suspend fun hasAnyPendingSync(): Boolean = withContext(Dispatchers.IO) {
