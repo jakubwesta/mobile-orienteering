@@ -233,8 +233,6 @@ class MapViewModel @Inject constructor(
             val newVisited = _state.value.visitedCheckpointIndices + nextIndex
             val newNextIndex = nextIndex + 1
 
-            android.util.Log.d("MapViewModel", "Checkpoint ${nextIndex + 1} visited! (radius: ${checkpointRadius}m) Next: ${newNextIndex + 1}")
-
             _state.update {
                 it.copy(
                     visitedCheckpointIndices = newVisited,
@@ -271,10 +269,7 @@ class MapViewModel @Inject constructor(
     // ==================== TRACKING ====================
 
     fun startTracking() {
-        android.util.Log.d("MapViewModel", "startTracking() called")
-
         if (!locationManager.hasLocationPermission()) {
-            android.util.Log.e("MapViewModel", "No location permission!")
             _state.update { it.copy(error = "Location permission required") }
             return
         }

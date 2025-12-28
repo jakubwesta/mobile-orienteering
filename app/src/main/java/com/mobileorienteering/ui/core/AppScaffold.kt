@@ -18,11 +18,13 @@ import com.mobileorienteering.ui.core.snackbar.SnackbarViewModel
 @Composable
 fun AppScaffold(
     navController: NavHostController,
-    isFirstLaunch: Boolean,
-    isLoggedIn: Boolean
+    isFirstLaunch: Boolean?,
+    isLoggedIn: Boolean?
 ) {
+    if (isFirstLaunch == null || isLoggedIn == null) return
+
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val showBottomBar = currentRoute.shouldShowBottomBar()
+    val showBottomBar = currentRoute.shouldShowBottomBar() || (currentRoute == null && isLoggedIn)
 
     val syncViewModel: SyncViewModel = hiltViewModel()
     val firstLaunchViewModel: FirstLaunchViewModel = hiltViewModel()
@@ -105,14 +107,16 @@ private fun HandleAuthState(
 }
 
 private fun String?.shouldShowBottomBar(): Boolean {
-    return this != null && AppScreen.mainScreens.any {
-        this.startsWith(it.route)
+    if (this == null) return false
+    return AppScreen.mainScreens.any { screen ->
+        screen != null && this.startsWith(screen.route)
     }
 }
 
 private fun String?.isMainScreen(): Boolean {
-    return this != null && AppScreen.mainScreens.any {
-        this.startsWith(it.route)
+    if (this == null) return false
+    return AppScreen.mainScreens.any { screen ->
+        screen != null && this.startsWith(screen.route)
     }
 }
 

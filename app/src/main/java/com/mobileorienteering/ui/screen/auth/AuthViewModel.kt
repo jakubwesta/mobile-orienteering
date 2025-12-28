@@ -12,6 +12,7 @@ import com.mobileorienteering.data.preferences.MapStatePreferences
 import com.mobileorienteering.util.manager.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,15 +26,15 @@ class AuthViewModel @Inject constructor(
     private val syncManager: SyncManager
 ) : ViewModel() {
 
-    val isLoggedIn = repo.isLoggedInFlow.stateIn(
+    val isLoggedIn: StateFlow<Boolean?> = repo.isLoggedInFlow.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        false
+        SharingStarted.Eagerly,
+        null
     )
 
     val authModel = repo.authModelFlow.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
+        SharingStarted.Eagerly,
         null
     )
 

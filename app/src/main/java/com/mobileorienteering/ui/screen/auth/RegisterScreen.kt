@@ -32,7 +32,7 @@ fun RegisterScreen(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn) {
+        if (isLoggedIn == true) {
             navController.navigate(AppScreen.Map.route) {
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
             }
