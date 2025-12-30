@@ -13,6 +13,8 @@ import com.mobileorienteering.ui.component.RunFinishedDialog
 import com.mobileorienteering.ui.component.RunProgressPanel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
@@ -40,11 +42,14 @@ fun MapScreen(
     val scaffoldState = rememberBottomSheetScaffoldState()
 
     var tapPosition by remember { mutableStateOf<Position?>(null) }
-    var showCheckpointDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsStateWithLifecycle()
 
     var draggingCheckpointIndex by remember { mutableStateOf<Int?>(null) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.updatePermissionState()
+    }
 
     LaunchedEffect(initialMapId) {
         if (initialMapId != null) {
@@ -145,14 +150,10 @@ fun MapScreen(
                     if (draggingCheckpointIndex != null) {
                         viewModel.moveCheckpoint(draggingCheckpointIndex!!, point.longitude, point.latitude)
                         draggingCheckpointIndex = null
-                        ClickResult.Consume
                     } else if (!state.isRunActive) {
                         tapPosition = point
-                        showCheckpointDialog = true
-                        ClickResult.Pass
-                    } else {
-                        ClickResult.Pass
                     }
+                    ClickResult.Pass
                 }
             ) {
                 RoutePathLayer(
@@ -231,7 +232,6 @@ fun MapScreen(
                         onClick = {
                             state.currentLocation?.let { location ->
                                 tapPosition = Position(location.longitude, location.latitude)
-                                showCheckpointDialog = true
                             }
                         },
                         modifier = Modifier
@@ -244,10 +244,7 @@ fun MapScreen(
             if (draggingCheckpointIndex == null) {
                 CheckpointDialog(
                     position = tapPosition,
-                    onDismiss = {
-                        showCheckpointDialog = false
-                        tapPosition = null
-                    },
+                    onDismiss = { tapPosition = null },
                     onConfirm = { name ->
                         tapPosition?.let { pos ->
                             viewModel.addCheckpoint(
@@ -265,6 +262,7 @@ fun MapScreen(
                     onDismiss = { showSaveDialog = false },
                     onSave = { name ->
                         viewModel.saveCurrentMap(name)
+                        showSaveDialog = false
                     }
                 )
             }

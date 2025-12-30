@@ -28,7 +28,7 @@ fun LibraryScreen(
     onEditMap: (Long) -> Unit = {},
     onStartRun: (Long) -> Unit = {}
 ) {
-    val maps by viewModel.maps.collectAsState()
+    val maps by viewModel.filteredMaps.collectAsState()
     val isLoading by remember { viewModel.isLoading }
     val error by remember { viewModel.error }
     val searchQuery by remember { viewModel.searchQuery }

@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import com.mobileorienteering.util.filter.RunningLocationFilter
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +25,8 @@ class LocationManager @Inject constructor(
 ) {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
+
+    private val locationFilter = RunningLocationFilter()
 
     fun hasLocationPermission(): Boolean {
         val hasFineLocation = ContextCompat.checkSelfPermission(
@@ -63,10 +66,15 @@ class LocationManager @Inject constructor(
         }
     }
 
+
+    fun resetFilter() {
+        locationFilter.reset()
+    }
+
     @Suppress("MissingPermission")
     fun getLocationUpdates(
-        intervalMillis: Long = 5000L,
-        minimalDistance: Float = 10f
+        intervalMillis: Long = 2000L,
+        minimalDistance: Float = 5f
     ): Flow<Location> = callbackFlow {
         if (!hasLocationPermission()) {
             close(IllegalStateException("Location permission not granted"))
@@ -86,7 +94,8 @@ class LocationManager @Inject constructor(
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.locations.forEach { location ->
-                    trySend(location).isSuccess
+                    val filteredLocation = locationFilter.filter(location)
+                    trySend(filteredLocation).isSuccess
                 }
             }
         }

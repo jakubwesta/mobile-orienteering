@@ -4,14 +4,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.domain.Activity
-import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.model.domain.OrienteeringMap
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,7 +24,6 @@ class ActivityViewModel @Inject constructor(
 
     var isLoading = mutableStateOf(false)
     var error = mutableStateOf<String?>(null)
-    var successMessage = mutableStateOf<String?>(null)
 
     var searchQuery = mutableStateOf("")
         private set
@@ -48,56 +46,13 @@ class ActivityViewModel @Inject constructor(
         return activityRepository.getActivityByIdFlow(activityId)
     }
 
-    fun createActivity(
-        userId: Long,
-        mapId: Long,
-        title: String,
-        startTime: Instant,
-        duration: String,
-        distance: Double,
-        pathData: List<PathPoint>
-    ) {
-        viewModelScope.launch {
-            isLoading.value = true
-            error.value = null
-
-            try {
-                val result = activityRepository.createActivity(
-                    userId = userId,
-                    mapId = mapId,
-                    title = title,
-                    startTime = startTime,
-                    duration = duration,
-                    distance = distance,
-                    pathData = pathData
-                )
-
-                result.onSuccess {
-                    successMessage.value = "Activity saved!"
-                }.onFailure { e ->
-                    error.value = e.message ?: "Failed to save activity"
-                }
-            } catch (e: Exception) {
-                error.value = e.message ?: "Unknown error"
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
     fun deleteActivity(activityId: Long) {
         viewModelScope.launch {
             isLoading.value = true
             error.value = null
 
             try {
-                val result = activityRepository.deleteActivity(activityId)
-
-                result.onSuccess {
-                    successMessage.value = "Activity deleted"
-                }.onFailure { e ->
-                    error.value = e.message ?: "Failed to delete activity"
-                }
+                activityRepository.deleteActivity(activityId)
             } catch (e: Exception) {
                 error.value = e.message ?: "Unknown error"
             } finally {
@@ -118,10 +73,6 @@ class ActivityViewModel @Inject constructor(
 
     fun clearError() {
         error.value = null
-    }
-
-    fun clearSuccessMessage() {
-        successMessage.value = null
     }
 
     private fun updateFilteredActivities(allActivities: List<Activity>) {
@@ -145,23 +96,12 @@ class ActivityViewModel @Inject constructor(
         _filteredActivities.value = filtered
     }
 
-    fun getStatistics(): ActivityStatistics {
-        val allActivities = activities.value
-        return ActivityStatistics(
-            totalActivities = allActivities.size,
-            totalDistance = allActivities.sumOf { it.distance },
-            averageDistance = if (allActivities.isNotEmpty()) {
-                allActivities.sumOf { it.distance } / allActivities.size
-            } else 0.0,
-            longestDistance = allActivities.maxOfOrNull { it.distance } ?: 0.0
-        )
-    }
-
     fun getAllMaps(): StateFlow<List<OrienteeringMap>> {
         return mapRepository.getAllMapsFlow()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getMapForActivity(activityId: Long): Flow<OrienteeringMap?> {
         return getActivity(activityId).flatMapLatest { activity ->
             if (activity != null) {
@@ -180,10 +120,3 @@ enum class SortOrder {
     DISTANCE_ASC,
     TITLE_ASC
 }
-
-data class ActivityStatistics(
-    val totalActivities: Int = 0,
-    val totalDistance: Double = 0.0,
-    val averageDistance: Double = 0.0,
-    val longestDistance: Double = 0.0
-)

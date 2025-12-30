@@ -129,6 +129,7 @@ class MapViewModel @Inject constructor(
                 isRunActive = true,
                 runStartTime = Instant.now(),
                 visitedCheckpointIndices = emptySet(),
+                checkpointVisitTimes = emptyMap(),
                 runDistance = 0.0,
                 nextCheckpointIndex = 0,
                 runPathData = emptyList(),
@@ -149,16 +150,20 @@ class MapViewModel @Inject constructor(
 
         val visitedControlPoints = state.visitedCheckpointIndices.map { index ->
             val checkpoint = state.checkpoints[index]
+            val visitTime = state.checkpointVisitTimes[index] ?: Instant.now()
             VisitedControlPoint(
                 controlPointName = checkpoint.name,
                 order = index + 1,
-                visitedAt = Instant.now(),
+                visitedAt = visitTime,
                 latitude = checkpoint.position.latitude,
                 longitude = checkpoint.position.longitude
             )
-        }
+        }.sortedBy { it.order }
 
         val isCompleted = state.visitedCheckpointIndices.size == state.checkpoints.size
+
+        // Snapshot pathData PRZED wyczyszczeniem - żeby zapisać trasę do momentu zakończenia
+        val pathDataSnapshot = state.runPathData.toList()
 
         _finishedRunState.value = FinishedRunState(
             isCompleted = isCompleted,
@@ -168,7 +173,7 @@ class MapViewModel @Inject constructor(
             distance = state.runDistance,
             mapId = state.currentMapId ?: 0L,
             mapName = state.currentMapName ?: "Unknown",
-            pathData = state.runPathData,
+            pathData = pathDataSnapshot,
             startTime = state.runStartTime ?: Instant.now()
         )
 
@@ -230,12 +235,15 @@ class MapViewModel @Inject constructor(
         )
 
         if (distance <= checkpointRadius) {
+            val visitTime = Instant.now()
             val newVisited = _state.value.visitedCheckpointIndices + nextIndex
+            val newVisitTimes = _state.value.checkpointVisitTimes + (nextIndex to visitTime)
             val newNextIndex = nextIndex + 1
 
             _state.update {
                 it.copy(
                     visitedCheckpointIndices = newVisited,
+                    checkpointVisitTimes = newVisitTimes,
                     nextCheckpointIndex = newNextIndex
                 )
             }
@@ -260,9 +268,9 @@ class MapViewModel @Inject constructor(
         val minutes = (seconds % 3600) / 60
         val secs = seconds % 60
         return if (hours > 0) {
-            String.format("%d:%02d:%02d", hours, minutes, secs)
+            String.format(java.util.Locale.ROOT, "%d:%02d:%02d", hours, minutes, secs)
         } else {
-            String.format("%02d:%02d", minutes, secs)
+            String.format(java.util.Locale.ROOT, "%02d:%02d", minutes, secs)
         }
     }
 
@@ -295,6 +303,10 @@ class MapViewModel @Inject constructor(
                 error = null
             )
         }
+
+        // Reset location filter for fresh tracking session
+        locationManager.resetFilter()
+
         startLocationUpdates()
     }
 
@@ -367,6 +379,7 @@ class MapViewModel @Inject constructor(
         saveTrackingState(false)
     }
 
+    @Suppress("unused")  // API na przyszłość - pojedyncze pobranie lokalizacji
     fun getCurrentLocation() {
         viewModelScope.launch {
             if (!locationManager.hasLocationPermission()) {
@@ -457,6 +470,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    @Suppress("unused")  // Może być użyte w przyszłości do resetu bez wylogowania
     fun resetTracking() {
         _state.update {
             MapState(hasPermission = it.hasPermission)

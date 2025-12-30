@@ -15,12 +15,11 @@ class LibraryViewModel @Inject constructor(
     private val mapRepository: MapRepository
 ) : ViewModel() {
 
-    val maps: StateFlow<List<OrienteeringMap>> = mapRepository.getAllMapsFlow()
+    private val maps: StateFlow<List<OrienteeringMap>> = mapRepository.getAllMapsFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     var isLoading = mutableStateOf(false)
     var error = mutableStateOf<String?>(null)
-    var successMessage = mutableStateOf<String?>(null)
 
     var searchQuery = mutableStateOf("")
         private set
@@ -39,23 +38,13 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    fun getMap(mapId: Long): Flow<OrienteeringMap?> {
-        return mapRepository.getMapByIdFlow(mapId)
-    }
-
     fun deleteMap(mapId: Long) {
         viewModelScope.launch {
             isLoading.value = true
             error.value = null
 
             try {
-                val result = mapRepository.deleteMap(mapId)
-
-                result.onSuccess {
-                    successMessage.value = "Map deleted"
-                }.onFailure { e ->
-                    error.value = e.message ?: "Failed to delete map"
-                }
+                mapRepository.deleteMap(mapId)
             } catch (e: Exception) {
                 error.value = e.message ?: "Unknown error"
             } finally {
@@ -78,10 +67,6 @@ class LibraryViewModel @Inject constructor(
         error.value = null
     }
 
-    fun clearSuccessMessage() {
-        successMessage.value = null
-    }
-
     private fun updateFilteredMaps(allMaps: List<OrienteeringMap>) {
         var filtered = allMaps
 
@@ -99,11 +84,6 @@ class LibraryViewModel @Inject constructor(
         }
 
         _filteredMaps.value = filtered
-    }
-
-    fun getAllMaps(): StateFlow<List<OrienteeringMap>> {
-        return mapRepository.getAllMapsFlow()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
 }
 

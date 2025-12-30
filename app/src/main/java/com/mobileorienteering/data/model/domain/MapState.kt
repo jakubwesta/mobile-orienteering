@@ -20,6 +20,7 @@ data class MapState(
     val isRunActive: Boolean = false,
     val runStartTime: Instant? = null,
     val visitedCheckpointIndices: Set<Int> = emptySet(),
+    val checkpointVisitTimes: Map<Int, Instant> = emptyMap(),
     val runDistance: Double = 0.0,
 
     val nextCheckpointIndex: Int = 0,

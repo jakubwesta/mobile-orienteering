@@ -171,6 +171,8 @@ class ActivityRepository @Inject constructor(
      * Uploads a single local activity to a server.
      * Deletes local activity (with negative id).
      * Inserts the synced activity from server (with positive id).
+     * Note: Backend doesn't support status/visitedControlPoints/totalCheckpoints fields,
+     * so we preserve them locally using activity.copy()
      */
     private suspend fun uploadActivityToServer(activity: Activity): Result<Unit> {
         return try {
@@ -191,6 +193,7 @@ class ActivityRepository @Inject constructor(
             result.map { response ->
                 activityDao.deleteActivityById(activity.id)
 
+                // copy() preserves status, visitedControlPoints, totalControlPoints
                 val syncedActivity = activity.copy(id = response.id)
                 activityDao.insertActivity(
                     syncedActivity.toEntity(syncedWithServer = true)
@@ -203,6 +206,7 @@ class ActivityRepository @Inject constructor(
 
     /**
      * Downloads all activities from server and inserts them locally.
+     * Preserves local status/checkpoint data since backend doesn't support these fields.
      * Deletes synced, local activities, that are no longer on a server.
      */
     private suspend fun downloadActivitiesFromServer(userId: Long): Result<Unit> {
@@ -212,13 +216,30 @@ class ActivityRepository @Inject constructor(
             val serverActivityIds = serverActivities.map { it.id }.toSet()
 
             val localActivities = activityDao.getActivitiesByUserId(userId).first()
+            val localActivitiesMap = localActivities.associateBy { it.id }
 
+            // Delete local activities that no longer exist on server
             localActivities
                 .filter { it.syncedWithServer && it.id !in serverActivityIds }
                 .forEach { activityDao.deleteActivityById(it.id) }
 
-            val entities = serverActivities.map {
-                it.toDomainModel().toEntity(syncedWithServer = true)
+            // Merge server data while preserving local fields that backend doesn't support
+            val entities = serverActivities.map { serverActivity ->
+                val serverDomain = serverActivity.toDomainModel()
+                val localEntity = localActivitiesMap[serverActivity.id]
+
+                // Preserve local status/checkpoints - server doesn't support these fields
+                val mergedActivity = if (localEntity != null) {
+                    serverDomain.copy(
+                        status = localEntity.status,
+                        visitedControlPoints = localEntity.visitedControlPoints,
+                        totalControlPoints = localEntity.totalCheckpoints
+                    )
+                } else {
+                    serverDomain
+                }
+
+                mergedActivity.toEntity(syncedWithServer = true)
             }
             activityDao.insertActivities(entities)
         }

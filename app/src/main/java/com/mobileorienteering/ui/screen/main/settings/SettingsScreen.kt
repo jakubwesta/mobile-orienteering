@@ -14,7 +14,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
 import com.mobileorienteering.data.model.domain.ContrastLevel
 import com.mobileorienteering.ui.screen.auth.AuthViewModel
-import com.mobileorienteering.ui.screen.main.runs.ActivityViewModel
 import com.mobileorienteering.ui.screen.main.settings.components.SettingsClickableItem
 import com.mobileorienteering.ui.screen.main.settings.components.SettingsNavigationItem
 import com.mobileorienteering.ui.screen.main.settings.components.SettingsSection
@@ -57,8 +56,6 @@ fun SettingsScreen(
                     title = "Edit Profile",
                     onClick = onNavigateToEditProfile
                 )
-
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
                 if (authModel?.isGoogleLogin != true) {
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))

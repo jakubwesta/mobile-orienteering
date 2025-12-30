@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -23,6 +23,9 @@ fun CheckpointBottomSheetContent(
     viewModel: MapViewModel,
     onSaveRoute: () -> Unit = {}
 ) {
+    var editingCheckpointId by remember { mutableStateOf<String?>(null) }
+    var editingName by remember { mutableStateOf("") }
+
     Column(
         Modifier
             .fillMaxWidth()
@@ -51,17 +54,30 @@ fun CheckpointBottomSheetContent(
                     Text("${index + 1}. ${checkpoint.name}", modifier = Modifier.weight(1f))
 
                     IconButton(
+                        onClick = {
+                            editingCheckpointId = checkpoint.id
+                            editingName = checkpoint.name
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_edit),
+                            contentDescription = "Edit name",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    IconButton(
                         onClick = { viewModel.moveCheckpointUp(checkpoint.id) },
                         enabled = index > 0
                     ) {
-                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Przesuń w górę")
+                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move up")
                     }
 
                     IconButton(
                         onClick = { viewModel.moveCheckpointDown(checkpoint.id) },
                         enabled = index < state.checkpoints.size - 1
                     ) {
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Przesuń w dół")
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move down")
                     }
 
                     IconButton(onClick = { viewModel.removeCheckpoint(checkpoint.id) }) {
@@ -104,5 +120,36 @@ fun CheckpointBottomSheetContent(
                 }
             }
         }
+    }
+
+    if (editingCheckpointId != null) {
+        AlertDialog(
+            onDismissRequest = { editingCheckpointId = null },
+            title = { Text("Edit checkpoint name") },
+            text = {
+                OutlinedTextField(
+                    value = editingName,
+                    onValueChange = { editingName = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.updateCheckpointName(editingCheckpointId!!, editingName)
+                        editingCheckpointId = null
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingCheckpointId = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

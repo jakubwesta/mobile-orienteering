@@ -56,21 +56,19 @@ fun ActivityCard(
                             fontWeight = FontWeight.Bold
                         )
 
-                        if (activity.totalControlPoints > 0) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = if (activity.isCompleted) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.errorContainer
-                                }
-                            ) {
-                                Text(
-                                    text = if (activity.isCompleted) "Completed" else "Uncompleted",
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = if (activity.isCompleted) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.errorContainer
                             }
+                        ) {
+                            Text(
+                                text = if (activity.isCompleted) "Completed" else "Uncompleted",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall
+                            )
                         }
                     }
                 }
