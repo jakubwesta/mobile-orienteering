@@ -64,6 +64,14 @@ class FeedbackManager @Inject constructor(
         }
     }
 
+    fun playSoundEnableFeedback() {
+        soundPool.play(controlPointSoundId, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun playVibrationEnableFeedback() {
+        vibrate(100)
+    }
+
     private fun vibrate(durationMs: Long) {
         vibrator.vibrate(
             VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE)

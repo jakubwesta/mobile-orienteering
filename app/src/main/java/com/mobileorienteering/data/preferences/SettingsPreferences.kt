@@ -40,17 +40,6 @@ class SettingsPreferences @Inject constructor(
         )
     }
 
-    suspend fun updateSettings(settings: SettingsModel) {
-        context.settingsDataStore.edit { prefs ->
-            prefs[DARK_MODE] = settings.darkMode
-            prefs[CONTRAST_LEVEL] = settings.contrastLevel.name
-            prefs[CONTROL_POINT_SOUND] = settings.controlPointSound
-            prefs[CONTROL_POINT_VIBRATION] = settings.controlPointVibration
-            prefs[GPS_ACCURACY] = settings.gpsAccuracy
-            prefs[MAP_ZOOM] = settings.mapZoom
-        }
-    }
-
     suspend fun updateDarkMode(enabled: Boolean) =
         context.settingsDataStore.edit { it[DARK_MODE] = enabled }
 

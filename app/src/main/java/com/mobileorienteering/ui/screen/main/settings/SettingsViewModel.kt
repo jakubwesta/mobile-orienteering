@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.domain.ContrastLevel
 import com.mobileorienteering.data.model.domain.SettingsModel
 import com.mobileorienteering.data.preferences.SettingsPreferences
+import com.mobileorienteering.util.manager.FeedbackManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -13,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repo: SettingsPreferences
+    private val repo: SettingsPreferences,
+    private val feedbackManager: FeedbackManager
 ) : ViewModel() {
 
     val settings = repo.settingsFlow.stateIn(
@@ -32,10 +34,20 @@ class SettingsViewModel @Inject constructor(
 
     fun updateControlPointSound(enabled: Boolean) = viewModelScope.launch {
         repo.updateControlPointSound(enabled)
+
+        // Play sound preview when enabling sound
+        if (enabled) {
+            feedbackManager.playSoundEnableFeedback()
+        }
     }
 
     fun updateControlPointVibration(enabled: Boolean) = viewModelScope.launch {
         repo.updateControlPointVibration(enabled)
+
+        // Play vibration preview when enabling vibration
+        if (enabled) {
+            feedbackManager.playVibrationEnableFeedback()
+        }
     }
 
     fun updateGpsAccuracy(value: Int) = viewModelScope.launch {
@@ -44,9 +56,5 @@ class SettingsViewModel @Inject constructor(
 
     fun updateMapZoom(value: Int) = viewModelScope.launch {
         repo.updateMapZoom(value)
-    }
-
-    fun updateAll(settings: SettingsModel) = viewModelScope.launch {
-        repo.updateSettings(settings)
     }
 }
