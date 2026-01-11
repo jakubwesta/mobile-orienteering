@@ -9,6 +9,7 @@ import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.preferences.MapStatePreferences
+import com.mobileorienteering.ui.core.snackbar.SnackbarManager
 import com.mobileorienteering.util.manager.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,7 +24,8 @@ class AuthViewModel @Inject constructor(
     private val activityRepository: ActivityRepository,
     private val mapRepository: MapRepository,
     private val mapStatePreferences: MapStatePreferences,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val snackbarManager: SnackbarManager
 ) : ViewModel() {
 
     val isLoggedIn: StateFlow<Boolean?> = repo.isLoggedInFlow.stateIn(
@@ -44,7 +46,6 @@ class AuthViewModel @Inject constructor(
     var fullName = mutableStateOf<String?>(null)
     var phoneNumber = mutableStateOf<String?>(null)
 
-    var error = mutableStateOf<String?>(null)
     var isLoading = mutableStateOf(false)
     var isGoogleSignInLoading = mutableStateOf(false)
 
@@ -59,13 +60,14 @@ class AuthViewModel @Inject constructor(
                     )
                 )
                 result.onSuccess { authModel ->
-                    error.value = null
                     syncDataForUser(authModel.userId)
                 }.onFailure { e ->
-                    error.value = e.message ?: "Login failed"
+                    val errorMessage = e.message ?: "Login failed"
+                    snackbarManager.showError(errorMessage)
                 }
             } catch (e: Exception) {
-                error.value = e.message ?: "Unknown error"
+                val errorMessage = e.message ?: "Unknown error"
+                snackbarManager.showError(errorMessage)
             } finally {
                 isLoading.value = false
             }
@@ -78,13 +80,14 @@ class AuthViewModel @Inject constructor(
             try {
                 val result = repo.loginWithGoogle(idToken)
                 result.onSuccess { authModel ->
-                    error.value = null
                     syncDataForUser(authModel.userId)
                 }.onFailure { e ->
-                    error.value = e.message ?: "Google login failed"
+                    val errorMessage = e.message ?: "Google login failed"
+                    snackbarManager.showError(errorMessage)
                 }
             } catch (e: Exception) {
-                error.value = e.message ?: "Unknown error"
+                val errorMessage = e.message ?: "Unknown error"
+                snackbarManager.showError(errorMessage)
             } finally {
                 isGoogleSignInLoading.value = false
             }
@@ -105,13 +108,15 @@ class AuthViewModel @Inject constructor(
                     )
                 )
                 result.onSuccess { authModel ->
-                    error.value = null
+                    snackbarManager.showSuccess("Account created successfully!")
                     syncDataForUser(authModel.userId)
                 }.onFailure { e ->
-                    error.value = e.message ?: "Registration failed"
+                    val errorMessage = e.message ?: "Registration failed"
+                    snackbarManager.showError(errorMessage)
                 }
             } catch (e: Exception) {
-                error.value = e.message ?: "Unknown error"
+                val errorMessage = e.message ?: "Unknown error"
+                snackbarManager.showError(errorMessage)
             } finally {
                 isLoading.value = false
             }
@@ -130,12 +135,12 @@ class AuthViewModel @Inject constructor(
     private suspend fun syncDataForUser(userId: Long) {
         try {
             syncManager.syncAllDataForUser(userId)
-        } catch (_: Exception) {
-
-        }
+        } catch (_: Exception) { }
     }
 
-    fun clearError() {
-        error.value = null
+    fun showGoogleSignInError(message: String) {
+        viewModelScope.launch {
+            snackbarManager.showError(message)
+        }
     }
 }

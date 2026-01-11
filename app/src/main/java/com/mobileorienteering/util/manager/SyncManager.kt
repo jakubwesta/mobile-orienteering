@@ -37,10 +37,4 @@ class SyncManager @Inject constructor(
             Result.failure(e)
         }
     }
-
-    suspend fun hasAnyPendingSync(): Boolean = withContext(Dispatchers.IO) {
-        val unsyncedActivities = activityRepository.getUnsyncedActivities()
-        val unsyncedMaps = mapRepository.getUnsyncedMaps()
-        unsyncedActivities.isNotEmpty() || unsyncedMaps.isNotEmpty()
-    }
 }

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -31,7 +32,6 @@ fun LoginScreen(
 ) {
     val username by authViewModel.username
     val password by authViewModel.password
-    val error by authViewModel.error
     val isLoading by authViewModel.isLoading
     val isGoogleSignInLoading by authViewModel.isGoogleSignInLoading
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
@@ -49,15 +49,18 @@ fun LoginScreen(
             if (idToken != null) {
                 authViewModel.loginWithGoogle(idToken)
             } else {
-                authViewModel.error.value = "Google Sign-In was cancelled or failed"
+                authViewModel.showGoogleSignInError("Google Sign-In was cancelled or failed")
             }
         }
     }
 
+    // Redirects user to map screen after logging in
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn == true) {
             navController.navigate(AppScreen.Map.route) {
-                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
             }
         }
     }
@@ -91,11 +94,10 @@ fun LoginScreen(
                     value = username,
                     onValueChange = {
                         authViewModel.username.value = it
-                        if (error != null) authViewModel.clearError()
                     },
                     label = "Username",
                     leadingIconRes = R.drawable.ic_person_otlined,
-                    imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+                    imeAction = ImeAction.Next,
                     enabled = !isLoading && !isGoogleSignInLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -104,11 +106,10 @@ fun LoginScreen(
                     value = password,
                     onValueChange = {
                         authViewModel.password.value = it
-                        if (error != null) authViewModel.clearError()
                     },
                     label = "Password",
                     leadingIconRes = R.drawable.ic_lock_outlined,
-                    imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                    imeAction = ImeAction.Done,
                     onImeAction = {
                         focusManager.clearFocus()
                         authViewModel.login()
@@ -122,7 +123,10 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    enabled = !isLoading && !isGoogleSignInLoading && username.isNotBlank() && password.isNotBlank()
+                    enabled = !isLoading &&
+                            !isGoogleSignInLoading &&
+                            username.isNotBlank() &&
+                            password.isNotBlank()
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
@@ -133,25 +137,6 @@ fun LoginScreen(
                         Text(
                             "Log in",
                             style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-
-                error?.let { message ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        )
-                    ) {
-                        Text(
-                            text = message,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
                         )
                     }
                 }
@@ -182,7 +167,7 @@ fun LoginScreen(
                                     IntentSenderRequest.Builder(intentSender).build()
                                 )
                             } else {
-                                authViewModel.error.value = "Failed to start Google Sign-In"
+                                authViewModel.showGoogleSignInError("Failed to start Google Sign-In")
                             }
                         }
                     },

@@ -25,12 +25,12 @@ fun RegisterScreen(
     val password by authViewModel.password
     val fullName by authViewModel.fullName
     val phoneNumber by authViewModel.phoneNumber
-    val error by authViewModel.error
     val isLoading by authViewModel.isLoading
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
 
     val focusManager = LocalFocusManager.current
 
+    // Redirects user to map screen after logging in
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn == true) {
             navController.navigate(AppScreen.Map.route) {
@@ -137,21 +137,6 @@ fun RegisterScreen(
                         Text(
                             "Create account",
                             style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-
-                error?.let { message ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-                    ) {
-                        Text(
-                            text = message,
-                            modifier = Modifier.padding(12.dp),
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
                         )
                     }
                 }
