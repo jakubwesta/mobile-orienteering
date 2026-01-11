@@ -43,6 +43,11 @@ kotlinTest = "2.1.0"
 runner = "1.5.2"
 core = "1.5.0"
 jetbrainsKotlinJvm = "2.1.0"
+mockito = "5.14.2"
+mockitoKotlin = "5.4.0"
+coroutinesTest = "1.9.0"
+hiltTesting = "2.52"
+turbine = "1.1.0"
 
 media3 = "1.5.1"
 
@@ -104,6 +109,13 @@ moshi-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", v
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hiltTesting" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "core" }
 
 # Media3 (ExoPlayer)
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }

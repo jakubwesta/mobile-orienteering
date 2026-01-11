@@ -28,7 +28,7 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.mobileorienteering.HiltTestRunner"
 
         val googleWebClientId = localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
@@ -137,12 +137,29 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.play.services.auth)
 
-    // Testing
+    // Testing - Unit Tests
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.hilt.android.testing)
+    kspTest(libs.hilt.compiler)
+
+    // Testing - Instrumented Tests (UI Tests)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
+
+    // Flow testing (highly recommended)
+    testImplementation(libs.turbine)
+    androidTestImplementation(libs.turbine)
+
+    // Debug - Required for Compose UI testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
