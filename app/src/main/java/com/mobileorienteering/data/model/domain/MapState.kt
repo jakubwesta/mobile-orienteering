@@ -2,30 +2,16 @@ package com.mobileorienteering.data.model.domain
 
 import android.location.Location
 import org.maplibre.spatialk.geojson.Position
-import java.time.Instant
 
 data class MapState(
     val currentLocation: Location? = null,
     val isTracking: Boolean = false,
     val hasPermission: Boolean = false,
     val error: String? = null,
-    val locationHistory: List<Location> = emptyList(),
-    val distanceTraveled: Float = 0f,
-    val trackingStartTime: Long = 0L,
     val checkpoints: List<Checkpoint> = emptyList(),
 
     val currentMapId: Long? = null,
-    val currentMapName: String? = null,
-
-    val isRunActive: Boolean = false,
-    val runStartTime: Instant? = null,
-    val visitedCheckpointIndices: Set<Int> = emptySet(),
-    val checkpointVisitTimes: Map<Int, Instant> = emptyMap(),
-    val runDistance: Double = 0.0,
-
-    val nextCheckpointIndex: Int = 0,
-
-    val runPathData: List<PathPoint> = emptyList()
+    val currentMapName: String? = null
 )
 
 data class Checkpoint(
@@ -40,9 +26,7 @@ data class SavedMapState(
     val checkpoints: List<Checkpoint> = emptyList(),
     val currentMapId: Long? = null,
     val currentMapName: String? = null,
-    val isTracking: Boolean = false,
-    val distanceTraveled: Float = 0f,
-    val locationHistoryJson: String = "[]"
+    val isTracking: Boolean = false
 )
 
 

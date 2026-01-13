@@ -14,14 +14,14 @@ import com.mobileorienteering.data.preferences.MapStatePreferences
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.data.model.domain.Checkpoint
 import com.mobileorienteering.data.model.domain.MapState
-import com.mobileorienteering.util.manager.FeedbackManager
+import com.mobileorienteering.service.RunServiceManager
+import com.mobileorienteering.service.RunState
 import com.mobileorienteering.util.manager.LocationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.maplibre.spatialk.geojson.Position
-import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
 
@@ -32,18 +32,14 @@ class MapViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val mapStatePreferences: MapStatePreferences,
     private val settingsPreferences: SettingsPreferences,
-    private val feedbackManager: FeedbackManager,
-    private val activityRepository: ActivityRepository
+    private val activityRepository: ActivityRepository,
+    private val runServiceManager: RunServiceManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MapState())
     val state: StateFlow<MapState> = _state.asStateFlow()
 
-    private var lastLocation: Location? = null
     private var trackingJob: Job? = null
-    private var isInitialized = false
-
-    private var checkpointRadius: Int = 10
 
     private val _mapZoom = MutableStateFlow(16.0)
     val mapZoom: StateFlow<Double> = _mapZoom.asStateFlow()
@@ -73,15 +69,19 @@ class MapViewModel @Inject constructor(
     private val _finishedRunState = MutableStateFlow<FinishedRunState?>(null)
     val finishedRunState: StateFlow<FinishedRunState?> = _finishedRunState.asStateFlow()
 
+    // Stan biegu z Foreground Service
+    val runState: StateFlow<RunState> = runServiceManager.runState
+
     init {
         restoreSavedState()
         observeSettings()
+        // Próba połączenia z działającym Service (jeśli bieg był aktywny)
+        runServiceManager.tryReconnect()
     }
 
     private fun observeSettings() {
         viewModelScope.launch {
             settingsPreferences.settingsFlow.collect { settings ->
-                checkpointRadius = settings.gpsAccuracy
                 _mapZoom.value = settings.mapZoom.toDouble()
                 _showLocationDuringRun.value = settings.showLocationDuringRun
             }
@@ -97,7 +97,6 @@ class MapViewModel @Inject constructor(
                     checkpoints = savedState.checkpoints,
                     currentMapId = savedState.currentMapId,
                     currentMapName = savedState.currentMapName,
-                    distanceTraveled = savedState.distanceTraveled,
                     hasPermission = locationManager.hasLocationPermission()
                 )
             }
@@ -109,8 +108,6 @@ class MapViewModel @Inject constructor(
             if (savedState.checkpoints.isNotEmpty()) {
                 _shouldMoveCamera.value = true
             }
-
-            isInitialized = true
         }
     }
 
@@ -140,63 +137,38 @@ class MapViewModel @Inject constructor(
             return
         }
 
-        _state.update {
-            it.copy(
-                isRunActive = true,
-                runStartTime = Instant.now(),
-                visitedCheckpointIndices = emptySet(),
-                checkpointVisitTimes = emptyMap(),
-                runDistance = 0.0,
-                nextCheckpointIndex = 0,
-                runPathData = emptyList(),
-                error = null
-            )
-        }
+        val mapId = _state.value.currentMapId ?: 0L
+        val mapName = _state.value.currentMapName ?: "Unknown"
 
-        startTracking()
+        // Uruchom Foreground Service
+        runServiceManager.startRun(
+            checkpoints = _state.value.checkpoints,
+            mapId = mapId,
+            mapName = mapName
+        )
+
+        _state.update { it.copy(error = null) }
+
+        // Jednorazowe centrowanie kamery
+        _centerCameraOnce.value = true
     }
 
     fun stopRun() {
-        val state = _state.value
-        if (!state.isRunActive) return
+        // Zatrzymaj Service i pobierz końcowy stan
+        val finalRunState = runServiceManager.stopRun()
 
-        val duration = state.runStartTime?.let {
-            Duration.between(it, Instant.now())
-        } ?: Duration.ZERO
-
-        val visitedControlPoints = state.visitedCheckpointIndices.map { index ->
-            val checkpoint = state.checkpoints[index]
-            val visitTime = state.checkpointVisitTimes[index] ?: Instant.now()
-            VisitedControlPoint(
-                controlPointName = checkpoint.name,
-                order = index + 1,
-                visitedAt = visitTime,
-                latitude = checkpoint.position.latitude,
-                longitude = checkpoint.position.longitude
-            )
-        }.sortedBy { it.order }
-
-        val isCompleted = state.visitedCheckpointIndices.size == state.checkpoints.size
-
-        // Snapshot pathData PRZED wyczyszczeniem - żeby zapisać trasę do momentu zakończenia
-        val pathDataSnapshot = state.runPathData.toList()
-
-        _finishedRunState.value = FinishedRunState(
-            isCompleted = isCompleted,
-            duration = formatDurationString(duration.seconds),
-            visitedControlPoints = visitedControlPoints,
-            totalCheckpoints = state.checkpoints.size,
-            distance = state.runDistance,
-            mapId = state.currentMapId ?: 0L,
-            mapName = state.currentMapName ?: "Unknown",
-            pathData = pathDataSnapshot,
-            startTime = state.runStartTime ?: Instant.now()
-        )
-
-        _state.update {
-            it.copy(
-                isRunActive = false,
-                runPathData = emptyList()
+        if (!finalRunState.isActive && finalRunState.startTime != null) {
+            // Stwórz FinishedRunState z danych Service
+            _finishedRunState.value = FinishedRunState(
+                isCompleted = finalRunState.isCompleted,
+                duration = finalRunState.durationString,
+                visitedControlPoints = finalRunState.visitedControlPoints,
+                totalCheckpoints = finalRunState.totalCheckpoints,
+                distance = finalRunState.distance,
+                mapId = finalRunState.mapId,
+                mapName = finalRunState.mapName,
+                pathData = finalRunState.pathData,
+                startTime = finalRunState.startTime
             )
         }
     }
@@ -232,64 +204,6 @@ class MapViewModel @Inject constructor(
         _finishedRunState.value = null
     }
 
-    /**
-     * Sprawdza czy użytkownik jest w pobliżu NASTĘPNEGO checkpointu w kolejności.
-     * Checkpointy muszą być zaliczane po kolei (1→2→3→...).
-     */
-    private fun checkCheckpointVisit(location: Location) {
-        if (!_state.value.isRunActive) return
-
-        val checkpoints = _state.value.checkpoints
-        val nextIndex = _state.value.nextCheckpointIndex
-
-        if (nextIndex >= checkpoints.size) return
-
-        val nextCheckpoint = checkpoints[nextIndex]
-        val distance = calculateDistance(
-            location.latitude, location.longitude,
-            nextCheckpoint.position.latitude, nextCheckpoint.position.longitude
-        )
-
-        if (distance <= checkpointRadius) {
-            val visitTime = Instant.now()
-            val newVisited = _state.value.visitedCheckpointIndices + nextIndex
-            val newVisitTimes = _state.value.checkpointVisitTimes + (nextIndex to visitTime)
-            val newNextIndex = nextIndex + 1
-
-            _state.update {
-                it.copy(
-                    visitedCheckpointIndices = newVisited,
-                    checkpointVisitTimes = newVisitTimes,
-                    nextCheckpointIndex = newNextIndex
-                )
-            }
-
-            if (newNextIndex >= checkpoints.size) {
-                feedbackManager.playFinishFeedback()
-                stopRun()
-            } else {
-                feedbackManager.playControlPointFeedback()
-            }
-        }
-    }
-
-    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val results = FloatArray(1)
-        Location.distanceBetween(lat1, lon1, lat2, lon2, results)
-        return results[0].toDouble()
-    }
-
-    private fun formatDurationString(seconds: Long): String {
-        val hours = seconds / 3600
-        val minutes = (seconds % 3600) / 60
-        val secs = seconds % 60
-        return if (hours > 0) {
-            String.format(java.util.Locale.ROOT, "%d:%02d:%02d", hours, minutes, secs)
-        } else {
-            String.format(java.util.Locale.ROOT, "%02d:%02d", minutes, secs)
-        }
-    }
-
     // ==================== TRACKING ====================
 
     fun startTracking() {
@@ -301,10 +215,7 @@ class MapViewModel @Inject constructor(
         _state.update {
             it.copy(
                 isTracking = true,
-                error = null,
-                trackingStartTime = System.currentTimeMillis(),
-                locationHistory = emptyList(),
-                distanceTraveled = 0f
+                error = null
             )
         }
 
@@ -352,38 +263,8 @@ class MapViewModel @Inject constructor(
     }
 
     private fun updateLocation(location: Location) {
-        val distance = lastLocation?.distanceTo(location) ?: 0f
-
         _state.update { currentState ->
-            val newPathData = if (currentState.isRunActive) {
-                currentState.runPathData + PathPoint(
-                    latitude = location.latitude,
-                    longitude = location.longitude,
-                    timestamp = Instant.now()
-                )
-            } else {
-                currentState.runPathData
-            }
-
-            currentState.copy(
-                currentLocation = location,
-                locationHistory = currentState.locationHistory + location,
-                distanceTraveled = currentState.distanceTraveled + distance,
-                runDistance = if (currentState.isRunActive) {
-                    currentState.runDistance + distance
-                } else {
-                    currentState.runDistance
-                },
-                runPathData = newPathData
-            )
-        }
-
-        lastLocation = location
-
-        checkCheckpointVisit(location)
-
-        viewModelScope.launch {
-            mapStatePreferences.saveDistance(_state.value.distanceTraveled)
+            currentState.copy(currentLocation = location)
         }
     }
 
@@ -396,24 +277,6 @@ class MapViewModel @Inject constructor(
         }
 
         saveTrackingState(false)
-    }
-
-    @Suppress("unused")  // API na przyszłość - pojedyncze pobranie lokalizacji
-    fun getCurrentLocation() {
-        viewModelScope.launch {
-            if (!locationManager.hasLocationPermission()) {
-                _state.update { it.copy(error = "Location permission required") }
-                return@launch
-            }
-
-            val location = locationManager.getCurrentLocation()
-            _state.update {
-                it.copy(
-                    currentLocation = location,
-                    error = if (location == null) "Failed to get location" else null
-                )
-            }
-        }
     }
 
     fun clearError() {
@@ -486,18 +349,6 @@ class MapViewModel @Inject constructor(
             list.add(index + 1, item)
             _state.update { it.copy(checkpoints = list) }
             saveCheckpoints()
-        }
-    }
-
-    @Suppress("unused")  // Może być użyte w przyszłości do resetu bez wylogowania
-    fun resetTracking() {
-        _state.update {
-            MapState(hasPermission = it.hasPermission)
-        }
-        lastLocation = null
-
-        viewModelScope.launch {
-            mapStatePreferences.clearState()
         }
     }
 

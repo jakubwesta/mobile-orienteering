@@ -39,8 +39,6 @@ class MapStatePreferences @Inject constructor(
         private val CURRENT_MAP_ID = longPreferencesKey("current_map_id")
         private val CURRENT_MAP_NAME = stringPreferencesKey("current_map_name")
         private val IS_TRACKING = booleanPreferencesKey("is_tracking")
-        private val DISTANCE_TRAVELED = floatPreferencesKey("distance_traveled")
-        private val LOCATION_HISTORY_JSON = stringPreferencesKey("location_history_json")
     }
 
     val savedStateFlow: Flow<SavedMapState> = context.mapStateDataStore.data.map { prefs ->
@@ -55,9 +53,7 @@ class MapStatePreferences @Inject constructor(
             checkpoints = checkpoints,
             currentMapId = prefs[CURRENT_MAP_ID],
             currentMapName = prefs[CURRENT_MAP_NAME],
-            isTracking = prefs[IS_TRACKING] ?: false,
-            distanceTraveled = prefs[DISTANCE_TRAVELED] ?: 0f,
-            locationHistoryJson = prefs[LOCATION_HISTORY_JSON] ?: "[]"
+            isTracking = prefs[IS_TRACKING] ?: false
         )
     }
 
@@ -91,12 +87,6 @@ class MapStatePreferences @Inject constructor(
     suspend fun saveTrackingState(isTracking: Boolean) {
         context.mapStateDataStore.edit { prefs ->
             prefs[IS_TRACKING] = isTracking
-        }
-    }
-
-    suspend fun saveDistance(distance: Float) {
-        context.mapStateDataStore.edit { prefs ->
-            prefs[DISTANCE_TRAVELED] = distance
         }
     }
 
