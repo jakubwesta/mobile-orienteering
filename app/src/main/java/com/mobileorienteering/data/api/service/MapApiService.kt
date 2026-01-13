@@ -8,11 +8,15 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface MapApiService {
     @POST("api/mobile/maps")
     suspend fun createMap(@Body request: CreateMapRequest): Response<CreateMapResponse>
+
+    @PUT("api/mobile/maps/{id}")
+    suspend fun updateMap(@Path("id") id: Long, @Body request: CreateMapRequest): Response<MapResponse>
 
     @DELETE("api/mobile/maps/{id}")
     suspend fun deleteMap(@Path("id") id: Long): Response<Unit>

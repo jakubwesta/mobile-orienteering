@@ -299,7 +299,12 @@ fun MapScreen(
                     onSave = { name ->
                         viewModel.saveCurrentMap(name)
                         showSaveDialog = false
-                    }
+                    },
+                    existingMapName = state.currentMapName,
+                    onUpdate = if (state.currentMapId != null) { { name ->
+                        viewModel.updateCurrentMap(name)
+                        showSaveDialog = false
+                    } } else null
                 )
             }
 

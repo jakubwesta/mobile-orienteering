@@ -315,6 +315,16 @@ class MapViewModel @Inject constructor(
         saveCurrentMapInfo()
     }
 
+    fun detachFromMap() {
+        _state.update {
+            it.copy(
+                currentMapId = null,
+                currentMapName = null
+            )
+        }
+        saveCurrentMapInfo()
+    }
+
     fun updateCheckpointName(id: String, newName: String) {
         _state.update { currentState ->
             currentState.copy(
@@ -380,6 +390,51 @@ class MapViewModel @Inject constructor(
                 _state.update { it.copy(error = null) }
             }.onFailure { e ->
                 _state.update { it.copy(error = "Save error: ${e.message}") }
+            }
+        }
+    }
+
+    fun updateCurrentMap(name: String, description: String = "", location: String = "") {
+        val mapId = _state.value.currentMapId
+        if (mapId == null) {
+            _state.update { it.copy(error = "No map to update") }
+            return
+        }
+
+        viewModelScope.launch {
+            val auth = authRepository.getCurrentAuth()
+            if (auth == null) {
+                _state.update { it.copy(error = "You must be logged in to update map") }
+                return@launch
+            }
+
+            val controlPoints = _state.value.checkpoints.mapIndexed { index, cp ->
+                ControlPoint(
+                    id = index.toLong(),
+                    latitude = cp.position.latitude,
+                    longitude = cp.position.longitude
+                )
+            }
+
+            val result = mapRepository.updateMap(
+                mapId = mapId,
+                userId = auth.userId,
+                name = name,
+                description = description,
+                location = location,
+                controlPoints = controlPoints
+            )
+
+            result.onSuccess {
+                _state.update {
+                    it.copy(
+                        currentMapName = name,
+                        error = null
+                    )
+                }
+                saveCurrentMapInfo()
+            }.onFailure { e ->
+                _state.update { it.copy(error = "Update error: ${e.message}") }
             }
         }
     }

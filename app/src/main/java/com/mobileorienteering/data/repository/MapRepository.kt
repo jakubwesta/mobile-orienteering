@@ -64,6 +64,56 @@ class MapRepository @Inject constructor(
         }
     }
 
+    suspend fun updateMap(
+        mapId: Long,
+        userId: Long,
+        name: String,
+        description: String,
+        location: String,
+        controlPoints: List<ControlPoint>
+    ): Result<Unit> {
+        return try {
+            val existingMap = mapDao.getMapById(mapId)
+            val createdAt = existingMap?.createdAt ?: Instant.now()
+
+            val updatedMap = OrienteeringMap(
+                id = mapId,
+                userId = userId,
+                name = name,
+                description = description,
+                location = location,
+                controlPoints = controlPoints,
+                createdAt = createdAt
+            )
+
+            if (mapId > 0) {
+                val request = CreateMapRequest(
+                    userId = userId,
+                    name = name,
+                    description = description,
+                    location = location,
+                    mapData = controlPoints.toMapDataDto()
+                )
+
+                val result = ApiHelper.safeApiCall("Failed to update map") {
+                    mapApi.updateMap(mapId, request)
+                }
+
+                result.onSuccess {
+                    mapDao.updateMap(updatedMap.toEntity(syncedWithServer = true))
+                }.onFailure {
+                    mapDao.updateMap(updatedMap.toEntity(syncedWithServer = false))
+                }
+            } else {
+                mapDao.updateMap(updatedMap.toEntity(syncedWithServer = false))
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to update map: ${e.message}"))
+        }
+    }
+
     suspend fun deleteMap(id: Long): Result<Unit> {
         // If ID is negative, it's not on server yet
         if (id < 0) {
