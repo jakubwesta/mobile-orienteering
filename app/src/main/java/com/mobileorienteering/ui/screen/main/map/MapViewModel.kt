@@ -51,6 +51,13 @@ class MapViewModel @Inject constructor(
     private val _shouldMoveCamera = MutableStateFlow(false)
     val shouldMoveCamera: StateFlow<Boolean> = _shouldMoveCamera.asStateFlow()
 
+    private val _showLocationDuringRun = MutableStateFlow(true)
+    val showLocationDuringRun: StateFlow<Boolean> = _showLocationDuringRun.asStateFlow()
+
+    // Flaga do jednorazowego centrowania kamery przy włączeniu lokalizacji
+    private val _centerCameraOnce = MutableStateFlow(false)
+    val centerCameraOnce: StateFlow<Boolean> = _centerCameraOnce.asStateFlow()
+
     data class FinishedRunState(
         val isCompleted: Boolean,
         val duration: String,
@@ -76,6 +83,7 @@ class MapViewModel @Inject constructor(
             settingsPreferences.settingsFlow.collect { settings ->
                 checkpointRadius = settings.gpsAccuracy
                 _mapZoom.value = settings.mapZoom.toDouble()
+                _showLocationDuringRun.value = settings.showLocationDuringRun
             }
         }
     }
@@ -108,6 +116,14 @@ class MapViewModel @Inject constructor(
 
     fun cameraMoved() {
         _shouldMoveCamera.value = false
+    }
+
+    fun cameraCentered() {
+        _centerCameraOnce.value = false
+    }
+
+    fun requestCenterCamera() {
+        _centerCameraOnce.value = true
     }
 
     fun updatePermissionState() {
@@ -185,7 +201,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun saveFinishedRun() {
+    fun saveFinishedRun(title: String) {
         val finishedRun = _finishedRunState.value ?: return
 
         viewModelScope.launch {
@@ -198,7 +214,7 @@ class MapViewModel @Inject constructor(
             activityRepository.createRunActivity(
                 userId = auth.userId,
                 mapId = finishedRun.mapId,
-                title = "Run: ${finishedRun.mapName}",
+                title = title.ifBlank { "Run: ${finishedRun.mapName}" },
                 startTime = finishedRun.startTime,
                 duration = finishedRun.duration,
                 distance = finishedRun.distance,
@@ -291,6 +307,9 @@ class MapViewModel @Inject constructor(
                 distanceTraveled = 0f
             )
         }
+
+        // Jednorazowe centrowanie kamery przy włączeniu lokalizacji
+        _centerCameraOnce.value = true
 
         saveTrackingState(true)
         startLocationUpdates()

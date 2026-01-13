@@ -6,7 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,9 +20,12 @@ fun RunFinishedDialog(
     visitedCount: Int,
     totalCount: Int,
     distance: Double,
-    onSave: () -> Unit,
+    defaultTitle: String = "",
+    onSave: (String) -> Unit,
     onDiscard: () -> Unit
 ) {
+    var runTitle by remember { mutableStateOf(defaultTitle) }
+
     AlertDialog(
         onDismissRequest = {},
         icon = {
@@ -49,6 +52,16 @@ fun RunFinishedDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                OutlinedTextField(
+                    value = runTitle,
+                    onValueChange = { runTitle = it },
+                    label = { Text("Run name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text("Time: $duration")
                 Text("Control Points: $visitedCount/$totalCount")
                 Text("Distance: ${formatDistance(distance)}")
@@ -66,7 +79,7 @@ fun RunFinishedDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onSave) {
+            Button(onClick = { onSave(runTitle) }) {
                 Text("Save")
             }
         },

@@ -36,6 +36,8 @@ fun MapScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val finishedRunState by viewModel.finishedRunState.collectAsStateWithLifecycle()
     val mapZoom by viewModel.mapZoom.collectAsStateWithLifecycle()
+    val showLocationDuringRun by viewModel.showLocationDuringRun.collectAsStateWithLifecycle()
+    val centerCameraOnce by viewModel.centerCameraOnce.collectAsStateWithLifecycle()
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
     val coroutineScope = rememberCoroutineScope()
@@ -94,9 +96,10 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(state.currentLocation, mapZoom) {
-        val location = state.currentLocation ?: return@LaunchedEffect
-        if (state.isTracking || state.isRunActive) {
+    // Jednorazowe centrowanie kamery przy włączeniu lokalizacji lub na żądanie
+    LaunchedEffect(centerCameraOnce, state.currentLocation) {
+        if (centerCameraOnce) {
+            val location = state.currentLocation ?: return@LaunchedEffect
             coroutineScope.launch {
                 cameraState.animateTo(
                     CameraPosition(
@@ -104,6 +107,7 @@ fun MapScreen(
                         zoom = if (cameraState.position.zoom < mapZoom) mapZoom else cameraState.position.zoom
                     )
                 )
+                viewModel.cameraCentered()
             }
         }
     }
@@ -141,10 +145,7 @@ fun MapScreen(
                 baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
                 options = MapOptions(
                     ornamentOptions = OrnamentOptions.AllDisabled,
-                    gestureOptions = if (state.isTracking || state.isRunActive)
-                        GestureOptions.AllDisabled
-                    else
-                        GestureOptions.Standard
+                    gestureOptions = GestureOptions.Standard
                 ),
                 onMapClick = { point, _ ->
                     if (draggingCheckpointIndex != null) {
@@ -156,19 +157,26 @@ fun MapScreen(
                     ClickResult.Pass
                 }
             ) {
-                RoutePathLayer(
-                    pathData = state.runPathData,
-                    color = Color(0xFF2196F3),
-                    width = 4f
-                )
+                // Pokaż trasę i lokalizację tylko gdy:
+                // - bieg nie jest aktywny, LUB
+                // - bieg jest aktywny i showLocationDuringRun jest true
+                val shouldShowLocation = !state.isRunActive || showLocationDuringRun
 
-                NextCheckpointLineLayer(
-                    currentLocation = state.currentLocation,
-                    nextCheckpoint = if (state.nextCheckpointIndex < state.checkpoints.size) {
-                        state.checkpoints[state.nextCheckpointIndex]
-                    } else null,
-                    isRunActive = state.isRunActive
-                )
+                if (shouldShowLocation) {
+                    RoutePathLayer(
+                        pathData = state.runPathData,
+                        color = Color(0xFF2196F3),
+                        width = 4f
+                    )
+
+                    NextCheckpointLineLayer(
+                        currentLocation = state.currentLocation,
+                        nextCheckpoint = if (state.nextCheckpointIndex < state.checkpoints.size) {
+                            state.checkpoints[state.nextCheckpointIndex]
+                        } else null,
+                        isRunActive = state.isRunActive
+                    )
+                }
 
                 CheckpointsLayer(
                     checkpoints = state.checkpoints,
@@ -181,7 +189,9 @@ fun MapScreen(
                     }
                 )
 
-                UserLocationLayer(location = state.currentLocation)
+                if (shouldShowLocation) {
+                    UserLocationLayer(location = state.currentLocation)
+                }
             }
 
             if (draggingCheckpointIndex != null) {
@@ -238,7 +248,24 @@ fun MapScreen(
                             .align(Alignment.BottomEnd)
                             .padding(end = 16.dp, bottom = 88.dp + 64.dp)
                     )
+
+                    CenterCameraButton(
+                        onClick = { viewModel.requestCenterCamera() },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 16.dp, bottom = 160.dp + 64.dp)
+                    )
                 }
+            }
+
+            // Przycisk centrowania podczas biegu - zawsze widoczny
+            if (state.isRunActive && state.currentLocation != null && draggingCheckpointIndex == null) {
+                CenterCameraButton(
+                    onClick = { viewModel.requestCenterCamera() },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 16.dp)
+                )
             }
 
             if (draggingCheckpointIndex == null) {
@@ -274,7 +301,8 @@ fun MapScreen(
                     visitedCount = run.visitedControlPoints.size,
                     totalCount = run.totalCheckpoints,
                     distance = run.distance,
-                    onSave = { viewModel.saveFinishedRun() },
+                    defaultTitle = "Run: ${run.mapName}",
+                    onSave = { title -> viewModel.saveFinishedRun(title) },
                     onDiscard = { viewModel.discardFinishedRun() }
                 )
             }

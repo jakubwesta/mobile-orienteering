@@ -24,5 +24,6 @@ data class SettingsModel(
     val controlPointSound: Boolean = true,
     val controlPointVibration: Boolean = true,
     val gpsAccuracy: Int = 10,
-    val mapZoom: Int = 16
+    val mapZoom: Int = 16,
+    val showLocationDuringRun: Boolean = true
 )

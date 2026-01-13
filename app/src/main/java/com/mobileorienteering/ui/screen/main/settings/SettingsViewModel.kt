@@ -57,4 +57,8 @@ class SettingsViewModel @Inject constructor(
     fun updateMapZoom(value: Int) = viewModelScope.launch {
         repo.updateMapZoom(value)
     }
+
+    fun updateShowLocationDuringRun(enabled: Boolean) = viewModelScope.launch {
+        repo.updateShowLocationDuringRun(enabled)
+    }
 }

@@ -25,6 +25,7 @@ class SettingsPreferences @Inject constructor(
         private val CONTROL_POINT_VIBRATION = booleanPreferencesKey("control_point_vibration")
         private val GPS_ACCURACY = intPreferencesKey("gps_accuracy")
         private val MAP_ZOOM = intPreferencesKey("map_zoom")
+        private val SHOW_LOCATION_DURING_RUN = booleanPreferencesKey("show_location_during_run")
     }
 
     val settingsFlow: Flow<SettingsModel> = context.settingsDataStore.data.map { prefs ->
@@ -36,7 +37,8 @@ class SettingsPreferences @Inject constructor(
             controlPointSound = prefs[CONTROL_POINT_SOUND] ?: SettingsModel().controlPointSound,
             controlPointVibration = prefs[CONTROL_POINT_VIBRATION] ?: SettingsModel().controlPointVibration,
             gpsAccuracy = prefs[GPS_ACCURACY] ?: SettingsModel().gpsAccuracy,
-            mapZoom = prefs[MAP_ZOOM] ?: SettingsModel().mapZoom
+            mapZoom = prefs[MAP_ZOOM] ?: SettingsModel().mapZoom,
+            showLocationDuringRun = prefs[SHOW_LOCATION_DURING_RUN] ?: SettingsModel().showLocationDuringRun
         )
     }
 
@@ -57,4 +59,7 @@ class SettingsPreferences @Inject constructor(
 
     suspend fun updateMapZoom(value: Int) =
         context.settingsDataStore.edit { it[MAP_ZOOM] = value }
+
+    suspend fun updateShowLocationDuringRun(enabled: Boolean) =
+        context.settingsDataStore.edit { it[SHOW_LOCATION_DURING_RUN] = enabled }
 }

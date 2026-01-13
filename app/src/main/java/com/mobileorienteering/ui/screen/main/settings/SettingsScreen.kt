@@ -147,6 +147,15 @@ fun SettingsScreen(
             }
 
             SettingsSection(title = "GPS") {
+                SettingsSwitchItem(
+                    icon = R.drawable.ic_visibility_filled,
+                    title = "Show location during run",
+                    checked = settings.showLocationDuringRun,
+                    onCheckedChange = { viewModel.updateShowLocationDuringRun(it) }
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
