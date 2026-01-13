@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.domain.Activity
+import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.data.repository.ActivityRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.model.domain.OrienteeringMap
@@ -16,11 +17,16 @@ import javax.inject.Inject
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
     private val activityRepository: ActivityRepository,
-    private val mapRepository: MapRepository
+    private val mapRepository: MapRepository,
+    private val settingsPreferences: SettingsPreferences
 ) : ViewModel() {
 
     val activities: StateFlow<List<Activity>> = activityRepository.getAllActivitiesFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val checkpointRadius: StateFlow<Int> = settingsPreferences.settingsFlow
+        .map { it.gpsAccuracy }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 10)
 
     var isLoading = mutableStateOf(false)
     var error = mutableStateOf<String?>(null)

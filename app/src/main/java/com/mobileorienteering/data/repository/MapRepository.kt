@@ -95,13 +95,17 @@ class MapRepository @Inject constructor(
                     mapData = controlPoints.toMapDataDto()
                 )
 
+                android.util.Log.d("MapRepository", "Calling updateMap API for mapId=$mapId")
+
                 val result = ApiHelper.safeApiCall("Failed to update map") {
                     mapApi.updateMap(mapId, request)
                 }
 
-                result.onSuccess {
+                result.onSuccess { response ->
+                    android.util.Log.d("MapRepository", "Update success, response id=${response.id}")
                     mapDao.updateMap(updatedMap.toEntity(syncedWithServer = true))
-                }.onFailure {
+                }.onFailure { error ->
+                    android.util.Log.e("MapRepository", "Update failed: ${error.message}")
                     mapDao.updateMap(updatedMap.toEntity(syncedWithServer = false))
                 }
             } else {
@@ -110,6 +114,7 @@ class MapRepository @Inject constructor(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("MapRepository", "Update exception: ${e.message}")
             Result.failure(Exception("Failed to update map: ${e.message}"))
         }
     }
@@ -206,7 +211,7 @@ class MapRepository @Inject constructor(
 
     /**
      * Downloads all maps from server and inserts them locally.
-     * Deletes synced, local maps, that are no longer on a server.
+     * Only deletes local maps if server has data (protects against empty server after restart).
      */
     private suspend fun downloadMapsFromServer(userId: Long): Result<Unit> {
         return ApiHelper.safeApiCall("Failed to sync maps") {
@@ -216,9 +221,13 @@ class MapRepository @Inject constructor(
 
             val localMaps = mapDao.getMapsByUserId(userId).first()
 
-            localMaps
-                .filter { it.syncedWithServer && it.id !in serverMapIds }
-                .forEach { mapDao.deleteMapById(it.id) }
+            // Only delete local maps if server has data
+            // This protects against data loss when server is empty after restart
+            if (serverMaps.isNotEmpty()) {
+                localMaps
+                    .filter { it.syncedWithServer && it.id !in serverMapIds }
+                    .forEach { mapDao.deleteMapById(it.id) }
+            }
 
             val entities = serverMaps.map {
                 it.toDomainModel().toEntity(syncedWithServer = true)

@@ -71,6 +71,14 @@ fun MapScreen(
         }
     }
 
+    // Automatyczne zakończenie biegu po zaliczeniu wszystkich checkpointów
+    LaunchedEffect(runState.autoFinished) {
+        if (runState.autoFinished && runState.isActive) {
+            viewModel.stopRun()
+            showSaveDialog = true
+        }
+    }
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -171,7 +179,8 @@ fun MapScreen(
                 // Użyj lokalizacji z Service podczas biegu, inaczej z normalnego trackingu
                 val currentLocation = if (isRunActive) runState.currentLocation else state.currentLocation
 
-                if (shouldShowLocation) {
+                // Wyświetl trasę tylko podczas aktywnego biegu
+                if (isRunActive && runState.pathData.isNotEmpty()) {
                     RoutePathLayer(
                         pathData = runState.pathData,
                         color = Color(0xFF2196F3),
@@ -189,8 +198,8 @@ fun MapScreen(
 
                 CheckpointsLayer(
                     checkpoints = state.checkpoints,
-                    visitedIndices = runState.visitedCheckpointIndices,
-                    nextCheckpointIndex = runState.nextCheckpointIndex,
+                    visitedIndices = if (isRunActive) runState.visitedCheckpointIndices else emptySet(),
+                    nextCheckpointIndex = if (isRunActive) runState.nextCheckpointIndex else -1,
                     isRunActive = isRunActive,
                     draggingIndex = draggingCheckpointIndex,
                     onCheckpointLongClick = { index ->

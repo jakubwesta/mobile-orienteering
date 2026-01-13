@@ -396,7 +396,10 @@ class MapViewModel @Inject constructor(
 
     fun updateCurrentMap(name: String, description: String = "", location: String = "") {
         val mapId = _state.value.currentMapId
+        android.util.Log.d("MapViewModel", "updateCurrentMap called, mapId=$mapId, name=$name")
+
         if (mapId == null) {
+            android.util.Log.e("MapViewModel", "No map to update - currentMapId is null")
             _state.update { it.copy(error = "No map to update") }
             return
         }
@@ -416,6 +419,8 @@ class MapViewModel @Inject constructor(
                 )
             }
 
+            android.util.Log.d("MapViewModel", "Calling mapRepository.updateMap for mapId=$mapId")
+
             val result = mapRepository.updateMap(
                 mapId = mapId,
                 userId = auth.userId,
@@ -426,6 +431,7 @@ class MapViewModel @Inject constructor(
             )
 
             result.onSuccess {
+                android.util.Log.d("MapViewModel", "Update successful")
                 _state.update {
                     it.copy(
                         currentMapName = name,
@@ -434,6 +440,7 @@ class MapViewModel @Inject constructor(
                 }
                 saveCurrentMapInfo()
             }.onFailure { e ->
+                android.util.Log.e("MapViewModel", "Update failed: ${e.message}")
                 _state.update { it.copy(error = "Update error: ${e.message}") }
             }
         }

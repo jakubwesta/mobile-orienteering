@@ -82,7 +82,7 @@ class RunTrackingService : Service() {
                 val checkpointsJson = intent.getStringExtra(EXTRA_CHECKPOINTS)
                 val mapId = intent.getLongExtra(EXTRA_MAP_ID, 0L)
                 val mapName = intent.getStringExtra(EXTRA_MAP_NAME) ?: "Unknown"
-                
+
                 if (checkpointsJson != null) {
                     val checkpoints = deserializeCheckpoints(checkpointsJson)
                     startRun(checkpoints, mapId, mapName)
@@ -114,15 +114,15 @@ class RunTrackingService : Service() {
 
     fun stopRun(): RunState {
         val finalState = _runState.value.copy(isActive = false)
-        
+
         locationJob?.cancel()
         timerJob?.cancel()
-        
+
         _runState.value = finalState
-        
+
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
-        
+
         return finalState
     }
 
@@ -183,17 +183,21 @@ class RunTrackingService : Service() {
                 longitude = nextCheckpoint.position.longitude
             )
 
+            val newNextIndex = state.nextCheckpointIndex + 1
+            val allVisited = newNextIndex >= state.checkpoints.size
+
             _runState.update { current ->
                 current.copy(
                     visitedCheckpointIndices = current.visitedCheckpointIndices + current.nextCheckpointIndex,
                     checkpointVisitTimes = current.checkpointVisitTimes + (current.nextCheckpointIndex to Instant.now()),
                     visitedControlPoints = current.visitedControlPoints + visitedPoint,
-                    nextCheckpointIndex = current.nextCheckpointIndex + 1
+                    nextCheckpointIndex = newNextIndex,
+                    autoFinished = allVisited
                 )
             }
 
             // Sprawdź czy ukończono wszystkie checkpointy
-            if (_runState.value.nextCheckpointIndex >= state.checkpoints.size) {
+            if (allVisited) {
                 feedbackManager.playFinishFeedback()
             } else {
                 feedbackManager.playControlPointFeedback()
@@ -237,7 +241,7 @@ class RunTrackingService : Service() {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        
+
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
@@ -306,12 +310,12 @@ class RunTrackingService : Service() {
                     val (key, value) = part.split(":")
                     key.trim().removeSurrounding("\"") to value.trim().removeSurrounding("\"")
                 }
-                
+
                 val lat = parts["lat"]?.toDoubleOrNull() ?: return@mapNotNull null
                 val lng = parts["lng"]?.toDoubleOrNull() ?: return@mapNotNull null
                 val name = parts["name"] ?: ""
                 val id = parts["id"] ?: java.util.UUID.randomUUID().toString()
-                
+
                 Checkpoint(
                     id = id,
                     position = org.maplibre.spatialk.geojson.Position(lng, lat),
@@ -339,7 +343,8 @@ data class RunState(
     val currentLocation: Location? = null,
     val mapId: Long = 0,
     val mapName: String = "",
-    val error: String? = null
+    val error: String? = null,
+    val autoFinished: Boolean = false
 ) {
     val isCompleted: Boolean
         get() = visitedCheckpointIndices.size == totalCheckpoints && totalCheckpoints > 0

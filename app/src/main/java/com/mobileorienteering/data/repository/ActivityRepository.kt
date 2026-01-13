@@ -3,11 +3,13 @@ package com.mobileorienteering.data.repository
 import com.mobileorienteering.data.api.service.ActivityApiService
 import com.mobileorienteering.data.api.ApiHelper
 import com.mobileorienteering.data.local.dao.ActivityDao
-import com.mobileorienteering.data.local.entity.toEntity
-import com.mobileorienteering.data.local.entity.toDomainModel
+import com.mobileorienteering.data.local.dao.MapDao
+import com.mobileorienteering.data.local.entity.*
 import com.mobileorienteering.data.model.domain.*
 import com.mobileorienteering.data.model.network.request.*
 import com.mobileorienteering.data.model.network.response.*
+import com.mobileorienteering.data.preferences.SettingsPreferences
+import com.mobileorienteering.util.computeVisitedControlPoints
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -19,7 +21,9 @@ import javax.inject.Singleton
 @Singleton
 class ActivityRepository @Inject constructor(
     private val activityApi: ActivityApiService,
-    private val activityDao: ActivityDao
+    private val activityDao: ActivityDao,
+    private val mapDao: MapDao,
+    private val settingsPreferences: SettingsPreferences
 ) {
 
     fun getAllActivitiesFlow(): Flow<List<Activity>> {
@@ -65,6 +69,9 @@ class ActivityRepository @Inject constructor(
             activityDao.insertActivity(
                 activity.toEntity(syncedWithServer = false)
             )
+
+            // Upload to server (preserves local status/visitedControlPoints/totalCheckpoints)
+            uploadActivityToServer(activity)
 
             Result.success(tempId)
         } catch (e: Exception) {
@@ -207,7 +214,8 @@ class ActivityRepository @Inject constructor(
     /**
      * Downloads all activities from server and inserts them locally.
      * Preserves local status/checkpoint data since backend doesn't support these fields.
-     * Deletes synced, local activities, that are no longer on a server.
+     * For new activities (not in local DB), computes visitedControlPoints from pathData.
+     * Only deletes local activities if server has data (protects against empty server after restart).
      */
     private suspend fun downloadActivitiesFromServer(userId: Long): Result<Unit> {
         return ApiHelper.safeApiCall("Failed to sync activities") {
@@ -218,10 +226,16 @@ class ActivityRepository @Inject constructor(
             val localActivities = activityDao.getActivitiesByUserId(userId).first()
             val localActivitiesMap = localActivities.associateBy { it.id }
 
-            // Delete local activities that no longer exist on server
-            localActivities
-                .filter { it.syncedWithServer && it.id !in serverActivityIds }
-                .forEach { activityDao.deleteActivityById(it.id) }
+            // Get checkpoint radius from settings
+            val checkpointRadius = settingsPreferences.settingsFlow.first().gpsAccuracy
+
+            // Only delete local activities if server has data
+            // This protects against data loss when server is empty after restart
+            if (serverActivities.isNotEmpty()) {
+                localActivities
+                    .filter { it.syncedWithServer && it.id !in serverActivityIds }
+                    .forEach { activityDao.deleteActivityById(it.id) }
+            }
 
             // Merge server data while preserving local fields that backend doesn't support
             val entities = serverActivities.map { serverActivity ->
@@ -236,7 +250,28 @@ class ActivityRepository @Inject constructor(
                         totalControlPoints = localEntity.totalCheckpoints
                     )
                 } else {
-                    serverDomain
+                    // New activity - compute visitedControlPoints from pathData
+                    val mapEntity = mapDao.getMapById(serverActivity.mapId)
+                    if (mapEntity != null && serverDomain.pathData.isNotEmpty()) {
+                        val controlPoints = mapEntity.toDomainModel().controlPoints
+                        val computed = computeVisitedControlPoints(
+                            pathData = serverDomain.pathData,
+                            controlPoints = controlPoints,
+                            radiusMeters = checkpointRadius
+                        )
+                        val computedStatus = if (computed.size >= controlPoints.size) {
+                            ActivityStatus.COMPLETED
+                        } else {
+                            ActivityStatus.ABANDONED
+                        }
+                        serverDomain.copy(
+                            status = computedStatus,
+                            visitedControlPoints = computed,
+                            totalControlPoints = controlPoints.size
+                        )
+                    } else {
+                        serverDomain
+                    }
                 }
 
                 mergedActivity.toEntity(syncedWithServer = true)
