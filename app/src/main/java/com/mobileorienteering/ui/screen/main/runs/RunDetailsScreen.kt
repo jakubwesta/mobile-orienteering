@@ -105,8 +105,19 @@ private fun RunDetailsContent(
     checkpointRadius: Int,
     modifier: Modifier = Modifier
 ) {
+    // Stabilizuj dane dla mapy - używaj tylko ID do porównań
+    val stablePathData = remember(activity.id) { activity.pathData }
+    val stableCheckpoints = remember(activity.id, map?.id) {
+        map?.controlPoints?.mapIndexed { index, cp ->
+            Checkpoint(
+                position = Position(cp.longitude, cp.latitude),
+                name = "Punkt ${index + 1}"
+            )
+        } ?: emptyList()
+    }
+
     // Oblicz visited control points jeśli nie ma zapisanych, ale mamy pathData i mapę
-    val visitedControlPoints = remember(activity, map, checkpointRadius) {
+    val visitedControlPoints = remember(activity.id, map?.id, checkpointRadius) {
         if (activity.visitedControlPoints.isNotEmpty()) {
             activity.visitedControlPoints
         } else if (map != null && activity.pathData.isNotEmpty()) {
@@ -120,8 +131,12 @@ private fun RunDetailsContent(
         }
     }
 
+    val stableVisitedIndices = remember(activity.id, visitedControlPoints) {
+        visitedControlPoints.map { it.order - 1 }.toSet()
+    }
+
     // Oblicz rzeczywisty status na podstawie odwiedzonych checkpointów
-    val computedStatus = remember(visitedControlPoints, map) {
+    val computedStatus = remember(visitedControlPoints.size, map?.controlPoints?.size) {
         when {
             map == null -> activity.status
             map.controlPoints.isEmpty() -> ActivityStatus.COMPLETED
@@ -130,30 +145,19 @@ private fun RunDetailsContent(
         }
     }
 
-    val checkpoints = remember(map) {
-        map?.controlPoints?.mapIndexed { index, cp ->
-            Checkpoint(
-                position = Position(cp.longitude, cp.latitude),
-                name = "Punkt ${index + 1}"
-            )
-        } ?: emptyList()
-    }
-
-    Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Column(modifier = modifier) {
+        // Header i mapa poza scroll
         RunHeader(
             title = activity.title,
             startTime = activity.startTime,
             status = computedStatus
         )
 
-        if (activity.pathData.isNotEmpty()) {
+        if (stablePathData.isNotEmpty()) {
             RunMapPreview(
-                pathData = activity.pathData,
-                checkpoints = checkpoints,
-                visitedIndices = visitedControlPoints.map { it.order - 1 }.toSet(),
+                pathData = stablePathData,
+                checkpoints = stableCheckpoints,
+                visitedIndices = stableVisitedIndices,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
@@ -162,60 +166,72 @@ private fun RunDetailsContent(
             )
         }
 
-        RunStatsCard(
-            distance = activity.distance,
-            duration = activity.duration,
-            startTime = activity.startTime,
-            pathData = activity.pathData,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+        Spacer(modifier = Modifier.height(16.dp))
 
-        val sortedVisitedPoints = visitedControlPoints.sortedBy { it.visitedAt }
-
-        if (sortedVisitedPoints.isNotEmpty()) {
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-            Text(
-                "Splits",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            // Dodaj punkt startowy
-            val startPoint = if (activity.pathData.isNotEmpty()) {
-                val firstPath = activity.pathData.minByOrNull { it.timestamp }!!
-                VisitedControlPoint(
-                    controlPointName = "Start",
-                    order = 0,
-                    visitedAt = activity.startTime,
-                    latitude = firstPath.latitude,
-                    longitude = firstPath.longitude
-                )
-            } else null
-
-            val timelinePoints = if (startPoint != null) {
-                listOf(startPoint) + sortedVisitedPoints
-            } else {
-                sortedVisitedPoints
-            }
-
-            RunTimeline(
-                startTime = activity.startTime,
-                visitedPoints = timelinePoints,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        } else if (map != null && map.controlPoints.isNotEmpty()) {
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-            Text(
-                "No control points visited",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+        val sortedVisitedPoints = remember(visitedControlPoints) {
+            visitedControlPoints.sortedBy { it.visitedAt }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Reszta w scroll
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            RunStatsCard(
+                distance = activity.distance,
+                duration = activity.duration,
+                startTime = activity.startTime,
+                pathData = stablePathData,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            if (sortedVisitedPoints.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                Text(
+                    "Splits",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                // Dodaj punkt startowy
+                val startPoint = if (stablePathData.isNotEmpty()) {
+                    val firstPath = stablePathData.minByOrNull { it.timestamp }!!
+                    VisitedControlPoint(
+                        controlPointName = "Start",
+                        order = 0,
+                        visitedAt = activity.startTime,
+                        latitude = firstPath.latitude,
+                        longitude = firstPath.longitude
+                    )
+                } else null
+
+                val timelinePoints = if (startPoint != null) {
+                    listOf(startPoint) + sortedVisitedPoints
+                } else {
+                    sortedVisitedPoints
+                }
+
+                RunTimeline(
+                    startTime = activity.startTime,
+                    visitedPoints = timelinePoints,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            } else if (map != null && map.controlPoints.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                Text(
+                    "No control points visited",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 }
 

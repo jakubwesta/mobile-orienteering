@@ -2,16 +2,18 @@ package com.mobileorienteering.ui.screen.main.runs.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.data.model.domain.PathPoint
-import com.mobileorienteering.ui.screen.main.map.components.RoutePathLayer
 import com.mobileorienteering.data.model.domain.Checkpoint
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.CircleLayer
+import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
@@ -21,6 +23,7 @@ import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.spatialk.geojson.Feature
+import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 
@@ -35,7 +38,8 @@ fun RunMapPreview(
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
 
-    LaunchedEffect(pathData) {
+    // Pre-calculate initial camera position once
+    val initialCameraPosition = remember(pathData) {
         if (pathData.isNotEmpty()) {
             val minLat = pathData.minOf { it.latitude }
             val maxLat = pathData.maxOf { it.latitude }
@@ -58,11 +62,56 @@ fun RunMapPreview(
                 else -> 16.0
             }
 
-            cameraState.position = CameraPosition(
+            CameraPosition(
                 target = Position(centerLon, centerLat),
                 zoom = zoom
             )
+        } else null
+    }
+
+    LaunchedEffect(initialCameraPosition) {
+        initialCameraPosition?.let {
+            cameraState.position = it
         }
+    }
+
+    // Pre-calculate route line data
+    val routeFeature = remember(pathData) {
+        if (pathData.size >= 2) {
+            val positions = pathData.map { Position(it.longitude, it.latitude) }
+            Feature(geometry = LineString(positions), properties = null)
+        } else null
+    }
+
+    // Pre-calculate checkpoint features
+    val checkpointFeatures = remember(checkpoints) {
+        checkpoints.map { checkpoint ->
+            Feature(
+                geometry = Point(Position(checkpoint.position.longitude, checkpoint.position.latitude)),
+                properties = null
+            )
+        }
+    }
+
+    // Pre-calculate start/end features
+    val startFeature = remember(pathData) {
+        if (pathData.isNotEmpty()) {
+            val startPoint = pathData.first()
+            Feature(
+                geometry = Point(Position(startPoint.longitude, startPoint.latitude)),
+                properties = null
+            )
+        } else null
+    }
+
+    val endFeature = remember(pathData) {
+        if (pathData.size > 1) {
+            val endPoint = pathData.last()
+            Feature(
+                geometry = Point(Position(endPoint.longitude, endPoint.latitude)),
+                properties = null
+            )
+        } else null
     }
 
     MaplibreMap(
@@ -75,40 +124,50 @@ fun RunMapPreview(
             gestureOptions = GestureOptions.Standard
         )
     ) {
-        RoutePathLayer(
-            pathData = pathData,
-            color = Color(0xFF4CAF50),
-            width = 4f
-        )
-
-        checkpoints.forEachIndexed { index, checkpoint ->
-            val isVisited = index in visitedIndices
-            val feature = Feature(
-                geometry = Point(Position(checkpoint.position.longitude, checkpoint.position.latitude)),
-                properties = null
+        // Route path
+        routeFeature?.let { feature ->
+            val routeSource = rememberGeoJsonSource(
+                data = GeoJsonData.Features(feature)
             )
-            val source = rememberGeoJsonSource(data = GeoJsonData.Features(feature))
 
-            CircleLayer(
-                id = "checkpoint-$index",
-                source = source,
-                color = const(if (isVisited) Color(0xFF4CAF50) else Color(0xFF9E9E9E)),
-                radius = const(10.dp),
-                strokeColor = const(Color.White),
-                strokeWidth = const(2.dp)
+            LineLayer(
+                id = "preview-route-outline",
+                source = routeSource,
+                color = const(Color.White),
+                width = const(6.dp)
+            )
+
+            LineLayer(
+                id = "preview-route",
+                source = routeSource,
+                color = const(Color(0xFF4CAF50)),
+                width = const(4.dp)
             )
         }
 
-        if (pathData.isNotEmpty()) {
-            val startPoint = pathData.first()
-            val startFeature = Feature(
-                geometry = Point(Position(startPoint.longitude, startPoint.latitude)),
-                properties = null
-            )
-            val startSource = rememberGeoJsonSource(data = GeoJsonData.Features(startFeature))
+        // Checkpoints
+        checkpointFeatures.forEachIndexed { index, feature ->
+            key(index) {
+                val isVisited = index in visitedIndices
+                val source = rememberGeoJsonSource(data = GeoJsonData.Features(feature))
+
+                CircleLayer(
+                    id = "preview-checkpoint-$index",
+                    source = source,
+                    color = const(if (isVisited) Color(0xFF4CAF50) else Color(0xFF9E9E9E)),
+                    radius = const(10.dp),
+                    strokeColor = const(Color.White),
+                    strokeWidth = const(2.dp)
+                )
+            }
+        }
+
+        // Start point
+        startFeature?.let { feature ->
+            val startSource = rememberGeoJsonSource(data = GeoJsonData.Features(feature))
 
             CircleLayer(
-                id = "start-point",
+                id = "preview-start-point",
                 source = startSource,
                 color = const(Color(0xFF2196F3)),
                 radius = const(8.dp),
@@ -117,16 +176,12 @@ fun RunMapPreview(
             )
         }
 
-        if (pathData.size > 1) {
-            val endPoint = pathData.last()
-            val endFeature = Feature(
-                geometry = Point(Position(endPoint.longitude, endPoint.latitude)),
-                properties = null
-            )
-            val endSource = rememberGeoJsonSource(data = GeoJsonData.Features(endFeature))
+        // End point
+        endFeature?.let { feature ->
+            val endSource = rememberGeoJsonSource(data = GeoJsonData.Features(feature))
 
             CircleLayer(
-                id = "end-point",
+                id = "preview-end-point",
                 source = endSource,
                 color = const(Color(0xFFF44336)),
                 radius = const(8.dp),
