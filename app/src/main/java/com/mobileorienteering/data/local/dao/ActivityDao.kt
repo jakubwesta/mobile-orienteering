@@ -18,6 +18,9 @@ interface ActivityDao {
     @Query("SELECT * FROM activities WHERE mapId = :mapId ORDER BY startTime DESC")
     fun getActivitiesByMapId(mapId: Long): Flow<List<ActivityEntity>>
 
+    @Query("SELECT * FROM activities WHERE mapId = :mapId")
+    suspend fun getActivitiesByMapIdOnce(mapId: Long): List<ActivityEntity>
+
     @Query("SELECT * FROM activities ORDER BY startTime DESC")
     fun getAllActivities(): Flow<List<ActivityEntity>>
 

@@ -41,8 +41,10 @@ fun MapScreen(
     val centerCameraOnce by viewModel.centerCameraOnce.collectAsStateWithLifecycle()
     val cameraState = rememberCameraState()
 
-    // Czy bieg jest aktywny - z Service
     val isRunActive = runState.isActive
+
+    val shouldShowLocation = !isRunActive || showLocationDuringRun
+
     val styleState = rememberStyleState()
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
@@ -171,11 +173,6 @@ fun MapScreen(
                     ClickResult.Pass
                 }
             ) {
-                // Pokaż trasę i lokalizację tylko gdy:
-                // - bieg nie jest aktywny, LUB
-                // - bieg jest aktywny i showLocationDuringRun jest true
-                val shouldShowLocation = !isRunActive || showLocationDuringRun
-
                 // Użyj lokalizacji z Service podczas biegu, inaczej z normalnego trackingu
                 val currentLocation = if (isRunActive) runState.currentLocation else state.currentLocation
 
@@ -187,13 +184,16 @@ fun MapScreen(
                         width = 4f
                     )
 
-                    NextCheckpointLineLayer(
-                        currentLocation = currentLocation,
-                        nextCheckpoint = if (runState.nextCheckpointIndex < state.checkpoints.size) {
-                            state.checkpoints[runState.nextCheckpointIndex]
-                        } else null,
-                        isRunActive = isRunActive
-                    )
+                    // Linia do następnego checkpointu tylko gdy lokalizacja jest widoczna
+                    if (shouldShowLocation) {
+                        NextCheckpointLineLayer(
+                            currentLocation = currentLocation,
+                            nextCheckpoint = if (runState.nextCheckpointIndex < state.checkpoints.size) {
+                                state.checkpoints[runState.nextCheckpointIndex]
+                            } else null,
+                            isRunActive = isRunActive
+                        )
+                    }
                 }
 
                 CheckpointsLayer(
@@ -276,8 +276,8 @@ fun MapScreen(
                 }
             }
 
-            // Przycisk centrowania podczas biegu - zawsze widoczny
-            if (isRunActive && runState.currentLocation != null && draggingCheckpointIndex == null) {
+            // Przycisk centrowania podczas biegu - tylko gdy lokalizacja jest widoczna
+            if (isRunActive && shouldShowLocation && runState.currentLocation != null && draggingCheckpointIndex == null) {
                 CenterCameraButton(
                     onClick = { viewModel.requestCenterCamera() },
                     modifier = Modifier

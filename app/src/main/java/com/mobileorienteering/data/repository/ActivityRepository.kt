@@ -1,6 +1,7 @@
 package com.mobileorienteering.data.repository
 
 import com.mobileorienteering.data.api.service.ActivityApiService
+import com.mobileorienteering.data.api.service.MapApiService
 import com.mobileorienteering.data.api.ApiHelper
 import com.mobileorienteering.data.local.dao.ActivityDao
 import com.mobileorienteering.data.local.dao.MapDao
@@ -8,6 +9,7 @@ import com.mobileorienteering.data.local.entity.*
 import com.mobileorienteering.data.model.domain.*
 import com.mobileorienteering.data.model.network.request.*
 import com.mobileorienteering.data.model.network.response.*
+import android.util.Log
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.util.computeVisitedControlPoints
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +23,7 @@ import javax.inject.Singleton
 @Singleton
 class ActivityRepository @Inject constructor(
     private val activityApi: ActivityApiService,
+    private val mapApi: MapApiService,
     private val activityDao: ActivityDao,
     private val mapDao: MapDao,
     private val settingsPreferences: SettingsPreferences
@@ -183,14 +186,35 @@ class ActivityRepository @Inject constructor(
      */
     private suspend fun uploadActivityToServer(activity: Activity): Result<Unit> {
         return try {
+            // If mapId is negative, map hasn't been synced to server yet
+            var actualMapId = activity.mapId
+            var updatedActivity = activity
+
+            if (actualMapId < 0) {
+                Log.d("ActivityRepository", "Map ID is negative ($actualMapId), syncing map first...")
+
+                val syncResult = syncMapAndGetNewId(actualMapId)
+                if (syncResult.isFailure) {
+                    Log.e("ActivityRepository", "Failed to sync map: ${syncResult.exceptionOrNull()?.message}")
+                    return Result.failure(syncResult.exceptionOrNull() ?: Exception("Map sync failed"))
+                }
+
+                actualMapId = syncResult.getOrThrow()
+                Log.d("ActivityRepository", "Map synced successfully, new ID: $actualMapId")
+
+                // Update local activity with new mapId
+                updatedActivity = activity.copy(mapId = actualMapId)
+                activityDao.updateActivity(updatedActivity.toEntity(syncedWithServer = false))
+            }
+
             val request = CreateActivityRequest(
-                userId = activity.userId,
-                mapId = activity.mapId,
-                title = activity.title,
-                startTime = activity.startTime.toString(),
-                duration = convertToIsoDuration(activity.duration),
-                distance = activity.distance,
-                pathData = activity.pathData.map { it.toDto() }
+                userId = updatedActivity.userId,
+                mapId = actualMapId,
+                title = updatedActivity.title,
+                startTime = updatedActivity.startTime.toString(),
+                duration = convertToIsoDuration(updatedActivity.duration),
+                distance = updatedActivity.distance,
+                pathData = updatedActivity.pathData.map { it.toDto() }
             )
 
             val result = ApiHelper.safeApiCall("Failed to sync activity") {
@@ -198,16 +222,68 @@ class ActivityRepository @Inject constructor(
             }
 
             result.map { response ->
-                activityDao.deleteActivityById(activity.id)
+                activityDao.deleteActivityById(updatedActivity.id)
 
                 // copy() preserves status, visitedControlPoints, totalControlPoints
-                val syncedActivity = activity.copy(id = response.id)
+                val syncedActivity = updatedActivity.copy(id = response.id)
                 activityDao.insertActivity(
                     syncedActivity.toEntity(syncedWithServer = true)
                 )
             }
         } catch (e: Exception) {
+            Log.e("ActivityRepository", "uploadActivityToServer failed: ${e.message}")
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Syncs a local map (with negative ID) to the server and returns the new server-assigned ID.
+     * Also updates all local activities that reference the old mapId.
+     */
+    private suspend fun syncMapAndGetNewId(localMapId: Long): Result<Long> {
+        return try {
+            val mapEntity = mapDao.getMapById(localMapId)
+                ?: return Result.failure(Exception("Map not found locally: $localMapId"))
+
+            val map = mapEntity.toDomainModel()
+
+            val request = CreateMapRequest(
+                userId = map.userId,
+                name = map.name,
+                description = map.description,
+                location = map.location,
+                mapData = map.controlPoints.toMapDataDto()
+            )
+
+            val result = ApiHelper.safeApiCall("Failed to sync map") {
+                mapApi.createMap(request)
+            }
+
+            result.map { response ->
+                val newMapId = response.id
+
+                mapDao.deleteMapById(localMapId)
+
+                val syncedMap = map.copy(id = newMapId)
+                mapDao.insertMap(syncedMap.toEntity(syncedWithServer = true))
+
+                updateActivitiesMapId(localMapId, newMapId)
+
+                newMapId
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Updates mapId for all local activities that reference the old map ID.
+     */
+    private suspend fun updateActivitiesMapId(oldMapId: Long, newMapId: Long) {
+        val activities = activityDao.getActivitiesByMapIdOnce(oldMapId)
+        activities.forEach { entity ->
+            val updated = entity.copy(mapId = newMapId)
+            activityDao.updateActivity(updated)
         }
     }
 
@@ -270,7 +346,12 @@ class ActivityRepository @Inject constructor(
                             totalControlPoints = controlPoints.size
                         )
                     } else {
-                        serverDomain
+                        // Cannot compute status - map not found or no path data
+                        // Default to ABANDONED as we can't verify completion
+                        Log.w("ActivityRepository",
+                            "Cannot compute status for activity ${serverActivity.id}: " +
+                                    "mapEntity=${mapEntity != null}, pathData.size=${serverDomain.pathData.size}")
+                        serverDomain.copy(status = ActivityStatus.ABANDONED)
                     }
                 }
 

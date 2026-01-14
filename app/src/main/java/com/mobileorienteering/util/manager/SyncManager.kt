@@ -15,21 +15,23 @@ class SyncManager @Inject constructor(
 
     /**
      * Full sync: uploads all unsynced data, then downloads from server.
+     * Maps are synced FIRST because activities need map data to compute status.
      */
     suspend fun syncAllDataForUser(userId: Long): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val activityResult = activityRepository.syncActivities(userId)
+            // Sync maps FIRST - activities need map data to compute status
             val mapResult = mapRepository.syncMaps(userId)
+            val activityResult = activityRepository.syncActivities(userId)
 
             when {
                 activityResult.isFailure && mapResult.isFailure ->
                     Result.failure(Exception("Both syncs failed"))
 
-                activityResult.isFailure ->
-                    Result.failure(Exception("Activity sync failed: ${activityResult.exceptionOrNull()?.message}"))
-
                 mapResult.isFailure ->
                     Result.failure(Exception("Map sync failed: ${mapResult.exceptionOrNull()?.message}"))
+
+                activityResult.isFailure ->
+                    Result.failure(Exception("Activity sync failed: ${activityResult.exceptionOrNull()?.message}"))
 
                 else -> Result.success(Unit)
             }
