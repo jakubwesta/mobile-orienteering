@@ -105,7 +105,6 @@ private fun RunDetailsContent(
     checkpointRadius: Int,
     modifier: Modifier = Modifier
 ) {
-    // Stabilizuj dane dla mapy - używaj tylko ID do porównań
     val stablePathData = remember(activity.id) { activity.pathData }
     val stableCheckpoints = remember(activity.id, map?.id) {
         map?.controlPoints?.mapIndexed { index, cp ->
@@ -116,7 +115,6 @@ private fun RunDetailsContent(
         } ?: emptyList()
     }
 
-    // Oblicz visited control points jeśli nie ma zapisanych, ale mamy pathData i mapę
     val visitedControlPoints = remember(activity.id, map?.id, checkpointRadius) {
         if (activity.visitedControlPoints.isNotEmpty()) {
             activity.visitedControlPoints
@@ -135,7 +133,6 @@ private fun RunDetailsContent(
         visitedControlPoints.map { it.order - 1 }.toSet()
     }
 
-    // Oblicz rzeczywisty status na podstawie odwiedzonych checkpointów
     val computedStatus = remember(visitedControlPoints.size, map?.controlPoints?.size) {
         when {
             map == null -> activity.status
@@ -146,7 +143,6 @@ private fun RunDetailsContent(
     }
 
     Column(modifier = modifier) {
-        // Header i mapa poza scroll
         RunHeader(
             title = activity.title,
             startTime = activity.startTime,
@@ -172,7 +168,6 @@ private fun RunDetailsContent(
             visitedControlPoints.sortedBy { it.visitedAt }
         }
 
-        // Reszta w scroll
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -196,7 +191,6 @@ private fun RunDetailsContent(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
-                // Dodaj punkt startowy
                 val startPoint = if (stablePathData.isNotEmpty()) {
                     val firstPath = stablePathData.minByOrNull { it.timestamp }!!
                     VisitedControlPoint(

@@ -56,12 +56,7 @@ fun formatDurationFromInstants(start: Instant, end: Instant): String {
     }
 }
 
-/**
- * Calculates pace in min/km
- * @param distanceMeters distance in meters
- * @param durationSeconds time in seconds
- * @return pace as String ("5:30 min/km")
- */
+
 fun calculatePace(distanceMeters: Double, durationSeconds: Long): String {
     if (distanceMeters <= 0 || durationSeconds <= 0) return "-"
 

@@ -54,7 +54,6 @@ fun LoginScreen(
         }
     }
 
-    // Redirects user to map screen after logging in
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn == true) {
             navController.navigate(AppScreen.Map.route) {

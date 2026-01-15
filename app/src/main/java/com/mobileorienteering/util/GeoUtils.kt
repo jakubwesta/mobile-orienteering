@@ -31,7 +31,7 @@ fun computeVisitedControlPoints(
 
     for (pathPoint in sortedPath) {
         if (nextCheckpointIndex >= controlPoints.size) {
-            break // Wszystkie checkpointy odwiedzone
+            break
         }
 
         val checkpoint = controlPoints[nextCheckpointIndex]

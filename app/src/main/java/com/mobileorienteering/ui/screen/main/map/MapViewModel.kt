@@ -50,7 +50,6 @@ class MapViewModel @Inject constructor(
     private val _showLocationDuringRun = MutableStateFlow(true)
     val showLocationDuringRun: StateFlow<Boolean> = _showLocationDuringRun.asStateFlow()
 
-    // Flaga do jednorazowego centrowania kamery przy włączeniu lokalizacji
     private val _centerCameraOnce = MutableStateFlow(false)
     val centerCameraOnce: StateFlow<Boolean> = _centerCameraOnce.asStateFlow()
 
@@ -69,13 +68,11 @@ class MapViewModel @Inject constructor(
     private val _finishedRunState = MutableStateFlow<FinishedRunState?>(null)
     val finishedRunState: StateFlow<FinishedRunState?> = _finishedRunState.asStateFlow()
 
-    // Stan biegu z Foreground Service
     val runState: StateFlow<RunState> = runServiceManager.runState
 
     init {
         restoreSavedState()
         observeSettings()
-        // Próba połączenia z działającym Service (jeśli bieg był aktywny)
         runServiceManager.tryReconnect()
     }
 
@@ -129,7 +126,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    // ==================== BIEG ====================
+    //BIEG
 
     fun startRun() {
         if (_state.value.checkpoints.isEmpty()) {
@@ -140,7 +137,6 @@ class MapViewModel @Inject constructor(
         val mapId = _state.value.currentMapId ?: 0L
         val mapName = _state.value.currentMapName ?: "Unknown"
 
-        // Uruchom Foreground Service
         runServiceManager.startRun(
             checkpoints = _state.value.checkpoints,
             mapId = mapId,
@@ -149,16 +145,13 @@ class MapViewModel @Inject constructor(
 
         _state.update { it.copy(error = null) }
 
-        // Jednorazowe centrowanie kamery
         _centerCameraOnce.value = true
     }
 
     fun stopRun() {
-        // Zatrzymaj Service i pobierz końcowy stan
         val finalRunState = runServiceManager.stopRun()
 
         if (!finalRunState.isActive && finalRunState.startTime != null) {
-            // Stwórz FinishedRunState z danych Service
             _finishedRunState.value = FinishedRunState(
                 isCompleted = finalRunState.isCompleted,
                 duration = finalRunState.durationString,
@@ -204,7 +197,7 @@ class MapViewModel @Inject constructor(
         _finishedRunState.value = null
     }
 
-    // ==================== TRACKING ====================
+    // TRACKING
 
     fun startTracking() {
         if (!locationManager.hasLocationPermission()) {
@@ -219,7 +212,6 @@ class MapViewModel @Inject constructor(
             )
         }
 
-        // Jednorazowe centrowanie kamery przy włączeniu lokalizacji
         _centerCameraOnce.value = true
 
         saveTrackingState(true)
@@ -234,7 +226,6 @@ class MapViewModel @Inject constructor(
             )
         }
 
-        // Reset location filter for fresh tracking session
         locationManager.resetFilter()
 
         startLocationUpdates()
@@ -279,11 +270,7 @@ class MapViewModel @Inject constructor(
         saveTrackingState(false)
     }
 
-    fun clearError() {
-        _state.update { it.copy(error = null) }
-    }
-
-    // ==================== CHECKPOINTS ====================
+    // CHECKPOINTS
 
     fun addCheckpoint(longitude: Double, latitude: Double, name: String = "") {
         val checkpoint = Checkpoint(
@@ -489,7 +476,7 @@ class MapViewModel @Inject constructor(
         saveCheckpoints()
     }
 
-    // ==================== POMOCNICZE METODY ZAPISU ====================
+    // POMOCNICZE METODY ZAPISU
 
     private fun saveCheckpoints() {
         viewModelScope.launch {
