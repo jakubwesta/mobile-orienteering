@@ -143,6 +143,7 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.kotlin.test)
     kspTest(libs.hilt.compiler)
 
     // Testing - Instrumented Tests (UI Tests)
