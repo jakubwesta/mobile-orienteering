@@ -35,7 +35,6 @@ class SettingsViewModel @Inject constructor(
     fun updateControlPointSound(enabled: Boolean) = viewModelScope.launch {
         repo.updateControlPointSound(enabled)
 
-        // Play sound preview when enabling sound
         if (enabled) {
             feedbackManager.playSoundEnableFeedback()
         }
@@ -44,7 +43,6 @@ class SettingsViewModel @Inject constructor(
     fun updateControlPointVibration(enabled: Boolean) = viewModelScope.launch {
         repo.updateControlPointVibration(enabled)
 
-        // Play vibration preview when enabling vibration
         if (enabled) {
             feedbackManager.playVibrationEnableFeedback()
         }

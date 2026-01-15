@@ -73,7 +73,6 @@ fun MapScreen(
         }
     }
 
-    // Automatyczne zakończenie biegu po zaliczeniu wszystkich checkpointów
     LaunchedEffect(runState.autoFinished) {
         if (runState.autoFinished && runState.isActive) {
             viewModel.stopRun()
@@ -110,10 +109,8 @@ fun MapScreen(
         }
     }
 
-    // Jednorazowe centrowanie kamery przy włączeniu lokalizacji lub na żądanie
     LaunchedEffect(centerCameraOnce, state.currentLocation, runState.currentLocation) {
         if (centerCameraOnce) {
-            // Użyj lokalizacji z Service podczas biegu, inaczej z normalnego trackingu
             val location = if (isRunActive) runState.currentLocation else state.currentLocation
             location ?: return@LaunchedEffect
             coroutineScope.launch {
@@ -173,10 +170,8 @@ fun MapScreen(
                     ClickResult.Pass
                 }
             ) {
-                // Użyj lokalizacji z Service podczas biegu, inaczej z normalnego trackingu
                 val currentLocation = if (isRunActive) runState.currentLocation else state.currentLocation
 
-                // Wyświetl trasę tylko podczas aktywnego biegu
                 if (isRunActive && runState.pathData.isNotEmpty()) {
                     RoutePathLayer(
                         pathData = runState.pathData,
@@ -184,7 +179,6 @@ fun MapScreen(
                         width = 4f
                     )
 
-                    // Linia do następnego checkpointu tylko gdy lokalizacja jest widoczna
                     if (shouldShowLocation) {
                         NextCheckpointLineLayer(
                             currentLocation = currentLocation,
@@ -276,7 +270,6 @@ fun MapScreen(
                 }
             }
 
-            // Przycisk centrowania podczas biegu - tylko gdy lokalizacja jest widoczna
             if (isRunActive && shouldShowLocation && runState.currentLocation != null && draggingCheckpointIndex == null) {
                 CenterCameraButton(
                     onClick = { viewModel.requestCenterCamera() },

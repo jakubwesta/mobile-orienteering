@@ -39,7 +39,6 @@ class MapRepository @Inject constructor(
         controlPoints: List<ControlPoint>
     ): Result<Long> {
         return try {
-            // Temporary negative ID for offline data
             val tempId = -(System.currentTimeMillis())
 
             val map = OrienteeringMap(
@@ -120,7 +119,6 @@ class MapRepository @Inject constructor(
     }
 
     suspend fun deleteMap(id: Long): Result<Unit> {
-        // If ID is negative, it's not on server yet
         if (id < 0) {
             mapDao.deleteMapById(id)
             return Result.success(Unit)
@@ -179,9 +177,7 @@ class MapRepository @Inject constructor(
 
     /**
      * Uploads a single local map to a server.
-     * Deletes local map (with negative id).
-     * Inserts the synced map from server (with positive id).
-     */
+]     */
     private suspend fun uploadMapToServer(map: OrienteeringMap): Result<Unit> {
         return try {
             val request = CreateMapRequest(
@@ -211,7 +207,7 @@ class MapRepository @Inject constructor(
 
     /**
      * Downloads all maps from server and inserts them locally.
-     * Only deletes local maps if server has data (protects against empty server after restart).
+     * Only deletes local maps if server has data.
      */
     private suspend fun downloadMapsFromServer(userId: Long): Result<Unit> {
         return ApiHelper.safeApiCall("Failed to sync maps") {
@@ -221,8 +217,6 @@ class MapRepository @Inject constructor(
 
             val localMaps = mapDao.getMapsByUserId(userId).first()
 
-            // Only delete local maps if server has data
-            // This protects against data loss when server is empty after restart
             if (serverMaps.isNotEmpty()) {
                 localMaps
                     .filter { it.syncedWithServer && it.id !in serverMapIds }

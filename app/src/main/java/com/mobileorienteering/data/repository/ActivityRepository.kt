@@ -73,7 +73,6 @@ class ActivityRepository @Inject constructor(
                 activity.toEntity(syncedWithServer = false)
             )
 
-            // Upload to server (preserves local status/visitedControlPoints/totalCheckpoints)
             uploadActivityToServer(activity)
 
             Result.success(tempId)
@@ -82,45 +81,7 @@ class ActivityRepository @Inject constructor(
         }
     }
 
-    suspend fun createActivity(
-        userId: Long,
-        mapId: Long,
-        title: String,
-        startTime: Instant,
-        duration: String,
-        distance: Double,
-        pathData: List<PathPoint>
-    ): Result<Long> {
-        return try {
-            // Temporary negative ID for offline data
-            val tempId = -(System.currentTimeMillis())
-
-            val activity = Activity(
-                id = tempId,
-                userId = userId,
-                mapId = mapId,
-                title = title,
-                startTime = startTime,
-                duration = duration,
-                distance = distance,
-                pathData = pathData,
-                createdAt = Instant.now()
-            )
-
-            activityDao.insertActivity(
-                activity.toEntity(syncedWithServer = false)
-            )
-
-            uploadActivityToServer(activity)
-
-            Result.success(tempId)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to save activity: ${e.message}"))
-        }
-    }
-
     suspend fun deleteActivity(id: Long): Result<Unit> {
-        // If ID is negative, it's not on server yet
         if (id < 0) {
             activityDao.deleteActivityById(id)
             return Result.success(Unit)
@@ -177,16 +138,9 @@ class ActivityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Uploads a single local activity to a server.
-     * Deletes local activity (with negative id).
-     * Inserts the synced activity from server (with positive id).
-     * Note: Backend doesn't support status/visitedControlPoints/totalCheckpoints fields,
-     * so we preserve them locally using activity.copy()
-     */
+
     private suspend fun uploadActivityToServer(activity: Activity): Result<Unit> {
         return try {
-            // If mapId is negative, map hasn't been synced to server yet
             var actualMapId = activity.mapId
             var updatedActivity = activity
 
@@ -202,7 +156,6 @@ class ActivityRepository @Inject constructor(
                 actualMapId = syncResult.getOrThrow()
                 Log.d("ActivityRepository", "Map synced successfully, new ID: $actualMapId")
 
-                // Update local activity with new mapId
                 updatedActivity = activity.copy(mapId = actualMapId)
                 activityDao.updateActivity(updatedActivity.toEntity(syncedWithServer = false))
             }
@@ -224,7 +177,6 @@ class ActivityRepository @Inject constructor(
             result.map { response ->
                 activityDao.deleteActivityById(updatedActivity.id)
 
-                // copy() preserves status, visitedControlPoints, totalControlPoints
                 val syncedActivity = updatedActivity.copy(id = response.id)
                 activityDao.insertActivity(
                     syncedActivity.toEntity(syncedWithServer = true)
@@ -236,10 +188,6 @@ class ActivityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Syncs a local map (with negative ID) to the server and returns the new server-assigned ID.
-     * Also updates all local activities that reference the old mapId.
-     */
     private suspend fun syncMapAndGetNewId(localMapId: Long): Result<Long> {
         return try {
             val mapEntity = mapDao.getMapById(localMapId)
@@ -276,9 +224,7 @@ class ActivityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Updates mapId for all local activities that reference the old map ID.
-     */
+
     private suspend fun updateActivitiesMapId(oldMapId: Long, newMapId: Long) {
         val activities = activityDao.getActivitiesByMapIdOnce(oldMapId)
         activities.forEach { entity ->
@@ -287,12 +233,6 @@ class ActivityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Downloads all activities from server and inserts them locally.
-     * Preserves local status/checkpoint data since backend doesn't support these fields.
-     * For new activities (not in local DB), computes visitedControlPoints from pathData.
-     * Only deletes local activities if server has data (protects against empty server after restart).
-     */
     private suspend fun downloadActivitiesFromServer(userId: Long): Result<Unit> {
         return ApiHelper.safeApiCall("Failed to sync activities") {
             activityApi.getActivitiesByUserId(userId)
@@ -302,23 +242,18 @@ class ActivityRepository @Inject constructor(
             val localActivities = activityDao.getActivitiesByUserId(userId).first()
             val localActivitiesMap = localActivities.associateBy { it.id }
 
-            // Get checkpoint radius from settings
             val checkpointRadius = settingsPreferences.settingsFlow.first().gpsAccuracy
 
-            // Only delete local activities if server has data
-            // This protects against data loss when server is empty after restart
             if (serverActivities.isNotEmpty()) {
                 localActivities
                     .filter { it.syncedWithServer && it.id !in serverActivityIds }
                     .forEach { activityDao.deleteActivityById(it.id) }
             }
 
-            // Merge server data while preserving local fields that backend doesn't support
             val entities = serverActivities.map { serverActivity ->
                 val serverDomain = serverActivity.toDomainModel()
                 val localEntity = localActivitiesMap[serverActivity.id]
 
-                // Preserve local status/checkpoints - server doesn't support these fields
                 val mergedActivity = if (localEntity != null) {
                     serverDomain.copy(
                         status = localEntity.status,
@@ -326,7 +261,6 @@ class ActivityRepository @Inject constructor(
                         totalControlPoints = localEntity.totalCheckpoints
                     )
                 } else {
-                    // New activity - compute visitedControlPoints from pathData
                     val mapEntity = mapDao.getMapById(serverActivity.mapId)
                     if (mapEntity != null && serverDomain.pathData.isNotEmpty()) {
                         val controlPoints = mapEntity.toDomainModel().controlPoints
@@ -346,8 +280,6 @@ class ActivityRepository @Inject constructor(
                             totalControlPoints = controlPoints.size
                         )
                     } else {
-                        // Cannot compute status - map not found or no path data
-                        // Default to ABANDONED as we can't verify completion
                         Log.w("ActivityRepository",
                             "Cannot compute status for activity ${serverActivity.id}: " +
                                     "mapEntity=${mapEntity != null}, pathData.size=${serverDomain.pathData.size}")
@@ -371,7 +303,6 @@ class ActivityRepository @Inject constructor(
 
     /**
      * Converts duration from display format (MM:SS or H:MM:SS) to ISO-8601 format (PT...S)
-     * Examples: "05:30" -> "PT5M30S", "1:02:03" -> "PT1H2M3S"
      */
     private fun convertToIsoDuration(displayDuration: String): String {
         val parts = displayDuration.split(":").map { it.toIntOrNull() ?: 0 }

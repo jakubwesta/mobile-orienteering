@@ -102,7 +102,6 @@ fun VideoPlayer(
                 modifier = Modifier.matchParentSize()
             )
 
-            // Ikona play gdy zatrzymane
             if (!isPlaying) {
                 Box(
                     modifier = Modifier

@@ -13,10 +13,6 @@ class SyncManager @Inject constructor(
     private val mapRepository: MapRepository
 ) {
 
-    /**
-     * Full sync: uploads all unsynced data, then downloads from server.
-     * Maps are synced FIRST because activities need map data to compute status.
-     */
     suspend fun syncAllDataForUser(userId: Long): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             // Sync maps FIRST - activities need map data to compute status

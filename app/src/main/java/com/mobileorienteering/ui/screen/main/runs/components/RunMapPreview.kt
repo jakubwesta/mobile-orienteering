@@ -38,7 +38,6 @@ fun RunMapPreview(
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
 
-    // Pre-calculate initial camera position once
     val initialCameraPosition = remember(pathData) {
         if (pathData.isNotEmpty()) {
             val minLat = pathData.minOf { it.latitude }
@@ -75,7 +74,6 @@ fun RunMapPreview(
         }
     }
 
-    // Pre-calculate route line data
     val routeFeature = remember(pathData) {
         if (pathData.size >= 2) {
             val positions = pathData.map { Position(it.longitude, it.latitude) }
@@ -83,7 +81,6 @@ fun RunMapPreview(
         } else null
     }
 
-    // Pre-calculate checkpoint features
     val checkpointFeatures = remember(checkpoints) {
         checkpoints.map { checkpoint ->
             Feature(
@@ -93,7 +90,6 @@ fun RunMapPreview(
         }
     }
 
-    // Pre-calculate start/end features
     val startFeature = remember(pathData) {
         if (pathData.isNotEmpty()) {
             val startPoint = pathData.first()
