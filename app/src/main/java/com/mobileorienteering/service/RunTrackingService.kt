@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Binder
@@ -196,7 +195,6 @@ class RunTrackingService : Service() {
                 )
             }
 
-            // Sprawdź czy ukończono wszystkie checkpointy
             if (allVisited) {
                 feedbackManager.playFinishFeedback()
             } else {
@@ -362,7 +360,6 @@ data class RunState(
         }
 }
 
-// Helper do serializacji checkpointów
 fun List<Checkpoint>.toServiceJson(): String {
     return this.joinToString(separator = ",", prefix = "[", postfix = "]") { cp ->
         "{\"id\":\"${cp.id}\",\"lat\":${cp.position.latitude},\"lng\":${cp.position.longitude},\"name\":\"${cp.name}\"}"

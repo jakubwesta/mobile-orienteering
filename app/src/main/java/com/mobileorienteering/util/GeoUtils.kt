@@ -1,7 +1,6 @@
 package com.mobileorienteering.util
 
 import android.location.Location
-import com.mobileorienteering.data.model.domain.Checkpoint
 import com.mobileorienteering.data.model.domain.ControlPoint
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.model.domain.VisitedControlPoint

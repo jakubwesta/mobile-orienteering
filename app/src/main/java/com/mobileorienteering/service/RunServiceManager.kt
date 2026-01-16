@@ -38,7 +38,6 @@ class RunServiceManager @Inject constructor(
             isBound = true
             _isServiceRunning.value = true
 
-            // Rozpocznij obserwowanie stanu z Service
             service?.let { svc ->
                 scope.launch {
                     svc.runState.collect { state ->
@@ -87,7 +86,6 @@ class RunServiceManager @Inject constructor(
             try {
                 context.unbindService(serviceConnection)
             } catch (e: Exception) {
-                // Ignoruj jeśli nie był zbindowany
             }
             isBound = false
             service = null
@@ -95,13 +93,11 @@ class RunServiceManager @Inject constructor(
     }
 
     fun tryReconnect() {
-        // Próba ponownego połączenia z działającym Service
         if (!isBound) {
             val intent = Intent(context, RunTrackingService::class.java)
             try {
                 context.bindService(intent, serviceConnection, 0)
             } catch (e: Exception) {
-                // Service nie działa
             }
         }
     }
