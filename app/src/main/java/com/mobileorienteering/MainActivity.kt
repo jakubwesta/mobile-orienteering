@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                     isFirstLaunch = isFirstLaunch,
                     isLoggedIn = isLoggedIn
                 )
-            }
+            }  
         }
     }
 }

@@ -27,7 +27,7 @@ class FeedbackManager @Inject constructor(
         .build()
 
     private val controlPointSoundId by lazy {
-        soundPool.load(context, R.raw.control_point_sound, 1)
+        soundPool.load(context, R.raw.sound, 1)
     }
 
     private val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
