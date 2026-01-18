@@ -50,11 +50,11 @@ jobs:
 
       # 6. Build Release AAB
       - name: Build Release AAB
-        run: ./gradlew bundleRelease --stacktrace
+        run: ./gradlew bundleRelease --no-configuration-cache --stacktrace
 
       # 7. Build Release APK
       - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace
+        run: ./gradlew assembleRelease --no-configuration-cache --stacktrace
 
       # 8. Extract version from tag
       - name: Get version from tag

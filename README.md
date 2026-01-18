@@ -1,4 +1,4 @@
-# Mobile Orienteering Ap
+# Mobile Orienteering App
 
 ### Release workflow
 
