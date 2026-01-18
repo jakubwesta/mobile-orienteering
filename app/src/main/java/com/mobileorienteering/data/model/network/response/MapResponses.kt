@@ -9,7 +9,8 @@ import com.squareup.moshi.JsonClass
 data class ControlPointDto(
     val latitude: Double,
     val longitude: Double,
-    val id: Long
+    val id: Long,
+    val name: String = ""
 )
 
 @JsonClass(generateAdapter = true)
@@ -50,7 +51,8 @@ fun ControlPointDto.toDomainModel(): ControlPoint {
     return ControlPoint(
         id = id,
         latitude = latitude,
-        longitude = longitude
+        longitude = longitude,
+        name = name
     )
 }
 
@@ -58,7 +60,8 @@ fun ControlPoint.toDto(): ControlPointDto {
     return ControlPointDto(
         id = id,
         latitude = latitude,
-        longitude = longitude
+        longitude = longitude,
+        name = name
     )
 }
 

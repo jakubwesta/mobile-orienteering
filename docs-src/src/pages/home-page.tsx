@@ -134,6 +134,13 @@ const HomePage = () => {
             >
               Privacy Policy
             </Link>
+            {" "} • {" "}
+            <Link 
+              to="/account-deletion" 
+              className="hover:text-foreground transition-colors underline"
+            >
+              Account Deletion
+            </Link>
           </p>
         </div>
       </footer>

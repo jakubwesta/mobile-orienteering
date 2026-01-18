@@ -17,5 +17,6 @@ data class OrienteeringMap(
 data class ControlPoint(
     val id: Long,
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+    val name: String = ""
 )

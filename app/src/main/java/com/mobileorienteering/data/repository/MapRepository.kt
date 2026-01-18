@@ -225,6 +225,9 @@ class MapRepository @Inject constructor(
     /**
      * Downloads all maps from server and inserts them locally.
      * Only deletes local maps if server has data.
+     * 
+     * Note: Server doesn't support control point names yet.
+     * Names are stored locally only and will be lost when syncing from server.
      */
     private suspend fun downloadMapsFromServer(userId: Long): Result<Unit> {
         return ApiHelper.safeApiCall("Failed to sync maps") {

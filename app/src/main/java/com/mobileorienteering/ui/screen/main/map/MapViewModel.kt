@@ -126,8 +126,6 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    //BIEG
-
     fun startRun() {
         if (_state.value.checkpoints.isEmpty()) {
             _state.update { it.copy(error = "No control points to run") }
@@ -355,7 +353,8 @@ class MapViewModel @Inject constructor(
                 ControlPoint(
                     id = index.toLong(),
                     latitude = cp.position.latitude,
-                    longitude = cp.position.longitude
+                    longitude = cp.position.longitude,
+                    name = cp.name
                 )
             }
 
@@ -393,7 +392,8 @@ class MapViewModel @Inject constructor(
                 ControlPoint(
                     id = index.toLong(),
                     latitude = cp.position.latitude,
-                    longitude = cp.position.longitude
+                    longitude = cp.position.longitude,
+                    name = cp.name
                 )
             }
 
@@ -435,7 +435,7 @@ class MapViewModel @Inject constructor(
             val checkpoints = map.controlPoints.mapIndexed { index, cp ->
                 Checkpoint(
                     position = Position(cp.longitude, cp.latitude),
-                    name = "Punkt ${index + 1}"
+                    name = cp.name.ifEmpty { "Point ${index + 1}" }
                 )
             }
 
@@ -466,8 +466,6 @@ class MapViewModel @Inject constructor(
         }
         saveCheckpoints()
     }
-
-    // POMOCNICZE METODY ZAPISU
 
     private fun saveCheckpoints() {
         viewModelScope.launch {

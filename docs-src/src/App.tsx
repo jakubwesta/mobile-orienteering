@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 
 const HomePage = lazy(() => import('@/pages/home-page'))
 const PrivacyPolicyPage = lazy(() => import('@/pages/privacy-policy-page'))
+const AccountDeletionPage = lazy(() => import('@/pages/account-deletion-page'))
 
 const AppRoutes = () => {
   const location = useLocation()
@@ -20,6 +21,7 @@ const AppRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<HomePage/>}/>
         <Route path="/privacy-policy" element={<PrivacyPolicyPage/>}/>
+        <Route path="/account-deletion" element={<AccountDeletionPage/>}/>
       </Routes>
     </Suspense>
   )
