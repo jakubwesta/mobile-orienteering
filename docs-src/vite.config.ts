@@ -6,7 +6,7 @@ import { defineConfig } from "vite"
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/mobile-orienteering/',
+  base: '/',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
