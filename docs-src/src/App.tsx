@@ -1,4 +1,4 @@
-import { HashRouter as Router, Route, Routes, useLocation } from 'react-router-dom'
+import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 
 import HomePage from '@/pages/home-page'
 import PrivacyPolicyPage from '@/pages/privacy-policy-page'
@@ -16,11 +16,11 @@ const AppRoutes = () => {
 
 const App = () => {
   return (
-    <Router>
+    <HashRouter>
       <div className="flex min-h-screen w-full bg-background">
         <AppRoutes />
       </div>
-    </Router>
+    </HashRouter>
   )
 }
 

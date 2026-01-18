@@ -1,4 +1,6 @@
 import { Map, MapPin, Timer, BarChart3, BookOpen, Cloud } from "lucide-react"
+import { Link } from "react-router-dom"
+
 import { PlayStoreButton } from "@/components/features/play-store-button"
 import { GitHubButton } from "@/components/features/github-button"
 import bannerBackground from "@/assets/banner_background.png"
@@ -126,12 +128,12 @@ const HomePage = () => {
               View on GitHub
             </a>
             {" "} • {" "}
-            <a 
-              href="/privacy-policy" 
+            <Link 
+              to="/privacy-policy" 
               className="hover:text-foreground transition-colors underline"
             >
               Privacy Policy
-            </a>
+            </Link>
           </p>
         </div>
       </footer>
