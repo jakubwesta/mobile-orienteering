@@ -1,6 +1,15 @@
-import privacyPolicyText from "@/assets/privacy-policy.txt?raw"
+import { useEffect, useState } from "react"
 
 const PrivacyPolicyPage = () => {
+  const [privacyPolicyText, setPrivacyPolicyText] = useState<string>("")
+
+  useEffect(() => {
+    fetch("/privacy-policy.txt")
+      .then((response) => response.text())
+      .then((text) => setPrivacyPolicyText(text))
+      .catch((error) => console.error("Error loading privacy policy:", error))
+  }, [])
+
   return (
     <div className="min-h-screen w-full bg-background">
       <section className="py-16 px-4">
