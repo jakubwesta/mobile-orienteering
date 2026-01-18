@@ -21,12 +21,13 @@ import java.time.Instant
 import javax.inject.Singleton
 
 @Singleton
-class ActivityRepository @Inject constructor(
+class   ActivityRepository @Inject constructor(
     private val activityApi: ActivityApiService,
     private val mapApi: MapApiService,
     private val activityDao: ActivityDao,
     private val mapDao: MapDao,
-    private val settingsPreferences: SettingsPreferences
+    private val settingsPreferences: SettingsPreferences,
+    private val authRepository: AuthRepository
 ) {
 
     fun getAllActivitiesFlow(): Flow<List<Activity>> {
@@ -87,6 +88,12 @@ class ActivityRepository @Inject constructor(
             return Result.success(Unit)
         }
 
+        val auth = authRepository.getCurrentAuth()
+        if (auth?.isGuestMode == true) {
+            activityDao.deleteActivityById(id)
+            return Result.success(Unit)
+        }
+
         return ApiHelper.safeApiCall("Failed to delete activity") {
             activityApi.deleteActivity(id)
         }.onSuccess {
@@ -101,6 +108,11 @@ class ActivityRepository @Inject constructor(
      */
     suspend fun syncActivities(userId: Long): Result<Unit> {
         return try {
+            val auth = authRepository.getCurrentAuth()
+            if (auth?.isGuestMode == true) {
+                return Result.success(Unit)
+            }
+
             try {
                 uploadAllUnsyncedActivities()
             } catch (_: Exception) {
@@ -141,6 +153,11 @@ class ActivityRepository @Inject constructor(
 
     private suspend fun uploadActivityToServer(activity: Activity): Result<Unit> {
         return try {
+            val auth = authRepository.getCurrentAuth()
+            if (auth?.isGuestMode == true) {
+                return Result.success(Unit)
+            }
+
             var actualMapId = activity.mapId
             var updatedActivity = activity
 

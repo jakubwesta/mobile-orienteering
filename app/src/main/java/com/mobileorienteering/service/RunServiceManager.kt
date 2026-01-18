@@ -19,7 +19,7 @@ import javax.inject.Singleton
 
 @Singleton
 class RunServiceManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     private var service: RunTrackingService? = null
     private var isBound = false
@@ -29,7 +29,6 @@ class RunServiceManager @Inject constructor(
     val runState: StateFlow<RunState> = _runState.asStateFlow()
 
     private val _isServiceRunning = MutableStateFlow(false)
-    val isServiceRunning: StateFlow<Boolean> = _isServiceRunning.asStateFlow()
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
@@ -85,7 +84,7 @@ class RunServiceManager @Inject constructor(
         if (isBound) {
             try {
                 context.unbindService(serviceConnection)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
             }
             isBound = false
             service = null
@@ -97,7 +96,7 @@ class RunServiceManager @Inject constructor(
             val intent = Intent(context, RunTrackingService::class.java)
             try {
                 context.bindService(intent, serviceConnection, 0)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
             }
         }
     }

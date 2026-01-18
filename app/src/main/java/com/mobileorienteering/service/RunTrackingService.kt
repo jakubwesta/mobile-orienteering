@@ -1,23 +1,17 @@
 package com.mobileorienteering.service
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.location.Location
 import android.os.Binder
 import android.os.IBinder
-import androidx.core.app.NotificationCompat
-import com.mobileorienteering.MainActivity
-import com.mobileorienteering.R
 import com.mobileorienteering.data.model.domain.Checkpoint
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.util.manager.FeedbackManager
 import com.mobileorienteering.util.manager.LocationManager
+import com.mobileorienteering.util.manager.NotificationManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -30,6 +24,7 @@ class RunTrackingService : Service() {
 
     @Inject lateinit var locationManager: LocationManager
     @Inject lateinit var feedbackManager: FeedbackManager
+    @Inject lateinit var notificationManager: NotificationManager
     @Inject lateinit var settingsPreferences: SettingsPreferences
 
     private val binder = RunBinder()
@@ -44,9 +39,6 @@ class RunTrackingService : Service() {
     val runState: StateFlow<RunState> = _runState.asStateFlow()
 
     companion object {
-        const val NOTIFICATION_ID = 1001
-        const val CHANNEL_ID = "run_tracking_channel"
-
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
 
@@ -63,7 +55,6 @@ class RunTrackingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
         observeSettings()
     }
 
@@ -95,8 +86,11 @@ class RunTrackingService : Service() {
     }
 
     private fun startRun(checkpoints: List<Checkpoint>, mapId: Long, mapName: String) {
-        val notification = createNotification("Starting run...", "0/0 checkpoints")
-        startForeground(NOTIFICATION_ID, notification)
+        val notification = notificationManager.buildRunNotification(
+            title = "Starting run...",
+            content = "0/0 checkpoints"
+        )
+        startForeground(NotificationManager.RUN_TRACKING_NOTIFICATION_ID, notification)
 
         _runState.value = RunState(
             isActive = true,
@@ -221,74 +215,20 @@ class RunTrackingService : Service() {
         }
     }
 
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Run Tracking",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Shows run progress"
-            setShowBadge(false)
-        }
-
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
-    }
-
-    private fun createNotification(title: String, content: String): Notification {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setSmallIcon(R.drawable.ic_runs_filled)
-            .setOngoing(true)
-            .setContentIntent(pendingIntent)
-            .setSilent(true)
-            .build()
-    }
-
     private fun updateNotification() {
         val state = _runState.value
-        val time = formatDuration(state.elapsedSeconds)
-        val checkpoints = "${state.visitedCheckpointIndices.size}/${state.totalCheckpoints}"
-        val distance = formatDistance(state.distance)
 
-        val notification = createNotification(
-            "Run in progress • $time",
-            "$checkpoints checkpoints • $distance"
+        val notification = notificationManager.buildRunProgressNotification(
+            elapsedSeconds = state.elapsedSeconds,
+            visitedCheckpoints = state.visitedCheckpointIndices.size,
+            totalCheckpoints = state.totalCheckpoints,
+            distanceMeters = state.distance
         )
 
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.notify(NOTIFICATION_ID, notification)
-    }
-
-    private fun formatDuration(seconds: Long): String {
-        val hours = seconds / 3600
-        val minutes = (seconds % 3600) / 60
-        val secs = seconds % 60
-        return if (hours > 0) {
-            String.format("%d:%02d:%02d", hours, minutes, secs)
-        } else {
-            String.format("%02d:%02d", minutes, secs)
-        }
-    }
-
-    private fun formatDistance(meters: Double): String {
-        return if (meters >= 1000) {
-            String.format("%.2f km", meters / 1000)
-        } else {
-            String.format("%.0f m", meters)
-        }
+        notificationManager.notify(
+            NotificationManager.RUN_TRACKING_NOTIFICATION_ID,
+            notification
+        )
     }
 
     override fun onDestroy() {
@@ -298,7 +238,6 @@ class RunTrackingService : Service() {
         serviceScope.cancel()
     }
 
-    // Serializacja checkpointów do przekazania przez Intent
     private fun deserializeCheckpoints(json: String): List<Checkpoint> {
         return try {
             val checkpointStrings = json.removeSurrounding("[", "]").split("},{")
@@ -353,9 +292,9 @@ data class RunState(
             val minutes = (elapsedSeconds % 3600) / 60
             val secs = elapsedSeconds % 60
             return if (hours > 0) {
-                String.format("%d:%02d:%02d", hours, minutes, secs)
+                String.format(java.util.Locale.getDefault(), "%d:%02d:%02d", hours, minutes, secs)
             } else {
-                String.format("%02d:%02d", minutes, secs)
+                String.format(java.util.Locale.getDefault(), "%02d:%02d", minutes, secs)
             }
         }
 }

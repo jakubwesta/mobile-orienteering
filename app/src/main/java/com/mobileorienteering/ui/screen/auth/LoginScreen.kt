@@ -208,6 +208,17 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
+                TextButton(
+                    onClick = { authViewModel.loginAsGuest() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading && !isGoogleSignInLoading
+                ) {
+                    Text(
+                        "Continue as Guest",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
                 Text(
                     text = "Don't have an account?",
                     style = MaterialTheme.typography.bodyMedium,

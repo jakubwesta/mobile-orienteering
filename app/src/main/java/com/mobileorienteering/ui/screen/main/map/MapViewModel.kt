@@ -171,13 +171,10 @@ class MapViewModel @Inject constructor(
 
         viewModelScope.launch {
             val auth = authRepository.getCurrentAuth()
-            if (auth == null) {
-                _state.update { it.copy(error = "You must be logged in") }
-                return@launch
-            }
+            val userId = auth?.userId ?: -1L
 
             activityRepository.createRunActivity(
-                userId = auth.userId,
+                userId = userId,
                 mapId = finishedRun.mapId,
                 title = title.ifBlank { "Run: ${finishedRun.mapName}" },
                 startTime = finishedRun.startTime,
@@ -352,10 +349,7 @@ class MapViewModel @Inject constructor(
     fun saveCurrentMap(name: String, description: String = "", location: String = "") {
         viewModelScope.launch {
             val auth = authRepository.getCurrentAuth()
-            if (auth == null) {
-                _state.update { it.copy(error = "You must be logged in to save map") }
-                return@launch
-            }
+            val userId = auth?.userId ?: -1L
 
             val controlPoints = _state.value.checkpoints.mapIndexed { index, cp ->
                 ControlPoint(
@@ -366,7 +360,7 @@ class MapViewModel @Inject constructor(
             }
 
             val result = mapRepository.createMap(
-                userId = auth.userId,
+                userId = userId,
                 name = name,
                 description = description,
                 location = location,
@@ -393,10 +387,7 @@ class MapViewModel @Inject constructor(
 
         viewModelScope.launch {
             val auth = authRepository.getCurrentAuth()
-            if (auth == null) {
-                _state.update { it.copy(error = "You must be logged in to update map") }
-                return@launch
-            }
+            val userId = auth?.userId ?: -1L
 
             val controlPoints = _state.value.checkpoints.mapIndexed { index, cp ->
                 ControlPoint(
@@ -410,7 +401,7 @@ class MapViewModel @Inject constructor(
 
             val result = mapRepository.updateMap(
                 mapId = mapId,
-                userId = auth.userId,
+                userId = userId,
                 name = name,
                 description = description,
                 location = location,

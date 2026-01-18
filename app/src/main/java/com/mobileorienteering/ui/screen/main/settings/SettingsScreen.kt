@@ -50,21 +50,56 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            SettingsSection(title = "Account") {
-                SettingsNavigationItem(
-                    icon = R.drawable.ic_person_filled,
-                    title = "Edit Profile",
-                    onClick = onNavigateToEditProfile
-                )
-
-                if (authModel?.isGoogleLogin != true) {
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-                    SettingsNavigationItem(
-                        icon = R.drawable.ic_lock_filled,
-                        title = "Change Password",
-                        onClick = onNavigateToEditPassword
+            if (authModel?.isGuestMode == true) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Guest Mode",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = "You're using the app as a guest. Sign in to sync your data across devices and access cloud features.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Button(
+                            onClick = { 
+                                authViewModel.logout()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Sign In")
+                        }
+                    }
+                }
+            }
+
+            if (authModel?.isGuestMode != true) {
+                SettingsSection(title = "Account") {
+                    SettingsNavigationItem(
+                        icon = R.drawable.ic_person_filled,
+                        title = "Edit Profile",
+                        onClick = onNavigateToEditProfile
+                    )
+
+                    if (authModel?.isGoogleLogin != true) {
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                        SettingsNavigationItem(
+                            icon = R.drawable.ic_lock_filled,
+                            title = "Change Password",
+                            onClick = onNavigateToEditPassword
+                        )
+                    }
                 }
             }
 
@@ -198,18 +233,26 @@ fun SettingsScreen(
             }
 
             SettingsSection(title = "Advanced") {
-                SettingsClickableItem(
-                    icon = R.drawable.ic_sync,
-                    title = "Sync data with server",
-                    onClick = { showSyncDialog = true }
-                )
+                if (authModel?.isGuestMode != true) {
+                    SettingsClickableItem(
+                        icon = R.drawable.ic_sync,
+                        title = "Sync data with server",
+                        onClick = { showSyncDialog = true }
+                    )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                }
 
                 SettingsClickableItem(
                     icon = R.drawable.ic_logout,
-                    title = "Logout",
-                    onClick = { showLogoutDialog = true }
+                    title = if (authModel?.isGuestMode == true) "Sign In" else "Logout",
+                    onClick = { 
+                        if (authModel?.isGuestMode == true) {
+                            authViewModel.logout()
+                        } else {
+                            showLogoutDialog = true
+                        }
+                    }
                 )
             }
         }

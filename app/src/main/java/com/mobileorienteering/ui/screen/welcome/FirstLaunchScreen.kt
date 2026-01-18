@@ -43,7 +43,7 @@ fun FirstLaunchScreen(
             Spacer(Modifier.height(32.dp))
 
             VideoPlayerFromRaw(
-                rawResId = R.raw.test_video,
+                rawResId = R.raw.welcome_screen_video,
                 modifier = Modifier.fillMaxWidth(),
                 aspectRatio = 16f / 9f
             )

@@ -123,6 +123,26 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun loginAsGuest() {
+        viewModelScope.launch {
+            isLoading.value = true
+            try {
+                val result = repo.loginAsGuest()
+                result.onSuccess {
+                    // No sync needed for guest mode
+                }.onFailure { e ->
+                    val errorMessage = e.message ?: "Guest login failed"
+                    snackbarManager.showError(errorMessage)
+                }
+            } catch (e: Exception) {
+                val errorMessage = e.message ?: "Unknown error"
+                snackbarManager.showError(errorMessage)
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             mapStatePreferences.clearState()

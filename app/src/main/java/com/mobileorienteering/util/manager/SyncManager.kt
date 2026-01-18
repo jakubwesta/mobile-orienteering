@@ -1,6 +1,7 @@
 package com.mobileorienteering.util.manager
 
 import com.mobileorienteering.data.repository.ActivityRepository
+import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -10,11 +11,17 @@ import javax.inject.Singleton
 @Singleton
 class SyncManager @Inject constructor(
     private val activityRepository: ActivityRepository,
-    private val mapRepository: MapRepository
+    private val mapRepository: MapRepository,
+    private val authRepository: AuthRepository
 ) {
 
     suspend fun syncAllDataForUser(userId: Long): Result<Unit> = withContext(Dispatchers.IO) {
         try {
+            val auth = authRepository.getCurrentAuth()
+            if (auth?.isGuestMode == true) {
+                return@withContext Result.success(Unit)
+            }
+
             // Sync maps FIRST - activities need map data to compute status
             val mapResult = mapRepository.syncMaps(userId)
             val activityResult = activityRepository.syncActivities(userId)

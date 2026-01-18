@@ -32,6 +32,13 @@ class UserViewModel @Inject constructor(
             error.value = null
 
             try {
+                val auth = authRepository.getCurrentAuth()
+                if (auth?.isGuestMode == true) {
+                    currentUser.value = null
+                    isLoading.value = false
+                    return@launch
+                }
+
                 val result = userRepository.getCurrentUser()
                 result.onSuccess { user ->
                     currentUser.value = user
@@ -58,7 +65,14 @@ class UserViewModel @Inject constructor(
             error.value = null
 
             try {
-                val userId = authRepository.getCurrentAuth()?.userId
+                val auth = authRepository.getCurrentAuth()
+                if (auth?.isGuestMode == true) {
+                    error.value = "Profile editing is not available in guest mode"
+                    isLoading.value = false
+                    return@launch
+                }
+
+                val userId = auth?.userId
                     ?: throw Exception("User not logged in")
 
                 val result = userRepository.updateProfile(
@@ -95,7 +109,14 @@ class UserViewModel @Inject constructor(
             error.value = null
 
             try {
-                val userId = authRepository.getCurrentAuth()?.userId
+                val auth = authRepository.getCurrentAuth()
+                if (auth?.isGuestMode == true) {
+                    error.value = "Password change is not available in guest mode"
+                    isLoading.value = false
+                    return@launch
+                }
+
+                val userId = auth?.userId
                     ?: throw Exception("User not logged in")
 
                 val result = userRepository.changePassword(

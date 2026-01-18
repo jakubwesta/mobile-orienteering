@@ -58,21 +58,13 @@ class SyncViewModel @Inject constructor(
     }
 
     private suspend fun syncIfLoggedIn() {
-        val userId = authRepository.getCurrentAuth()?.userId
-        if (userId != null) {
+        val auth = authRepository.getCurrentAuth()
+        if (auth != null && !auth.isGuestMode) {
             try {
-                syncManager.syncAllDataForUser(userId)
+                syncManager.syncAllDataForUser(auth.userId)
             } catch (_: Exception) {
 
             }
         }
-    }
-
-    fun clearError() {
-        error.value = null
-    }
-
-    fun clearSuccessMessage() {
-        successMessage.value = null
     }
 }

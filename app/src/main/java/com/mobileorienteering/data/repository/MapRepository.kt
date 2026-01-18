@@ -18,7 +18,8 @@ import javax.inject.Singleton
 @Singleton
 class MapRepository @Inject constructor(
     private val mapApi: MapApiService,
-    private val mapDao: MapDao
+    private val mapDao: MapDao,
+    private val authRepository: AuthRepository
 ) {
 
     fun getAllMapsFlow(): Flow<List<OrienteeringMap>> {
@@ -124,6 +125,12 @@ class MapRepository @Inject constructor(
             return Result.success(Unit)
         }
 
+        val auth = authRepository.getCurrentAuth()
+        if (auth?.isGuestMode == true) {
+            mapDao.deleteMapById(id)
+            return Result.success(Unit)
+        }
+
         return ApiHelper.safeApiCall("Failed to delete map") {
             mapApi.deleteMap(id)
         }.onSuccess {
@@ -138,6 +145,11 @@ class MapRepository @Inject constructor(
      */
     suspend fun syncMaps(userId: Long): Result<Unit> {
         return try {
+            val auth = authRepository.getCurrentAuth()
+            if (auth?.isGuestMode == true) {
+                return Result.success(Unit)
+            }
+
             try {
                 uploadAllUnsyncedMaps()
             } catch (_: Exception) {
@@ -180,6 +192,11 @@ class MapRepository @Inject constructor(
 ]     */
     private suspend fun uploadMapToServer(map: OrienteeringMap): Result<Unit> {
         return try {
+            val auth = authRepository.getCurrentAuth()
+            if (auth?.isGuestMode == true) {
+                return Result.success(Unit)
+            }
+
             val request = CreateMapRequest(
                 userId = map.userId,
                 name = map.name,

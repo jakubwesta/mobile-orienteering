@@ -33,6 +33,7 @@ class AuthRepository @Inject constructor(
         private val TOKEN = stringPreferencesKey("token")
         private val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         private val IS_GOOGLE_LOGIN = booleanPreferencesKey("is_google_login")
+        private val IS_GUEST_MODE = booleanPreferencesKey("is_guest_mode")
     }
 
     @Volatile
@@ -52,13 +53,15 @@ class AuthRepository @Inject constructor(
         val username = prefs[USERNAME]
         val refreshToken = prefs[REFRESH_TOKEN]
         val isGoogleLogin = prefs[IS_GOOGLE_LOGIN] ?: false
+        val isGuestMode = prefs[IS_GUEST_MODE] ?: false
         if (token != null && username != null && refreshToken != null && userId != null) {
             AuthModel(
                 userId = userId,
                 username = username,
                 token = token,
                 refreshToken = refreshToken,
-                isGoogleLogin = isGoogleLogin
+                isGoogleLogin = isGoogleLogin,
+                isGuestMode = isGuestMode
             )
         } else null
     }
@@ -98,6 +101,23 @@ class AuthRepository @Inject constructor(
             )
         }.mapCatching { authResponse ->
             fetchUserAndSaveAuth(authResponse, isGoogleLogin = false)
+        }
+    }
+
+    suspend fun loginAsGuest(): Result<AuthModel> {
+        return try {
+            val guestAuth = AuthModel(
+                userId = -1L,
+                username = "Guest",
+                token = "guest_token",
+                refreshToken = "guest_refresh_token",
+                isGoogleLogin = false,
+                isGuestMode = true
+            )
+            saveAuth(guestAuth)
+            Result.success(guestAuth)
+        } catch (e: Exception) {
+            Result.failure(Exception("Guest login failed: ${e.message}"))
         }
     }
 
@@ -142,6 +162,7 @@ class AuthRepository @Inject constructor(
             prefs[REFRESH_TOKEN] = refreshToken
             prefs[USERNAME] = username
             prefs[IS_GOOGLE_LOGIN] = isGoogleLogin
+            prefs[IS_GUEST_MODE] = false
         }
     }
 
@@ -171,6 +192,7 @@ class AuthRepository @Inject constructor(
             prefs.remove(USERNAME)
             prefs.remove(REFRESH_TOKEN)
             prefs.remove(IS_GOOGLE_LOGIN)
+            prefs.remove(IS_GUEST_MODE)
         }
     }
 
@@ -180,13 +202,15 @@ class AuthRepository @Inject constructor(
             val username = prefs[USERNAME]
             val refreshToken = prefs[REFRESH_TOKEN]
             val isGoogleLogin = prefs[IS_GOOGLE_LOGIN] ?: false
+            val isGuestMode = prefs[IS_GUEST_MODE] ?: false
             if (username != null && refreshToken != null) {
                 return AuthModel(
                     userId = 0,  // Temporary
                     username = username,
                     token = token,
                     refreshToken = refreshToken,
-                    isGoogleLogin = isGoogleLogin
+                    isGoogleLogin = isGoogleLogin,
+                    isGuestMode = isGuestMode
                 )
             }
         }
@@ -197,13 +221,15 @@ class AuthRepository @Inject constructor(
         val username = prefs[USERNAME]
         val refreshToken = prefs[REFRESH_TOKEN]
         val isGoogleLogin = prefs[IS_GOOGLE_LOGIN] ?: false
+        val isGuestMode = prefs[IS_GUEST_MODE] ?: false
         return if (token != null && username != null && refreshToken != null && userId != null) {
             AuthModel(
                 userId = userId,
                 username = username,
                 token = token,
                 refreshToken = refreshToken,
-                isGoogleLogin = isGoogleLogin
+                isGoogleLogin = isGoogleLogin,
+                isGuestMode = isGuestMode
             )
         } else null
     }
@@ -215,6 +241,7 @@ class AuthRepository @Inject constructor(
             prefs[USERNAME] = auth.username
             prefs[REFRESH_TOKEN] = auth.refreshToken
             prefs[IS_GOOGLE_LOGIN] = auth.isGoogleLogin
+            prefs[IS_GUEST_MODE] = auth.isGuestMode
         }
     }
 
