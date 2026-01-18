@@ -14,5 +14,10 @@
 /captures
 .externalNativeBuild
 .cxx
+.cursor
+.vscode
+app-release.*
+output-metadata.json
+settings.json
 local.properties
 keystore.jks

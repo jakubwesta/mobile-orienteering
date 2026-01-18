@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 kotlin {
@@ -14,6 +15,7 @@ kotlin {
 
 android {
     namespace = "com.mobileorienteering"
+    //noinspection GradleDependency
     compileSdk = 35
 
     val localProperties = Properties()
@@ -25,6 +27,7 @@ android {
     defaultConfig {
         applicationId = "com.mobileorienteering"
         minSdk = 26
+        //noinspection OldTargetApi
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -36,10 +39,18 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = "app-alias"
-            keyPassword = "orienteering-password"
-            storeFile = file("../keystore.jks")
-            storePassword = "orienteering-password"
+            val keystoreFile = localProperties.getProperty("KEYSTORE_FILE")
+            val keystorePassword = localProperties.getProperty("KEYSTORE_PASSWORD")
+            val keyAlias = localProperties.getProperty("KEY_ALIAS")
+            val keyPassword = localProperties.getProperty("KEY_PASSWORD")
+
+            if (keystoreFile != null && keystorePassword != null &&
+                keyAlias != null && keyPassword != null) {
+                storeFile = file(keystoreFile)
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
         }
     }
 
@@ -49,11 +60,14 @@ android {
         }
 
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
             signingConfig = signingConfigs.getByName("release")
 
             val releaseUrl =
@@ -62,19 +76,14 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-
-    kotlinOptions {
-        jvmTarget = "21"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 hilt {

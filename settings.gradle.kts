@@ -16,6 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "MobileOrienteering"
 
-// Moduły projektu
 include(":app")
 include(":shared")

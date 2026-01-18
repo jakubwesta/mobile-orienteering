@@ -38,7 +38,6 @@ playServicesAuth = "21.2.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-kotlinStdlib = "2.1.0"
 kotlinTest = "2.1.0"
 runner = "1.5.2"
 core = "1.5.0"
@@ -79,7 +78,6 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 
 # MapLibre (ANDROID-ONLY API, stabilne!)
 maplibre-compose = { module = "org.maplibre.compose:maplibre-compose", version = "0.12.1" }
-maplibre-composeMaterial3 = { module = "org.maplibre.compose:maplibre-compose-material3", version = "0.11.0" }
 
 # Room
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
@@ -128,6 +126,7 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+androidx-room = { id = "androidx.room", version.ref = "room" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-lint = { id = "com.android.lint", version.ref = "agp" }
