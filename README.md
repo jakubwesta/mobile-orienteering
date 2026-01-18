@@ -2,11 +2,13 @@
 
 ## Development
 
+All scripts used for development and publishing are in /scripts
+
 ### Release workflow
 
 1. Edit app/build.gradle.kts. Change ```versionName = "x.y.z"```
 2. Commit and push changes
-3. Run the release script ```.\release.ps1 -version "x.y.z"```
+3. Run the release script ```.\scripts\release.ps1 -version "x.y.z"```
 4. GitHub Actions automatically:
     - Builds AAB
     - Builds APK
@@ -20,5 +22,5 @@
 1. Make sure you have GitHub CLI installed:
    - ```winget install GitHub.cli```
    - ```gh auth login```
-2. Run the rollback-release script ```.\rollback-release.ps1 -version "x.y.z"```
+2. Run the rollback-release script ```.\scripts\rollback-release.ps1 -version "x.y.z"```
 3. Done. Release tags are deleted and release is removed from GitHub
