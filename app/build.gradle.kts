@@ -29,8 +29,8 @@ android {
         minSdk = 26
         //noinspection OldTargetApi
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = getVersionCode()
+        versionName = "1.0.0"
         testInstrumentationRunner = "com.mobileorienteering.HiltTestRunner"
 
         val googleWebClientId = localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")
@@ -79,6 +79,16 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+// Function to calculate versionCode from git
+fun getVersionCode(): Int {
+    return try {
+        val process = Runtime.getRuntime().exec("git rev-list --count HEAD")
+        process.inputStream.bufferedReader().readText().trim().toInt()
+    } catch (_: Exception) {
+        1
     }
 }
 
