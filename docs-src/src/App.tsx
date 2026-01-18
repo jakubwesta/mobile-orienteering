@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom'
+import { HashRouter as Router, Route, Routes, useLocation } from 'react-router-dom'
 
 import HomePage from '@/pages/home-page'
 import PrivacyPolicyPage from '@/pages/privacy-policy-page'
