@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 
 import { PlayStoreButton } from "@/components/features/play-store-button"
 import { GitHubButton } from "@/components/features/github-button"
-import bannerBackground from "@/assets/banner_background.png"
+import bannerBackground from "@/assets/banner_background.webp"
 
 const HomePage = () => {
   const features = [
