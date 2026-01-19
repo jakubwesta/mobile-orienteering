@@ -2,42 +2,38 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/icon.png" />
+
+    <!-- Viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Favicons -->
     <link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
     <link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
-    
+
     <!-- Primary Meta Tags -->
     <title>Mobile Orienteering</title>
     <meta name="title" content="Mobile Orienteering - Android App for Orienteering Training & Competition" />
     <meta name="description" content="Mobile Orienteering is a comprehensive Android app for orienteering training and competition. Track your runs, navigate checkpoints, analyze performance with GPS positioning and detailed statistics." />
     <meta name="keywords" content="mobile orienteering, orienteering app, android orienteering, GPS navigation, orienteering training, checkpoint navigation, orienteering sport, orienteering GPS, run tracking, performance analytics" />
     <meta name="author" content="Jakub Westa, Dawid Pilarski" />
-    <meta name="copyright" content="Elastic License 2.0" />
     <link rel="canonical" href="https://mobileorienteering.com/" />
-    
-    <!-- Open Graph / Facebook -->
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://mobileorienteering.com/" />
     <meta property="og:title" content="Mobile Orienteering - Android App for Orienteering Training & Competition" />
-    <meta property="og:description" content="Track your runs, navigate checkpoints, and analyze your performance with detailed statistics. A comprehensive Android app for orienteering enthusiasts." />
+    <meta property="og:description" content="Track your runs, navigate checkpoints, and analyze your performance with detailed statistics." />
     <meta property="og:image" content="https://mobileorienteering.com/icon.png" />
     <meta property="og:site_name" content="Mobile Orienteering" />
-    
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://mobileorienteering.com/" />
     <meta name="twitter:title" content="Mobile Orienteering - Android App for Orienteering Training & Competition" />
-    <meta name="twitter:description" content="Track your runs, navigate checkpoints, and analyze your performance with detailed statistics. A comprehensive Android app for orienteering enthusiasts." />
+    <meta name="twitter:description" content="Track your runs, navigate checkpoints, and analyze your performance with detailed statistics." />
     <meta name="twitter:image" content="https://mobileorienteering.com/icon.png" />
 
-    <!-- DNS Prefetch & Preconnect -->
-    <link rel="dns-prefetch" href="https://play.google.com">
-    <link rel="preconnect" href="https://github.com">
-    
-    <!-- Structured Data (JSON-LD) -->
+    <!-- Structured Data: Software Application -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -50,42 +46,35 @@
         "price": "0",
         "priceCurrency": "USD"
       },
-      "description": "A comprehensive Android application designed for orienteering training and competition. Track your runs, navigate checkpoints, and analyze your performance with detailed statistics.",
+      "description": "A comprehensive Android application designed for orienteering training and competition.",
       "url": "https://mobileorienteering.com",
       "author": {
         "@type": "Person",
         "name": "Jakub Westa"
-      },
-      "creator": [
-        {
-          "@type": "Person",
-          "name": "Jakub Westa"
-        },
-        {
-          "@type": "Person",
-          "name": "Dawid Pilarski"
-        }
-      ],
-      "featureList": [
-        "Interactive Map View with real-time GPS positioning",
-        "Checkpoint Navigation",
-        "Run Tracking with detailed time and distance metrics",
-        "Performance Analytics",
-        "Map Library for custom orienteering maps",
-        "Cloud Sync across devices"
-      ],
-      "screenshot": "https://mobileorienteering.com/icon.png",
-      "softwareVersion": "0.1.0",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "ratingCount": "1"
       }
     }
     </script>
+
+    <!-- Structured Data: WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Mobile Orienteering",
+      "alternateName": "Mobile Orienteering App",
+      "url": "https://mobileorienteering.com"
+    }
+    </script>
   </head>
+
   <body>
     <div id="root"></div>
+
+    <noscript>
+      <h1>Mobile Orienteering</h1>
+      <p>Android app for orienteering training and competition.</p>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
