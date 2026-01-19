@@ -1,0 +1,11 @@
+# Google OAuth
+GOOGLE_WEB_CLIENT_ID=client_id
+
+# Backend URLs
+RELEASE_BASE_URL=url
+
+# Keystore Configuration
+KEYSTORE_FILE=path_to_keystore
+KEYSTORE_PASSWORD=password
+KEY_ALIAS=alias
+KEY_PASSWORD=password

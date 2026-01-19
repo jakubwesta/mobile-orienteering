@@ -76,7 +76,6 @@ fun MapScreen(
     LaunchedEffect(runState.autoFinished) {
         if (runState.autoFinished && runState.isActive) {
             viewModel.stopRun()
-            showSaveDialog = true
         }
     }
 
@@ -134,10 +133,10 @@ fun MapScreen(
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
-        sheetPeekHeight = if (isRunActive) 0.dp else 64.dp,
-        sheetDragHandle = { if (!isRunActive) MapBottomSheetHandle() },
+        sheetPeekHeight = if (isRunActive || state.checkpoints.isEmpty()) 0.dp else 64.dp,
+        sheetDragHandle = { if (!isRunActive && state.checkpoints.isNotEmpty()) MapBottomSheetHandle() },
         sheetContent = {
-            if (!isRunActive) {
+            if (!isRunActive && state.checkpoints.isNotEmpty()) {
                 CheckpointBottomSheetContent(
                     state = state,
                     viewModel = viewModel,
@@ -216,6 +215,24 @@ fun MapScreen(
                 )
             }
 
+            if (!isRunActive && state.checkpoints.isEmpty() && draggingCheckpointIndex == null) {
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Text(
+                        text = "Click place on map to add your first control point",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
             if (draggingCheckpointIndex == null) {
                 RunProgressPanel(
                     isVisible = isRunActive,
@@ -230,6 +247,8 @@ fun MapScreen(
             }
 
             if (!isRunActive && draggingCheckpointIndex == null) {
+                val bottomSheetOffset = if (state.checkpoints.isEmpty()) 0.dp else 64.dp
+                
                 TrackingButton(
                     isTracking = state.isTracking,
                     onClick = {
@@ -246,7 +265,7 @@ fun MapScreen(
                     },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 16.dp + 64.dp)
+                        .padding(end = 16.dp, bottom = 16.dp + bottomSheetOffset)
                 )
 
                 if (state.currentLocation != null) {
@@ -258,14 +277,14 @@ fun MapScreen(
                         },
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .padding(end = 16.dp, bottom = 88.dp + 64.dp)
+                            .padding(end = 16.dp, bottom = 88.dp + bottomSheetOffset)
                     )
 
                     CenterCameraButton(
                         onClick = { viewModel.requestCenterCamera() },
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .padding(end = 16.dp, bottom = 160.dp + 64.dp)
+                            .padding(end = 16.dp, bottom = 160.dp + bottomSheetOffset)
                     )
                 }
             }

@@ -8,9 +8,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mobileorienteering.BuildConfig
 import com.mobileorienteering.R
 import com.mobileorienteering.data.model.domain.ContrastLevel
 import com.mobileorienteering.ui.screen.auth.AuthViewModel
@@ -33,6 +36,9 @@ fun SettingsScreen(
     var showContrastDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showSyncDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     Scaffold(
         topBar = {
@@ -244,6 +250,14 @@ fun SettingsScreen(
                 }
 
                 SettingsClickableItem(
+                    icon = R.drawable.ic_info_outlined,
+                    title = "About app",
+                    onClick = { showAboutDialog = true }
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                SettingsClickableItem(
                     icon = R.drawable.ic_logout,
                     title = if (authModel?.isGuestMode == true) "Sign In" else "Logout",
                     onClick = { 
@@ -339,6 +353,72 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
                     Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            title = { Text("About app") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = context.getString(R.string.app_name),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Text(
+                        text = "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    
+                    HorizontalDivider()
+                    
+                    Text(
+                        text = "License",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Elastic License 2.0",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    
+                    HorizontalDivider()
+                    
+                    Text(
+                        text = "Authors",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Jakub Westa & Dawid Pilarski",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    HorizontalDivider()
+
+                    TextButton(
+                        onClick = {
+                            uriHandler.openUri("https://mobileorienteering.com/#/privacy-policy")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Privacy Policy",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAboutDialog = false }) {
+                    Text("Close")
                 }
             }
         )

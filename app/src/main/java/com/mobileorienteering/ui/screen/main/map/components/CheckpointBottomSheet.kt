@@ -3,9 +3,6 @@ package com.mobileorienteering.ui.screen.main.map.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +22,7 @@ fun CheckpointBottomSheetContent(
 ) {
     var editingCheckpointId by remember { mutableStateOf<String?>(null) }
     var editingName by remember { mutableStateOf("") }
+    var showDeleteAllDialog by remember { mutableStateOf(false) }
 
     Column(
         Modifier
@@ -70,14 +68,20 @@ fun CheckpointBottomSheetContent(
                         onClick = { viewModel.moveCheckpointUp(checkpoint.id) },
                         enabled = index > 0
                     ) {
-                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move up")
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_up),
+                            contentDescription = "Move up"
+                        )
                     }
 
                     IconButton(
                         onClick = { viewModel.moveCheckpointDown(checkpoint.id) },
                         enabled = index < state.checkpoints.size - 1
                     ) {
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move down")
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_down),
+                            contentDescription = "Move down"
+                        )
                     }
 
                     IconButton(onClick = { viewModel.removeCheckpoint(checkpoint.id) }) {
@@ -94,7 +98,6 @@ fun CheckpointBottomSheetContent(
         if (state.checkpoints.isNotEmpty()) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Info o edytowanej mapie - nad przyciskami
             if (state.currentMapId != null && state.currentMapName != null) {
                 Row(
                     modifier = Modifier
@@ -134,7 +137,7 @@ fun CheckpointBottomSheetContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { viewModel.clearCheckpoints() },
+                    onClick = { showDeleteAllDialog = true },
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(
@@ -182,6 +185,29 @@ fun CheckpointBottomSheetContent(
             },
             dismissButton = {
                 TextButton(onClick = { editingCheckpointId = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showDeleteAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAllDialog = false },
+            title = { Text("Delete all control points") },
+            text = { Text("Are you sure you want to delete all control points? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.clearCheckpoints()
+                        showDeleteAllDialog = false
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAllDialog = false }) {
                     Text("Cancel")
                 }
             }

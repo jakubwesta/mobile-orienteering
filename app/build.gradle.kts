@@ -29,8 +29,8 @@ android {
         minSdk = 26
         //noinspection OldTargetApi
         targetSdk = 35
-        versionCode = 1 // Manually increment each release, used for GooglePlay
-        versionName = "0.1.0" // Manually increment each release
+        versionCode = 1 // Handled via workflow 1.23.45 -> '12345'
+        versionName = "0.1.0" // Handled via workflow and TAG
         testInstrumentationRunner = "com.mobileorienteering.HiltTestRunner"
 
         val googleWebClientId = localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")

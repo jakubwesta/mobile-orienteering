@@ -23,7 +23,7 @@ fun BottomNavBar(navController: NavController) {
             .fillMaxWidth()
     ) {
         AppScreen.mainScreens.forEach { screen ->
-            val selected = currentRoute == screen.route
+            val selected = currentRoute?.startsWith(screen.route) == true
 
             NavigationBarItem(
                 selected = selected,
