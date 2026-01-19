@@ -26,6 +26,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       - name: Decode Keystore
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
@@ -54,15 +58,14 @@ jobs:
           sed -i "s/versionCode .*/versionCode $VERSION_CODE/" app/build.gradle.kts
           sed -i "s/versionName \".*\"/versionName \"$VERSION_NAME\"/" app/build.gradle.kts
 
+      - name: Show version info
+        run: echo "VERSION=${{ steps.version.outputs.VERSION }}"
+
       - name: Build Release AAB
         run: ./gradlew bundleRelease --no-configuration-cache --stacktrace
 
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-configuration-cache --stacktrace
-
-      - name: Get version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Rename release files with version
         run: |
