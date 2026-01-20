@@ -21,7 +21,7 @@ import java.time.Instant
 import javax.inject.Singleton
 
 @Singleton
-class   ActivityRepository @Inject constructor(
+class ActivityRepository @Inject constructor(
     private val activityApi: ActivityApiService,
     private val mapApi: MapApiService,
     private val activityDao: ActivityDao,

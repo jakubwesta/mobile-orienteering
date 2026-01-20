@@ -7,11 +7,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.mobileorienteering.ui.component.BottomNavBar
+import com.mobileorienteering.ui.core.components.BottomNavBar
 import com.mobileorienteering.ui.core.snackbar.LocalSnackbarController
 import com.mobileorienteering.ui.core.snackbar.rememberSnackbarController
-import com.mobileorienteering.ui.screen.main.settings.SyncViewModel
-import com.mobileorienteering.ui.screen.welcome.FirstLaunchViewModel
+import com.mobileorienteering.ui.screens.settings.SyncViewModel
+import com.mobileorienteering.ui.screens.first_launch.FirstLaunchViewModel
 import com.mobileorienteering.ui.core.snackbar.SnackbarEvent
 import com.mobileorienteering.ui.core.snackbar.SnackbarViewModel
 
@@ -109,14 +109,14 @@ private fun HandleAuthState(
 private fun String?.shouldShowBottomBar(): Boolean {
     if (this == null) return false
     return AppScreen.mainScreens.any { screen ->
-        screen != null && this.startsWith(screen.route)
+        this.startsWith(screen.route)
     }
 }
 
 private fun String?.isMainScreen(): Boolean {
     if (this == null) return false
     return AppScreen.mainScreens.any { screen ->
-        screen != null && this.startsWith(screen.route)
+        this.startsWith(screen.route)
     }
 }
 
@@ -127,6 +127,6 @@ private fun determineStartDestination(
     return when {
         isFirstLaunch -> AppScreen.Welcome.route
         !isLoggedIn -> AppScreen.Login.route
-        else -> AppScreen.Map.route
+        else -> AppScreen.Library.route
     }
 }

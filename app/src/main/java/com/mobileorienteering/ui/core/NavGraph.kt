@@ -7,16 +7,16 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.mobileorienteering.ui.screen.auth.LoginScreen
-import com.mobileorienteering.ui.screen.auth.RegisterScreen
-import com.mobileorienteering.ui.screen.main.library.LibraryScreen
-import com.mobileorienteering.ui.screen.main.runs.RunsScreen
-import com.mobileorienteering.ui.screen.main.settings.SettingsScreen
-import com.mobileorienteering.ui.screen.main.map.MapScreen
-import com.mobileorienteering.ui.screen.welcome.FirstLaunchScreen
-import com.mobileorienteering.ui.screen.main.runs.RunDetailsScreen
-import com.mobileorienteering.ui.screen.main.settings.EditPasswordScreen
-import com.mobileorienteering.ui.screen.main.settings.EditProfileScreen
+import com.mobileorienteering.ui.screens.auth.LoginScreen
+import com.mobileorienteering.ui.screens.auth.RegisterScreen
+import com.mobileorienteering.ui.screens.library.LibraryScreen
+import com.mobileorienteering.ui.screens.runs.RunsScreen
+import com.mobileorienteering.ui.screens.settings.SettingsScreen
+import com.mobileorienteering.ui.screens.map.MapScreen
+import com.mobileorienteering.ui.screens.first_launch.FirstLaunchScreen
+import com.mobileorienteering.ui.screens.runs.RunDetailsScreen
+import com.mobileorienteering.ui.screens.settings.EditPasswordScreen
+import com.mobileorienteering.ui.screens.settings.EditProfileScreen
 
 @Composable
 fun AppNavGraph(

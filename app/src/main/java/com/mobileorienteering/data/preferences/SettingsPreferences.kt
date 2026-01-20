@@ -30,36 +30,55 @@ class SettingsPreferences @Inject constructor(
 
     val settingsFlow: Flow<SettingsModel> = context.settingsDataStore.data.map { prefs ->
         SettingsModel(
-            darkMode = prefs[DARK_MODE] ?: SettingsModel().darkMode,
+            darkMode = prefs[DARK_MODE]
+                ?: SettingsModel().darkMode,
+
             contrastLevel = prefs[CONTRAST_LEVEL]?.let {
                 ContrastLevel.valueOf(it)
             } ?: SettingsModel().contrastLevel,
-            controlPointSound = prefs[CONTROL_POINT_SOUND] ?: SettingsModel().controlPointSound,
-            controlPointVibration = prefs[CONTROL_POINT_VIBRATION] ?: SettingsModel().controlPointVibration,
-            gpsAccuracy = prefs[GPS_ACCURACY] ?: SettingsModel().gpsAccuracy,
-            mapZoom = prefs[MAP_ZOOM] ?: SettingsModel().mapZoom,
-            showLocationDuringRun = prefs[SHOW_LOCATION_DURING_RUN] ?: SettingsModel().showLocationDuringRun
+
+            controlPointSound = prefs[CONTROL_POINT_SOUND]
+                ?: SettingsModel().controlPointSound,
+
+            controlPointVibration = prefs[CONTROL_POINT_VIBRATION]
+                ?: SettingsModel().controlPointVibration,
+
+            gpsAccuracy = prefs[GPS_ACCURACY]
+                ?: SettingsModel().gpsAccuracy,
+
+            mapZoom = prefs[MAP_ZOOM]
+                ?: SettingsModel().mapZoom,
+
+            showLocationDuringRun = prefs[SHOW_LOCATION_DURING_RUN]
+                ?: SettingsModel().showLocationDuringRun
         )
     }
 
-    suspend fun updateDarkMode(enabled: Boolean) =
-        context.settingsDataStore.edit { it[DARK_MODE] = enabled }
+    suspend fun updateDarkMode(
+        enabled: Boolean
+    ) = context.settingsDataStore.edit { it[DARK_MODE] = enabled }
 
-    suspend fun updateContrastLevel(level: ContrastLevel) =
-        context.settingsDataStore.edit { it[CONTRAST_LEVEL] = level.name }
+    suspend fun updateContrastLevel(
+        level: ContrastLevel
+    ) = context.settingsDataStore.edit { it[CONTRAST_LEVEL] = level.name }
 
-    suspend fun updateControlPointSound(enabled: Boolean) =
-        context.settingsDataStore.edit { it[CONTROL_POINT_SOUND] = enabled }
+    suspend fun updateControlPointSound(
+        enabled: Boolean
+    ) = context.settingsDataStore.edit { it[CONTROL_POINT_SOUND] = enabled }
 
-    suspend fun updateControlPointVibration(enabled: Boolean) =
-        context.settingsDataStore.edit { it[CONTROL_POINT_VIBRATION] = enabled }
+    suspend fun updateControlPointVibration(
+        enabled: Boolean
+    ) = context.settingsDataStore.edit { it[CONTROL_POINT_VIBRATION] = enabled }
 
-    suspend fun updateGpsAccuracy(value: Int) =
-        context.settingsDataStore.edit { it[GPS_ACCURACY] = value }
+    suspend fun updateGpsAccuracy(
+        value: Int
+    ) = context.settingsDataStore.edit { it[GPS_ACCURACY] = value }
 
-    suspend fun updateMapZoom(value: Int) =
-        context.settingsDataStore.edit { it[MAP_ZOOM] = value }
+    suspend fun updateMapZoom(
+        value: Int
+    ) = context.settingsDataStore.edit { it[MAP_ZOOM] = value }
 
-    suspend fun updateShowLocationDuringRun(enabled: Boolean) =
-        context.settingsDataStore.edit { it[SHOW_LOCATION_DURING_RUN] = enabled }
+    suspend fun updateShowLocationDuringRun(
+        enabled: Boolean
+    ) = context.settingsDataStore.edit { it[SHOW_LOCATION_DURING_RUN] = enabled }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.mobileorienteering.BuildConfig
 import com.mobileorienteering.data.local.AppDatabase
+import com.mobileorienteering.data.local.addAllMigrations
 import com.mobileorienteering.data.local.dao.ActivityDao
 import com.mobileorienteering.data.local.dao.MapDao
 import dagger.Module
@@ -27,7 +28,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             DATABASE_NAME
-        ).addMigrations(AppDatabase.MIGRATION_1_2)
+        ).addAllMigrations()
 
         if (BuildConfig.DEBUG) {
             builder.fallbackToDestructiveMigration()

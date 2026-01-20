@@ -9,8 +9,9 @@ import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.service.RunServiceManager
 import com.mobileorienteering.service.RunState
-import com.mobileorienteering.ui.screen.main.map.MapViewModel
+import com.mobileorienteering.ui.screens.map.MapViewModel
 import com.mobileorienteering.util.manager.LocationManager
+import com.mobileorienteering.util.manager.NotificationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +36,7 @@ class MapViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var locationManager: LocationManager
+    private lateinit var notificationManager: NotificationManager
     private lateinit var mapRepository: MapRepository
     private lateinit var authRepository: AuthRepository
     private lateinit var mapStatePreferences: MapStatePreferences
@@ -55,6 +57,7 @@ class MapViewModelTest {
         settingsPreferences = mock()
         activityRepository = mock()
         runServiceManager = mock()
+        notificationManager = mock()
 
         whenever(locationManager.hasLocationPermission()).thenReturn(false)
         runBlocking {
@@ -65,6 +68,7 @@ class MapViewModelTest {
 
         viewModel = MapViewModel(
             locationManager = locationManager,
+            notificationManager = notificationManager,
             mapRepository = mapRepository,
             authRepository = authRepository,
             mapStatePreferences = mapStatePreferences,

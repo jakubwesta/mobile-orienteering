@@ -6,18 +6,20 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.mobileorienteering.ui.core.AppScaffold
-import com.mobileorienteering.ui.screen.auth.AuthViewModel
-import com.mobileorienteering.ui.screen.main.settings.SettingsViewModel
-import com.mobileorienteering.ui.screen.welcome.FirstLaunchViewModel
+import com.mobileorienteering.ui.screens.auth.AuthViewModel
+import com.mobileorienteering.ui.screens.settings.SettingsViewModel
+import com.mobileorienteering.ui.screens.first_launch.FirstLaunchViewModel
 import com.mobileorienteering.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

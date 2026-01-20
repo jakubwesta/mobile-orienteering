@@ -6,18 +6,19 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.*
-import com.google.android.gms.tasks.Task
-import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.mobileorienteering.util.filter.RunningLocationFilter
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
 
 @Singleton
 class LocationManager @Inject constructor(
@@ -98,13 +99,5 @@ class LocationManager @Inject constructor(
         awaitClose {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
-    }
-}
-
-fun <T> Task<T>.await(): T? {
-    return try {
-        Tasks.await(this)
-    } catch (_: Exception) {
-        null
     }
 }

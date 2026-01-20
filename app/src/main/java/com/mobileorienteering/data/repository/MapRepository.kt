@@ -189,7 +189,7 @@ class MapRepository @Inject constructor(
 
     /**
      * Uploads a single local map to a server.
-]     */
+     */
     private suspend fun uploadMapToServer(map: OrienteeringMap): Result<Unit> {
         return try {
             val auth = authRepository.getCurrentAuth()
