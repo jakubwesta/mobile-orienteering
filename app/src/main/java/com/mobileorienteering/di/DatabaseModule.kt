@@ -2,6 +2,7 @@ package com.mobileorienteering.di
 
 import android.content.Context
 import androidx.room.Room
+import com.mobileorienteering.BuildConfig
 import com.mobileorienteering.data.local.AppDatabase
 import com.mobileorienteering.data.local.dao.ActivityDao
 import com.mobileorienteering.data.local.dao.MapDao
@@ -22,14 +23,17 @@ object DatabaseModule {
     fun provideAppDatabase(
         @ApplicationContext context: Context
     ): AppDatabase {
-        return Room.databaseBuilder(
+        val builder = Room.databaseBuilder(
             context,
             AppDatabase::class.java,
             DATABASE_NAME
-        )
-            .addMigrations(AppDatabase.MIGRATION_1_2)
-            .fallbackToDestructiveMigration()
-            .build()
+        ).addMigrations(AppDatabase.MIGRATION_1_2)
+
+        if (BuildConfig.DEBUG) {
+            builder.fallbackToDestructiveMigration()
+        }
+
+        return builder.build()
     }
 
     @Provides

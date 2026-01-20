@@ -2,9 +2,6 @@ package com.mobileorienteering.ui.component
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.util.Locale
 
 @Composable
 fun RunFinishedDialog(
@@ -28,18 +26,6 @@ fun RunFinishedDialog(
 
     AlertDialog(
         onDismissRequest = {},
-        icon = {
-            Icon(
-                imageVector = if (isCompleted) Icons.Default.Star else Icons.Default.Close,
-                contentDescription = null,
-                tint = if (isCompleted) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.error
-                },
-                modifier = Modifier.size(48.dp)
-            )
-        },
         title = {
             Text(
                 if (isCompleted) "Run Completed!" else "Run Stopped",
@@ -93,8 +79,8 @@ fun RunFinishedDialog(
 
 private fun formatDistance(meters: Double): String {
     return if (meters >= 1000) {
-        String.format("%.2f km", meters / 1000)
+        String.format(Locale.US, "%.2f km", meters / 1000)
     } else {
-        String.format("%.0f m", meters)
+        String.format(Locale.US, "%.0f m", meters)
     }
 }

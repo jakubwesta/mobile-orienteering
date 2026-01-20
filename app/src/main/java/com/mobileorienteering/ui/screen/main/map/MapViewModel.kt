@@ -28,6 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val locationManager: LocationManager,
+    private val notificationManager: com.mobileorienteering.util.manager.NotificationManager,
     private val mapRepository: MapRepository,
     private val authRepository: AuthRepository,
     private val mapStatePreferences: MapStatePreferences,
@@ -126,6 +127,17 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    fun handleStartRun(
+        onRequestNotificationPermission: () -> Unit,
+        onStartRun: () -> Unit
+    ) {
+        if (!notificationManager.hasNotificationPermission()) {
+            onRequestNotificationPermission()
+        } else {
+            onStartRun()
+        }
+    }
+
     fun startRun() {
         if (_state.value.checkpoints.isEmpty()) {
             _state.update { it.copy(error = "No control points to run") }
@@ -191,8 +203,6 @@ class MapViewModel @Inject constructor(
     fun discardFinishedRun() {
         _finishedRunState.value = null
     }
-
-    // TRACKING
 
     fun startTracking() {
         if (!locationManager.hasLocationPermission()) {
@@ -265,7 +275,30 @@ class MapViewModel @Inject constructor(
         saveTrackingState(false)
     }
 
-    // CHECKPOINTS
+    fun handleLocationFabClick(
+        onRequestPermission: () -> Unit,
+        onLocationEnabled: () -> Unit,
+        onLocationDisabled: () -> Unit
+    ) {
+        if (!locationManager.hasLocationPermission()) {
+            onRequestPermission()
+        } else if (locationManager.isLocationEnabled()) {
+            onLocationEnabled()
+        } else {
+            onLocationDisabled()
+        }
+    }
+
+    fun handleLocationPermissionGranted(
+        onLocationEnabled: () -> Unit,
+        onLocationDisabled: () -> Unit
+    ) {
+        if (locationManager.isLocationEnabled()) {
+            onLocationEnabled()
+        } else {
+            onLocationDisabled()
+        }
+    }
 
     fun addCheckpoint(longitude: Double, latitude: Double, name: String = "") {
         val checkpoint = Checkpoint(

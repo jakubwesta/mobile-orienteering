@@ -24,7 +24,10 @@ import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.content.Intent
+import android.provider.Settings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +43,7 @@ fun MapScreen(
     val showLocationDuringRun by viewModel.showLocationDuringRun.collectAsStateWithLifecycle()
     val centerCameraOnce by viewModel.centerCameraOnce.collectAsStateWithLifecycle()
     val cameraState = rememberCameraState()
+    val context = LocalContext.current
 
     val isRunActive = runState.isActive
 
@@ -50,7 +54,10 @@ fun MapScreen(
     val scaffoldState = rememberBottomSheetScaffoldState()
 
     var tapPosition by remember { mutableStateOf<Position?>(null) }
+    var hasAutoStarted by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
+    var showGpsSettingsDialog by remember { mutableStateOf(false) }
+    var pendingRunStart by remember { mutableStateOf(false) }
     val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsStateWithLifecycle()
 
     var draggingCheckpointIndex by remember { mutableStateOf<Int?>(null) }
@@ -59,23 +66,16 @@ fun MapScreen(
         viewModel.updatePermissionState()
     }
 
-    LaunchedEffect(initialMapId) {
-        if (initialMapId != null) {
-            viewModel.loadMap(initialMapId)
-        }
-    }
-
-    var hasAutoStarted by remember { mutableStateOf(false) }
-    LaunchedEffect(startRun, state.checkpoints) {
-        if (startRun && state.checkpoints.isNotEmpty() && !isRunActive && !hasAutoStarted) {
-            hasAutoStarted = true
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
             viewModel.startRun()
-        }
-    }
-
-    LaunchedEffect(runState.autoFinished) {
-        if (runState.autoFinished && runState.isActive) {
-            viewModel.stopRun()
+            pendingRunStart = false
+        } else {
+            // Permission denied, but we can still start the run without notifications
+            viewModel.startRun()
+            pendingRunStart = false
         }
     }
 
@@ -86,7 +86,54 @@ fun MapScreen(
         val coarseLocationGranted = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
 
         if (fineLocationGranted || coarseLocationGranted) {
-            viewModel.startTracking()
+            viewModel.handleLocationPermissionGranted(
+                onLocationEnabled = {
+                    viewModel.startTracking()
+                    viewModel.requestCenterCamera()
+                },
+                onLocationDisabled = {
+                    showGpsSettingsDialog = true
+                }
+            )
+        }
+    }
+
+    LaunchedEffect(initialMapId) {
+        if (initialMapId != null) {
+            viewModel.loadMap(initialMapId)
+        }
+    }
+
+    LaunchedEffect(startRun, state.checkpoints) {
+        if (startRun && state.checkpoints.isNotEmpty() && !isRunActive && !hasAutoStarted) {
+            hasAutoStarted = true
+            pendingRunStart = true
+        }
+    }
+
+    LaunchedEffect(pendingRunStart) {
+        if (pendingRunStart) {
+            viewModel.handleStartRun(
+                onRequestNotificationPermission = {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                    } else {
+                        // For Android 12 and below, just start the run
+                        viewModel.startRun()
+                        pendingRunStart = false
+                    }
+                },
+                onStartRun = {
+                    viewModel.startRun()
+                    pendingRunStart = false
+                }
+            )
+        }
+    }
+
+    LaunchedEffect(runState.autoFinished) {
+        if (runState.autoFinished && runState.isActive) {
+            viewModel.stopRun()
         }
     }
 
@@ -225,7 +272,7 @@ fun MapScreen(
                     )
                 ) {
                     Text(
-                        text = "Click place on map to add your first control point",
+                        text = "Click on map to add your first control point",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(16.dp)
@@ -249,17 +296,28 @@ fun MapScreen(
             if (!isRunActive && draggingCheckpointIndex == null) {
                 val bottomSheetOffset = if (state.checkpoints.isEmpty()) 0.dp else 64.dp
                 
-                TrackingButton(
+                LocationFab(
                     isTracking = state.isTracking,
                     onClick = {
                         if (state.isTracking) {
                             viewModel.stopTracking()
                         } else {
-                            locationPermissionLauncher.launch(
-                                arrayOf(
-                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                )
+                            viewModel.handleLocationFabClick(
+                                onRequestPermission = {
+                                    locationPermissionLauncher.launch(
+                                        arrayOf(
+                                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                },
+                                onLocationEnabled = {
+                                    viewModel.startTracking()
+                                    viewModel.requestCenterCamera()
+                                },
+                                onLocationDisabled = {
+                                    showGpsSettingsDialog = true
+                                }
                             )
                         }
                     },
@@ -267,30 +325,14 @@ fun MapScreen(
                         .align(Alignment.BottomEnd)
                         .padding(end = 16.dp, bottom = 16.dp + bottomSheetOffset)
                 )
-
-                if (state.currentLocation != null) {
-                    AddCheckpointButton(
-                        onClick = {
-                            state.currentLocation?.let { location ->
-                                tapPosition = Position(location.longitude, location.latitude)
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(end = 16.dp, bottom = 88.dp + bottomSheetOffset)
-                    )
-
-                    CenterCameraButton(
-                        onClick = { viewModel.requestCenterCamera() },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(end = 16.dp, bottom = 160.dp + bottomSheetOffset)
-                    )
-                }
             }
 
-            if (isRunActive && shouldShowLocation && runState.currentLocation != null && draggingCheckpointIndex == null) {
-                CenterCameraButton(
+            if (isRunActive
+                && shouldShowLocation
+                && runState.currentLocation != null
+                && draggingCheckpointIndex == null) {
+                LocationFab(
+                    isTracking = true,
                     onClick = { viewModel.requestCenterCamera() },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -309,6 +351,30 @@ fun MapScreen(
                                 latitude = pos.latitude,
                                 name = name
                             )
+                        }
+                    }
+                )
+            }
+
+            if (showGpsSettingsDialog) {
+                AlertDialog(
+                    onDismissRequest = { showGpsSettingsDialog = false },
+                    title = { Text("Location Services Disabled") },
+                    text = { Text("Location services are turned off. Would you like to enable them in settings?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showGpsSettingsDialog = false
+                                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                                context.startActivity(intent)
+                            }
+                        ) {
+                            Text("Open Settings")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showGpsSettingsDialog = false }) {
+                            Text("Cancel")
                         }
                     }
                 )

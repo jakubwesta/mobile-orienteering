@@ -42,30 +42,17 @@ class LocationManager @Inject constructor(
         return hasFineLocation || hasCoarseLocation
     }
 
-    @Suppress("MissingPermission")
-    suspend fun getCurrentLocation(): Location? {
-        if (!hasLocationPermission()) {
-            return null
-        }
-
-        return try {
-            val currentLocation = suspendCancellableCoroutine { continuation ->
-                fusedLocationClient.getCurrentLocation(
-                    Priority.PRIORITY_HIGH_ACCURACY,
-                    null
-                ).addOnSuccessListener { location ->
-                    continuation.resume(location)
-                }.addOnFailureListener { _ ->
-                    continuation.resume(null)
-                }
-            }
-
-            currentLocation ?: fusedLocationClient.lastLocation.await()
-        } catch (_: Exception) {
-            null
-        }
+    fun isLocationEnabled(): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE)
+                as android.location.LocationManager
+        val isGpsEnabled = locationManager.isProviderEnabled(
+            android.location.LocationManager.GPS_PROVIDER
+        )
+        val isNetworkEnabled = locationManager.isProviderEnabled(
+            android.location.LocationManager.NETWORK_PROVIDER
+        )
+        return isGpsEnabled || isNetworkEnabled
     }
-
 
     fun resetFilter() {
         locationFilter.reset()

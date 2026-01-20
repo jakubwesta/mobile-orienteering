@@ -1,7 +1,9 @@
 package com.mobileorienteering.ui.component
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,34 +49,38 @@ fun ActivityCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Text(
+                        activity.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Visible,
+                        softWrap = false,
+                        modifier = Modifier.horizontalScroll(rememberScrollState())
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = if (activity.isCompleted) {
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        }
                     ) {
                         Text(
-                            activity.title,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f, fill = false),
-                            maxLines = 2
-                        )
-
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
+                            text = if (activity.isCompleted) "Completed" else "Uncompleted",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
                             color = if (activity.isCompleted) {
-                                MaterialTheme.colorScheme.primaryContainer
+                                MaterialTheme.colorScheme.onTertiaryContainer
                             } else {
-                                MaterialTheme.colorScheme.errorContainer
-                            }
-                        ) {
-                            Text(
-                                text = if (activity.isCompleted) "Completed" else "Uncompleted",
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
+                                MaterialTheme.colorScheme.onErrorContainer
+                            },
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
 
@@ -112,7 +118,7 @@ fun ActivityCard(
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -157,18 +163,21 @@ fun ActivityCard(
             }
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     "Distance: ${formatDistance(activity.distance)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
                 )
                 Text(
                     "Duration: ${formatDuration(activity.duration)}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
                 )
             }
 

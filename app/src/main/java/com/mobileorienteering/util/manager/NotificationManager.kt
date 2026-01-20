@@ -6,7 +6,10 @@ import android.app.NotificationManager as AndroidNotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.mobileorienteering.MainActivity
 import com.mobileorienteering.R
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -41,6 +44,18 @@ class NotificationManager @Inject constructor(
         }
 
         notificationManager.createNotificationChannel(channel)
+    }
+
+    fun hasNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            // For Android 12 and below, notifications are enabled by default
+            true
+        }
     }
 
     fun buildRunNotification(
@@ -78,10 +93,26 @@ class NotificationManager @Inject constructor(
         val checkpoints = "$visitedCheckpoints/$totalCheckpoints"
         val distance = formatDistance(distanceMeters)
 
-        return buildRunNotification(
-            title = "Run in progress • $time",
-            content = "$checkpoints checkpoints • $distance"
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
+        return NotificationCompat.Builder(context, RUN_TRACKING_CHANNEL_ID)
+            .setContentTitle("Run in progress • $time")
+            .setContentText("$checkpoints checkpoints • $distance")
+            .setSmallIcon(R.drawable.ic_runs_filled)
+            .setOngoing(true)
+            .setContentIntent(pendingIntent)
+            .setSilent(true)
+            .setProgress(totalCheckpoints, visitedCheckpoints, false)
+            .build()
     }
 
     fun notify(notificationId: Int, notification: Notification) {
