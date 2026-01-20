@@ -45,6 +45,13 @@ class LoginTest {
         Thread.sleep(500)
     }
 
+    @Before
+    fun disableAnimations() {
+        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("settings put global window_animation_scale 0")
+        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("settings put global transition_animation_scale 0")
+        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("settings put global animator_duration_scale 0")
+    }
+
     private fun handleWelcomeScreenIfPresent() {
         val welcomeScreenPresent = try {
             composeTestRule
