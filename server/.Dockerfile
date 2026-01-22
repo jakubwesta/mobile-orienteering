@@ -17,14 +17,13 @@ RUN uv sync --no-dev
 FROM base AS production
 COPY --from=dependencies --chown=app:app /app/.venv /app/.venv
 COPY --chown=app:app . .
+RUN uv pip install -e .
 RUN groupadd -r app && useradd -r -g app app
 USER app
-
-ENV PYTHONPATH=/app/server/src
 
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-CMD ["uv", "run", "server"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
