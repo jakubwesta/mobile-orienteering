@@ -8,18 +8,19 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
-# ---- dependencies ----
+# --- dependencies ---
 FROM base AS dependencies
 COPY pyproject.toml ./
-RUN uv sync --no-install-project --no-dev
+RUN uv sync --no-dev
 
-# ---- production ----
+# --- production ---
 FROM base AS production
 COPY --from=dependencies --chown=app:app /app/.venv /app/.venv
 COPY --chown=app:app . .
-
 RUN groupadd -r app && useradd -r -g app app
 USER app
+
+ENV PYTHONPATH=/app/src
 
 EXPOSE 8000
 
