@@ -2,6 +2,9 @@
 .gradle
 .idea
 .kotlin
+.venv
+.env
+uv.lock
 /local.properties
 /.idea/caches
 /.idea/libraries
