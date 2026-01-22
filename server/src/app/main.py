@@ -53,8 +53,6 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-app.add_middleware(HTTPSRedirectMiddleware)
-
 @app.get("/")
 async def root():
   return {
@@ -77,5 +75,6 @@ def main():
     reload=config.RELOAD,
     log_level="info",
     proxy_headers=True,
-    forwarded_allow_ips="*"
+    forwarded_allow_ips="*",
+    access_log=False,
   )
