@@ -1,10 +1,10 @@
 import logging
+import sys
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from app.core.config import config
 from app.core.router import api_router
@@ -13,7 +13,8 @@ from app.core.db import db_lifespan_context
 logging.basicConfig(
   level=logging.INFO,
   format="%(asctime)s - %(name)s - %(message)s",
-  datefmt="[%Y-%m-%d %H:%M:%S]"
+  datefmt="[%Y-%m-%d %H:%M:%S]",
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
 
 logging.getLogger('sqlalchemy').setLevel(logging.CRITICAL)
