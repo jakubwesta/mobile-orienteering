@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from app.core.config import config
 from app.core.router import api_router
@@ -12,8 +13,7 @@ from app.core.db import db_lifespan_context
 logging.basicConfig(
   level=logging.INFO,
   format="%(asctime)s - %(name)s - %(message)s",
-  datefmt="[%Y-%m-%d %H:%M:%S]",
-  force=True
+  datefmt="[%Y-%m-%d %H:%M:%S]"
 )
 
 logging.getLogger('sqlalchemy').setLevel(logging.CRITICAL)
@@ -44,11 +44,16 @@ app = FastAPI(
 
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=["*"],
+  allow_origins=[
+    "https://mobileorienteering.com",
+    "https://www.mobileorienteering.com"
+  ],
   allow_credentials=True,
   allow_methods=["*"],
   allow_headers=["*"],
 )
+
+app.add_middleware(HTTPSRedirectMiddleware)
 
 @app.get("/")
 async def root():
@@ -70,5 +75,7 @@ def main():
     host=config.HOST, 
     port=config.PORT, 
     reload=config.RELOAD,
-    log_level="info"
+    log_level="info",
+    proxy_headers=True,
+    forwarded_allow_ips="*"
   )
