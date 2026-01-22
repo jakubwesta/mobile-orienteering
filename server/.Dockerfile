@@ -15,11 +15,9 @@ RUN uv sync --no-dev
 
 # --- production ---
 FROM base AS production
-COPY --from=dependencies --chown=app:app /app/.venv /app/.venv
-COPY --chown=app:app . .
+COPY --from=dependencies /app/.venv /app/.venv
+COPY . .
 RUN uv pip install -e .
-RUN groupadd -r app && useradd -r -g app app
-USER app
 
 EXPOSE 8000
 
