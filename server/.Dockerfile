@@ -11,7 +11,7 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 # ---- dependencies ----
 FROM base AS dependencies
 COPY pyproject.toml ./
-RUN uv sync --frozen --no-install-project --no-dev
+RUN uv sync --no-install-project --no-dev
 
 # ---- production ----
 FROM base AS production
