@@ -10,7 +10,7 @@ from app.core.router import api_router
 from app.core.db import db_lifespan_context
 
 logging.basicConfig(
-  level=logging.DEBUG,
+  level=logging.INFO,
   format="%(asctime)s - %(name)s - %(message)s",
   datefmt="[%Y-%m-%d %H:%M:%S]",
   force=True
@@ -69,5 +69,6 @@ def main():
     "app.main:app", 
     host=config.HOST, 
     port=config.PORT, 
-    reload=config.RELOAD
+    reload=config.RELOAD,
+    log_level="info"
   )
