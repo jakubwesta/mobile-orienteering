@@ -48,9 +48,9 @@ All scripts used for development and publishing are in /scripts
 1. Clone the repository:
    ```powershell
    git clone https://github.com/jakubwesta/mobile-orienteering.git
-   cd mobile-orienteering
+   cd mobile-orienteering/mobile
    ```
-2. Create `local.properites` in root directory. This file can store placeholders
+2. Create `local.properites`. This file can store placeholders
    ```properties
    GOOGLE_WEB_CLIENT_ID=your_google_client_id
    RELEASE_BASE_URL=your_api_base_url

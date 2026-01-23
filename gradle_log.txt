@@ -1,3 +1,0 @@
-rmdir /s /q .gradle
-rmdir /s /q app\build
-gradlew clean assembleDebug

@@ -5,7 +5,7 @@
 .venv
 .env
 uv.lock
-/local.properties
+/mobile/local.properties
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -14,6 +14,8 @@ uv.lock
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+/mobile/build
+**/build
 /captures
 .externalNativeBuild
 .cxx
