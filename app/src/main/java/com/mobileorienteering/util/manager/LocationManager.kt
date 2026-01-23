@@ -1,6 +1,9 @@
 package com.mobileorienteering.util.manager
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.location.Location
 import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -16,6 +19,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.location.LocationManager as AndroidLocationManager
+
 
 data class LocationUpdate(
     val raw: Location,
@@ -98,6 +103,37 @@ class LocationManager @Inject constructor(
 
         awaitClose {
             fusedLocationClient.removeLocationUpdates(locationCallback)
+        }
+    }
+
+    fun observeLocationProviderChanges(): Flow<Boolean> = callbackFlow {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE)
+                as AndroidLocationManager
+
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val isGpsEnabled = locationManager.isProviderEnabled(
+                    AndroidLocationManager.GPS_PROVIDER
+                )
+                val isNetworkEnabled = locationManager.isProviderEnabled(
+                    AndroidLocationManager.NETWORK_PROVIDER
+                )
+                trySend(isGpsEnabled || isNetworkEnabled)
+            }
+        }
+
+        val isEnabled = locationManager.isProviderEnabled(
+            AndroidLocationManager.GPS_PROVIDER
+        ) || locationManager.isProviderEnabled(
+            AndroidLocationManager.NETWORK_PROVIDER
+        )
+        trySend(isEnabled)
+
+        val filter = IntentFilter(AndroidLocationManager.PROVIDERS_CHANGED_ACTION)
+        context.registerReceiver(receiver, filter)
+
+        awaitClose {
+            context.unregisterReceiver(receiver)
         }
     }
 }

@@ -77,7 +77,25 @@ class MapViewModel @Inject constructor(
     init {
         restoreSavedState()
         observeSettings()
+        observeLocationProviderState()
         runServiceManager.tryReconnect()
+    }
+
+    private fun observeLocationProviderState() {
+        viewModelScope.launch {
+            locationManager.observeLocationProviderChanges()
+                .collect { isEnabled: Boolean ->
+                    if (!isEnabled && _state.value.isTracking) {
+                        stopTracking()
+                        _state.update {
+                            it.copy(
+                                currentLocation = null,
+                                error = "Location services disabled"
+                            )
+                        }
+                    }
+                }
+        }
     }
 
     private fun observeSettings() {
