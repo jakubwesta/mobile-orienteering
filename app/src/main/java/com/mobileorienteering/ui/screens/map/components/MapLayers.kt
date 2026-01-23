@@ -145,10 +145,9 @@ fun UserLocationLayer(location: Location?) {
 @Composable
 fun NextCheckpointLineLayer(
     currentLocation: Location?,
-    nextCheckpoint: Checkpoint?,
-    isRunActive: Boolean
+    nextCheckpoint: Checkpoint?
 ) {
-    if (!isRunActive || currentLocation == null || nextCheckpoint == null) return
+    if (currentLocation == null || nextCheckpoint == null) return
 
     val positions = listOf(
         Position(currentLocation.longitude, currentLocation.latitude),

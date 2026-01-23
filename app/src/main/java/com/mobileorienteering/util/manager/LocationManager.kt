@@ -1,11 +1,8 @@
 package com.mobileorienteering.util.manager
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
-import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -19,6 +16,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 import javax.inject.Singleton
+
+data class LocationUpdate(
+    val raw: Location,
+    val filtered: Location
+)
 
 @Singleton
 class LocationManager @Inject constructor(
@@ -58,7 +60,7 @@ class LocationManager @Inject constructor(
     fun getLocationUpdates(
         intervalMillis: Long = 2000L,
         minimalDistance: Float = 5f
-    ): Flow<Location> = callbackFlow {
+    ): Flow<LocationUpdate> = callbackFlow {
         if (!hasLocationPermission()) {
             close(IllegalStateException("Location permission not granted"))
             return@callbackFlow
@@ -78,7 +80,10 @@ class LocationManager @Inject constructor(
             override fun onLocationResult(result: LocationResult) {
                 result.locations.forEach { location ->
                     val filteredLocation = locationFilter.filter(location)
-                    trySend(filteredLocation).isSuccess
+                    trySend(LocationUpdate(
+                        raw = location,
+                        filtered = filteredLocation
+                    )).isSuccess
                 }
             }
         }

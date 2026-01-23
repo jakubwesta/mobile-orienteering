@@ -43,6 +43,7 @@ class MapViewModel @Inject constructor(
     val state: StateFlow<MapState> = _state.asStateFlow()
 
     private var trackingJob: Job? = null
+    private var rawLocation: Location? = null
 
     private val _mapZoom = MutableStateFlow(16.0)
     val mapZoom: StateFlow<Double> = _mapZoom.asStateFlow()
@@ -120,6 +121,10 @@ class MapViewModel @Inject constructor(
     }
 
     fun requestCenterCamera() {
+        // Use raw location for centering if available
+        rawLocation?.let { raw ->
+            _state.update { it.copy(currentLocation = raw) }
+        }
         _centerCameraOnce.value = true
     }
 
@@ -271,8 +276,9 @@ class MapViewModel @Inject constructor(
                     }
                     saveTrackingState(false)
                 }
-                .collectLatest { location ->
-                    updateLocation(location)
+                .collectLatest { locationUpdate ->
+                    rawLocation = locationUpdate.raw
+                    updateLocation(locationUpdate.filtered)
                 }
         }
     }

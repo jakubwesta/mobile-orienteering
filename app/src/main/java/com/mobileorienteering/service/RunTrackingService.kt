@@ -33,6 +33,7 @@ class RunTrackingService : Service() {
     private var timerJob: Job? = null
 
     private var lastLocation: Location? = null
+    private var rawLocation: Location? = null
     private var checkpointRadius: Int = 10
 
     private val _runState = MutableStateFlow(RunState())
@@ -127,8 +128,9 @@ class RunTrackingService : Service() {
                 minimalDistance = 5f
             ).catch { e ->
                 _runState.update { it.copy(error = "GPS error: ${e.message}") }
-            }.collect { location ->
-                updateLocation(location)
+            }.collect { locationUpdate ->
+                rawLocation = locationUpdate.raw
+                updateLocation(locationUpdate.filtered)
             }
         }
     }
@@ -259,7 +261,7 @@ class RunTrackingService : Service() {
                     name = name
                 )
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }

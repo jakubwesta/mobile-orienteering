@@ -280,22 +280,19 @@ fun MapScreen(
             ) {
                 val currentLocation = if (isRunActive) runState.currentLocation else state.currentLocation
 
-                if (isRunActive && runState.pathData.isNotEmpty()) {
+                if (isRunActive && runState.pathData.isNotEmpty() && shouldShowLocation) {
                     RoutePathLayer(
                         pathData = runState.pathData,
                         color = Color(0xFF2196F3),
                         width = 4f
                     )
 
-                    if (shouldShowLocation) {
-                        NextCheckpointLineLayer(
-                            currentLocation = currentLocation,
-                            nextCheckpoint = if (runState.nextCheckpointIndex < state.checkpoints.size) {
-                                state.checkpoints[runState.nextCheckpointIndex]
-                            } else null,
-                            isRunActive = isRunActive
-                        )
-                    }
+                    NextCheckpointLineLayer(
+                        currentLocation = currentLocation,
+                        nextCheckpoint = if (runState.nextCheckpointIndex < state.checkpoints.size) {
+                            state.checkpoints[runState.nextCheckpointIndex]
+                        } else null
+                    )
                 }
 
                 CheckpointsLayer(
@@ -362,7 +359,7 @@ fun MapScreen(
                     isTracking = state.isTracking,
                     onClick = {
                         if (state.isTracking) {
-                            viewModel.stopTracking()
+                            viewModel.requestCenterCamera()
                         } else {
                             viewModel.handleLocationFabClick(
                                 onRequestPermission = {
