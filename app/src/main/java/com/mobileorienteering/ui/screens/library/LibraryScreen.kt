@@ -26,7 +26,8 @@ import com.mobileorienteering.ui.screens.library.components.MapCard
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
     onEditMap: (Long) -> Unit = {},
-    onStartRun: (Long) -> Unit = {}
+    onStartRun: (Long) -> Unit = {},
+    onCreateFirstMap: () -> Unit = {}
 ) {
     val maps by viewModel.filteredMaps.collectAsState()
     val isLoading by remember { viewModel.isLoading }
@@ -189,14 +190,34 @@ fun LibraryScreen(
         }
         else if (maps.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "No maps yet.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Text(
+                        "No maps yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "Create your first map to start orienteering",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = onCreateFirstMap,
+                        modifier = Modifier.fillMaxWidth(0.7f)
+                    ) {
+                        Text("Create First Map")
+                    }
+                }
             }
         } else {
             LazyColumn(

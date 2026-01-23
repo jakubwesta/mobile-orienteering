@@ -77,6 +77,9 @@ fun AppNavGraph(
                 },
                 onStartRun = { mapId ->
                     navController.navigate("${AppScreen.Map.route}?mapId=$mapId&startRun=true")
+                },
+                onCreateFirstMap = {
+                    navController.navigate(AppScreen.Map.route)
                 }
             )
         }

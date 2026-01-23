@@ -19,7 +19,8 @@ import javax.inject.Singleton
 
 @Singleton
 class NotificationManager @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val permissionManager: PermissionManager
 ) {
     private val notificationManager =
         context.getSystemService(AndroidNotificationManager::class.java)
@@ -47,15 +48,7 @@ class NotificationManager @Inject constructor(
     }
 
     fun hasNotificationPermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            // For Android 12 and below, notifications are enabled by default
-            true
-        }
+        return permissionManager.hasNotificationPermission()
     }
 
     fun buildRunNotification(

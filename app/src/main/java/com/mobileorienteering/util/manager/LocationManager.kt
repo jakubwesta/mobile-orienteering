@@ -22,7 +22,8 @@ import javax.inject.Singleton
 
 @Singleton
 class LocationManager @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val permissionManager: PermissionManager
 ) {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
@@ -30,17 +31,11 @@ class LocationManager @Inject constructor(
     private val locationFilter = RunningLocationFilter()
 
     fun hasLocationPermission(): Boolean {
-        val hasFineLocation = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        return permissionManager.hasLocationPermission()
+    }
 
-        val hasCoarseLocation = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        return hasFineLocation || hasCoarseLocation
+    fun hasPreciseLocationPermission(): Boolean {
+        return permissionManager.hasPreciseLocationPermission()
     }
 
     fun isLocationEnabled(): Boolean {

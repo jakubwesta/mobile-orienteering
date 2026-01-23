@@ -1,6 +1,10 @@
 package com.mobileorienteering.ui.screens.map
 
 import android.Manifest
+import android.os.Build
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,28 +12,16 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.mobileorienteering.ui.screens.map.components.RunFinishedDialog
-import com.mobileorienteering.ui.screens.map.components.RunProgressPanel
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
-import kotlinx.coroutines.launch
-import org.maplibre.compose.camera.CameraPosition
-import org.maplibre.compose.camera.rememberCameraState
-import org.maplibre.compose.map.*
-import org.maplibre.compose.style.BaseStyle
-import org.maplibre.compose.style.rememberStyleState
-import org.maplibre.compose.util.ClickResult
-import org.maplibre.spatialk.geojson.Position
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import android.content.Intent
-import android.os.Build
-import android.provider.Settings
+import com.mobileorienteering.ui.core.components.GpsSettingsDialog
+import com.mobileorienteering.ui.core.components.LocationPermissionRationaleDialog
+import com.mobileorienteering.ui.core.components.LocationPermissionSettingsDialog
 import com.mobileorienteering.ui.screens.map.components.CheckpointBottomSheetContent
 import com.mobileorienteering.ui.screens.map.components.CheckpointDialog
 import com.mobileorienteering.ui.screens.map.components.CheckpointsLayer
@@ -38,8 +30,18 @@ import com.mobileorienteering.ui.screens.map.components.LocationFab
 import com.mobileorienteering.ui.screens.map.components.MapBottomSheetHandle
 import com.mobileorienteering.ui.screens.map.components.NextCheckpointLineLayer
 import com.mobileorienteering.ui.screens.map.components.RoutePathLayer
+import com.mobileorienteering.ui.screens.map.components.RunFinishedDialog
+import com.mobileorienteering.ui.screens.map.components.RunProgressPanel
 import com.mobileorienteering.ui.screens.map.components.SaveRouteDialog
 import com.mobileorienteering.ui.screens.map.components.UserLocationLayer
+import kotlinx.coroutines.launch
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.map.*
+import org.maplibre.compose.style.BaseStyle
+import org.maplibre.compose.style.rememberStyleState
+import org.maplibre.compose.util.ClickResult
+import org.maplibre.spatialk.geojson.Position
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,6 +112,10 @@ fun MapScreen(
                             pendingRunStart = false
                         }
                     },
+                    onLocationDisabled = {
+                        showGpsSettingsDialog = true
+                        pendingRunStart = false
+                    },
                     onStartRun = {
                         viewModel.startRun()
                         pendingRunStart = false
@@ -127,7 +133,7 @@ fun MapScreen(
                 )
             }
         } else {
-            val activity = context as? androidx.activity.ComponentActivity
+            val activity = context as? ComponentActivity
             val shouldShowRationale = activity?.shouldShowRequestPermissionRationale(
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) ?: true
@@ -174,6 +180,10 @@ fun MapScreen(
                         viewModel.startRun()
                         pendingRunStart = false
                     }
+                },
+                onLocationDisabled = {
+                    showGpsSettingsDialog = true
+                    pendingRunStart = false
                 },
                 onStartRun = {
                     viewModel.startRun()
@@ -408,26 +418,40 @@ fun MapScreen(
                 )
             }
 
-            if (showGpsSettingsDialog) {
-                AlertDialog(
-                    onDismissRequest = { showGpsSettingsDialog = false },
-                    title = { Text("Location Services Disabled") },
-                    text = { Text("Location services are turned off. Would you like to enable them in settings?") },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showGpsSettingsDialog = false
-                                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                                context.startActivity(intent)
-                            }
-                        ) {
-                            Text("Open Settings")
-                        }
+            if (showLocationPermissionRationale) {
+                LocationPermissionRationaleDialog(
+                    onDismiss = {
+                        showLocationPermissionRationale = false
+                        pendingRunStart = false
                     },
-                    dismissButton = {
-                        TextButton(onClick = { showGpsSettingsDialog = false }) {
-                            Text("Cancel")
-                        }
+                    onGrantPermission = {
+                        showLocationPermissionRationale = false
+                        locationPermissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
+                )
+            }
+
+            if (showLocationPermissionSettings) {
+                LocationPermissionSettingsDialog(
+                    context = context,
+                    onDismiss = {
+                        showLocationPermissionSettings = false
+                        pendingRunStart = false
+                    }
+                )
+            }
+
+            if (showGpsSettingsDialog) {
+                GpsSettingsDialog(
+                    context = context,
+                    onDismiss = {
+                        showGpsSettingsDialog = false
+                        pendingRunStart = false
                     }
                 )
             }

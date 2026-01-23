@@ -231,14 +231,54 @@ fun RunsScreen(
             }
         } else if (activities.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "No runs yet",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    if (maps.isEmpty()) {
+                        Text(
+                            "No runs yet",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            "Create your first map to start orienteering",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { navController.navigate(AppScreen.Map.route) },
+                            modifier = Modifier.fillMaxWidth(0.7f)
+                        ) {
+                            Text("Create First Map")
+                        }
+                    } else {
+                        Text(
+                            "No runs yet",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            "Go to your maps and start your first run",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { navController.navigate(AppScreen.Library.route) },
+                            modifier = Modifier.fillMaxWidth(0.7f)
+                        ) {
+                            Text("Go to Maps")
+                        }
+                    }
+                }
             }
         } else {
             LazyColumn(

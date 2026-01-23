@@ -18,7 +18,7 @@ import com.mobileorienteering.data.model.domain.MapState
 import com.mobileorienteering.service.RunServiceManager
 import com.mobileorienteering.service.RunState
 import com.mobileorienteering.util.manager.LocationManager
-import com.mobileorienteering.util.manager.NotificationManager
+import com.mobileorienteering.util.manager.PermissionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -30,7 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val locationManager: LocationManager,
-    private val notificationManager: NotificationManager,
+    private val permissionManager: PermissionManager,
     private val mapRepository: MapRepository,
     private val authRepository: AuthRepository,
     private val mapStatePreferences: MapStatePreferences,
@@ -132,14 +132,20 @@ class MapViewModel @Inject constructor(
     fun handleStartRun(
         onRequestLocationPermission: () -> Unit,
         onRequestNotificationPermission: () -> Unit,
+        onLocationDisabled: () -> Unit,
         onStartRun: () -> Unit
     ) {
-        if (!locationManager.hasLocationPermission()) {
+        if (!permissionManager.hasPreciseLocationPermission()) {
             onRequestLocationPermission()
             return
         }
 
-        if (!notificationManager.hasNotificationPermission()) {
+        if (!locationManager.isLocationEnabled()) {
+            onLocationDisabled()
+            return
+        }
+
+        if (!permissionManager.hasNotificationPermission()) {
             onRequestNotificationPermission()
         } else {
             onStartRun()
@@ -147,6 +153,11 @@ class MapViewModel @Inject constructor(
     }
 
     fun startRun() {
+        if (!permissionManager.hasPreciseLocationPermission()) {
+            _state.update { it.copy(error = "Location permission required") }
+            return
+        }
+
         if (_state.value.checkpoints.isEmpty()) {
             _state.update { it.copy(error = "No control points to run") }
             return
