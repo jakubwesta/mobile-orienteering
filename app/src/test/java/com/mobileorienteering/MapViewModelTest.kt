@@ -60,6 +60,8 @@ class MapViewModelTest {
         runServiceManager = mock()
 
         whenever(locationManager.hasLocationPermission()).thenReturn(false)
+        whenever(locationManager.observeLocationProviderChanges()).thenReturn(flowOf(true))
+        whenever(permissionManager.hasPreciseLocationPermission()).thenReturn(true)
         runBlocking {
             whenever(mapStatePreferences.getSavedState()).thenReturn(SavedMapState())
         }
