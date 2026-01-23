@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -65,9 +66,11 @@ fun MapScreen(
     val scaffoldState = rememberBottomSheetScaffoldState()
 
     var tapPosition by remember { mutableStateOf<Position?>(null) }
-    var hasAutoStarted by remember { mutableStateOf(false) }
+    var hasAutoStarted by rememberSaveable { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     var showGpsSettingsDialog by remember { mutableStateOf(false) }
+    var showLocationPermissionRationale by remember { mutableStateOf(false) }
+    var showLocationPermissionSettings by remember { mutableStateOf(false) }
     var pendingRunStart by remember { mutableStateOf(false) }
     val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsStateWithLifecycle()
 
@@ -84,7 +87,6 @@ fun MapScreen(
             viewModel.startRun()
             pendingRunStart = false
         } else {
-            // Permission denied, but we can still start the run without notifications
             viewModel.startRun()
             pendingRunStart = false
         }
@@ -97,15 +99,46 @@ fun MapScreen(
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
 
         if (fineLocationGranted || coarseLocationGranted) {
-            viewModel.handleLocationPermissionGranted(
-                onLocationEnabled = {
-                    viewModel.startTracking()
-                    viewModel.requestCenterCamera()
-                },
-                onLocationDisabled = {
-                    showGpsSettingsDialog = true
-                }
-            )
+            if (pendingRunStart) {
+                viewModel.handleStartRun(
+                    onRequestLocationPermission = {},
+                    onRequestNotificationPermission = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            viewModel.startRun()
+                            pendingRunStart = false
+                        }
+                    },
+                    onStartRun = {
+                        viewModel.startRun()
+                        pendingRunStart = false
+                    }
+                )
+            } else {
+                viewModel.handleLocationPermissionGranted(
+                    onLocationEnabled = {
+                        viewModel.startTracking()
+                        viewModel.requestCenterCamera()
+                    },
+                    onLocationDisabled = {
+                        showGpsSettingsDialog = true
+                    }
+                )
+            }
+        } else {
+            val activity = context as? androidx.activity.ComponentActivity
+            val shouldShowRationale = activity?.shouldShowRequestPermissionRationale(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) ?: true
+
+            if (shouldShowRationale) {
+                showLocationPermissionRationale = true
+            } else {
+                showLocationPermissionSettings = true
+            }
+
+            pendingRunStart = false
         }
     }
 
@@ -125,6 +158,14 @@ fun MapScreen(
     LaunchedEffect(pendingRunStart) {
         if (pendingRunStart) {
             viewModel.handleStartRun(
+                onRequestLocationPermission = {
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                },
                 onRequestNotificationPermission = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)

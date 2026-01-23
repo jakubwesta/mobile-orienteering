@@ -130,9 +130,15 @@ class MapViewModel @Inject constructor(
     }
 
     fun handleStartRun(
+        onRequestLocationPermission: () -> Unit,
         onRequestNotificationPermission: () -> Unit,
         onStartRun: () -> Unit
     ) {
+        if (!locationManager.hasLocationPermission()) {
+            onRequestLocationPermission()
+            return
+        }
+
         if (!notificationManager.hasNotificationPermission()) {
             onRequestNotificationPermission()
         } else {
