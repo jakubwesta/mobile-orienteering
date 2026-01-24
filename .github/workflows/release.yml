@@ -4,6 +4,27 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+      track:
+        description: 'Play Store track'
+        required: true
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+        default: 'internal'
+      publish_to_playstore:
+        description: 'Publish to Play Store'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -26,9 +47,49 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x mobile/gradlew
 
-      - name: Get version from tag
+      - name: Get version and track
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Manual trigger
+            VERSION="${{ inputs.version }}"
+            TRACK="${{ inputs.track }}"
+            PUBLISH_PLAYSTORE="${{ inputs.publish_to_playstore }}"
+          else
+            # Tag trigger - extract version, track, and publish flag from tag
+            TAG=${GITHUB_REF#refs/tags/v}
+            
+            # Parse tag format: v1.0.0:alpha:publish or v1.0.0:publish or v1.0.0
+            IFS=':' read -ra PARTS <<< "$TAG"
+            VERSION="${PARTS[0]}"
+            TRACK="internal"
+            PUBLISH_PLAYSTORE="false"
+            
+            # Check for track and publish flag
+            if [ ${#PARTS[@]} -gt 1 ]; then
+              for part in "${PARTS[@]:1}"; do
+                case "$part" in
+                  internal|alpha|beta|production)
+                    TRACK="$part"
+                    ;;
+                  publish)
+                    PUBLISH_PLAYSTORE="true"
+                    ;;
+                esac
+              done
+            fi
+          fi
+          
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TRACK=$TRACK" >> $GITHUB_OUTPUT
+          echo "PUBLISH_PLAYSTORE=$PUBLISH_PLAYSTORE" >> $GITHUB_OUTPUT
+          
+          echo "Building version $VERSION for $TRACK track"
+          if [ "$PUBLISH_PLAYSTORE" == "true" ]; then
+            echo "Will publish to Play Store ($TRACK track)"
+          else
+            echo "GitHub only (Play Store publishing disabled)"
+          fi
 
       - name: Decode Keystore
         env:
@@ -51,15 +112,16 @@ jobs:
         run: |
           VERSION_NAME=${{ steps.version.outputs.VERSION }}
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NAME"
-          MINOR=$(printf "%02d" $MINOR)
-          PATCH=$(printf "%02d" $PATCH)
           VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
           echo "Setting versionName=$VERSION_NAME and versionCode=$VERSION_CODE"
           sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" mobile/app/build.gradle.kts
           sed -i "s/versionName = \".*\"/versionName = \"$VERSION_NAME\"/" mobile/app/build.gradle.kts
 
-      - name: Show version info
-        run: echo "VERSION=${{ steps.version.outputs.VERSION }}"
+      - name: Show build info
+        run: |
+          echo "Version: ${{ steps.version.outputs.VERSION }}"
+          echo "Track: ${{ steps.version.outputs.TRACK }}"
+          echo "Play Store: ${{ steps.version.outputs.PUBLISH_PLAYSTORE == 'true' && 'YES' || 'NO (GitHub only)' }}"
 
       - name: Build Release AAB
         working-directory: mobile
@@ -75,30 +137,41 @@ jobs:
           mv mobile/app/build/outputs/bundle/release/app-release.aab mobile/app/build/outputs/bundle/release/app-release-$VERSION.aab
           mv mobile/app/build/outputs/apk/release/app-release.apk mobile/app/build/outputs/apk/release/app-release-$VERSION.apk
 
-      - name: Extract release notes from CHANGELOG
-        id: changelog
+      - name: Extract release notes for GitHub
+        id: github_notes
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           
           if [ -f "CHANGELOG.md" ]; then
-            NOTES=$(awk "/## \[$VERSION\]/,/^## / {if (/^## / && !/## \[$VERSION\]/) exit; if (!/## \[$VERSION\]/) print}" CHANGELOG.md)
+            # Extract everything between [VERSION] and next ## heading
+            NOTES=$(awk -v ver="$VERSION" '
+              BEGIN { found=0 }
+              /^## \[/ {
+                if (found == 1) exit;
+                if (index($0, "[" ver "]") > 0) {
+                  found=1;
+                  next;
+                }
+              }
+              found == 1 { print }
+            ' CHANGELOG.md)
             
             if [ -z "$NOTES" ]; then
               NOTES="No release notes available for version $VERSION"
             fi
             
-            echo "$NOTES" > release-notes.txt
-            echo "NOTES_FILE=release-notes.txt" >> $GITHUB_OUTPUT
+            # Save to file for GitHub Release
+            echo "$NOTES" > release-notes-github.txt
           else
-            echo "No release notes available" > release-notes.txt
-            echo "NOTES_FILE=release-notes.txt" >> $GITHUB_OUTPUT
+            echo "No release notes available" > release-notes-github.txt
           fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ steps.version.outputs.VERSION }}
-          body_path: release-notes.txt
+          name: ${{ steps.version.outputs.VERSION }}
+          body_path: release-notes-github.txt
+          tag_name: v${{ steps.version.outputs.VERSION }}
           files: |
             mobile/app/build/outputs/bundle/release/app-release-${{ steps.version.outputs.VERSION }}.aab
             mobile/app/build/outputs/apk/release/app-release-${{ steps.version.outputs.VERSION }}.apk
@@ -109,39 +182,52 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Decode Play Console credentials
+        if: steps.version.outputs.PUBLISH_PLAYSTORE == 'true'
         env:
           PLAY_CONSOLE_CREDS: ${{ secrets.PLAY_CONSOLE_CREDENTIALS_BASE64 }}
         run: |
           echo "$PLAY_CONSOLE_CREDS" | base64 -d > mobile/play-console-credentials.json
 
       - name: Setup Python
+        if: steps.version.outputs.PUBLISH_PLAYSTORE == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install Google API Client
+        if: steps.version.outputs.PUBLISH_PLAYSTORE == 'true'
         run: |
           pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
       - name: Extract release notes for Play Console
-        id: release_notes
+        if: steps.version.outputs.PUBLISH_PLAYSTORE == 'true'
+        id: play_notes
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           if [ -f "CHANGELOG.md" ]; then
+            # Extract formatted notes for Play Console (max 500 chars)
             NOTES=$(awk -v ver="$VERSION" '
+              BEGIN { found=0 }
               /^## \[/ {
-                if (found) exit;
-                if ($0 ~ "\\[" ver "\\]") found=1;
-                next;
+                if (found == 1) exit;
+                if (index($0, "[" ver "]") > 0) {
+                  found=1;
+                  next;
+                }
               }
-              found && /^### / { 
+              found == 1 && /^### / { 
                 gsub(/^### /, "");
                 print "\n" toupper($0);
                 next;
               }
-              found && /^- / { print; }
+              found == 1 && /^- / { print; }
             ' CHANGELOG.md | head -c 500)
             
+            if [ -z "$NOTES" ]; then
+              NOTES="Version $VERSION"
+            fi
+            
+            # Save to output
             echo "NOTES<<EOF" >> $GITHUB_OUTPUT
             echo "$NOTES" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
@@ -149,10 +235,20 @@ jobs:
             echo "NOTES=Version $VERSION" >> $GITHUB_OUTPUT
           fi
 
-      - name: Upload to Play Console (Internal Track)
+      - name: Upload to Play Console (${{ steps.version.outputs.TRACK }} track)
+        if: steps.version.outputs.PUBLISH_PLAYSTORE == 'true'
         run: |
           python scripts/upload_to_playstore.py \
             mobile/play-console-credentials.json \
             mobile/app/build/outputs/bundle/release/app-release-${{ steps.version.outputs.VERSION }}.aab \
-            --track internal \
-            --notes "${{ steps.release_notes.outputs.NOTES }}"
+            --track ${{ steps.version.outputs.TRACK }} \
+            --notes "${{ steps.play_notes.outputs.NOTES }}"
+
+      - name: Play Store publishing skipped
+        if: steps.version.outputs.PUBLISH_PLAYSTORE != 'true'
+        run: |
+          echo "Play Store publishing was skipped"
+          echo "This release is available on GitHub only"
+          echo ""
+          echo "To publish to Play Store later, run:"
+          echo "  .\scripts\release.ps1 -version ${{ steps.version.outputs.VERSION }} -track ${{ steps.version.outputs.TRACK }} -PublishToPlayStore"
