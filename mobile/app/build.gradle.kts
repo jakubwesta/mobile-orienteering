@@ -1,21 +1,20 @@
+import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
+    alias(libs.plugins.kotlin.compose)
 }
 
 kotlin {
     jvmToolchain(21)
 }
 
-android {
+configure<ApplicationExtension> {
     namespace = "com.mobileorienteering"
-    //noinspection GradleDependency
     compileSdk = 36
 
     val localProperties = Properties()
@@ -29,8 +28,8 @@ android {
         minSdk = 26
         //noinspection OldTargetApi
         targetSdk = 35
-        versionCode = 1 // Handled via workflow 1.23.45 -> '12345'
-        versionName = "0.1.0" // Handled via workflow and TAG
+        versionCode = 1 // Handled via workflow 1.23.45 -> '12345'. Not to be changed manually!
+        versionName = "0.1.0" // Handled via workflow and TAG. Not to be changed manually!
         testInstrumentationRunner = "com.mobileorienteering.HiltTestRunner"
 
         val googleWebClientId = localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")
@@ -55,11 +54,11 @@ android {
     }
 
     buildTypes {
-        debug {
+        getByName("debug") {
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
         }
 
-        release {
+        getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
 
@@ -91,10 +90,6 @@ hilt {
 }
 
 dependencies {
-
-    // Shared KMP module
-    implementation(project(":shared"))
-
     // Core & lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -174,6 +169,11 @@ dependencies {
     // Debug - Required for Compose UI testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// Fix KSP + BuildConfig timing issue with AGP 9.0 built-in Kotlin
+tasks.matching { it.name.startsWith("ksp") && it.name.contains("Kotlin") }.configureEach {
+    dependsOn(tasks.matching { it.name.startsWith("generate") && it.name.contains("BuildConfig") })
 }
 
 tasks.withType<Test> {

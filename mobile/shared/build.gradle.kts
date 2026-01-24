@@ -1,5 +1,6 @@
+import com.android.build.api.dsl.LibraryExtension
+
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
     id("com.android.library")
 }
 
@@ -32,7 +33,7 @@ kotlin {
     }
 }
 
-android {
+configure<LibraryExtension> {
     namespace = "com.mobileorienteering.shared"
     compileSdk = 36
 

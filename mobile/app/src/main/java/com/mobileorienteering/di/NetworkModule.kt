@@ -24,8 +24,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    private const val BASE_URL = BuildConfig.BASE_URL
-
     @Provides
     @Singleton
     fun provideMoshi(): Moshi = Moshi.Builder()
@@ -65,7 +63,7 @@ object NetworkModule {
         okHttpClient: OkHttpClient,
         moshi: Moshi
     ): Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(BuildConfig.BASE_URL)
         .client(okHttpClient)
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
