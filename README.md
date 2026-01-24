@@ -66,7 +66,7 @@ All scripts used for development and publishing are in /scripts
 1. Clone the repository:
    ```powershell
    git clone https://github.com/jakubwesta/mobile-orienteering.git
-   cd mobile-orienteering/docs-src
+   cd mobile-orienteering/website
    ```
 2. Initialize pnpm:
    ```powershell
