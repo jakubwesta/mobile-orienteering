@@ -16,8 +16,8 @@ Write-Host "Track: $track" -ForegroundColor Cyan
 Write-Host ""
 
 # Determine possible tag names (with or without publish flag)
-$tagBase = if ($track -eq "internal") { "v$version" } else { "v${version}:${track}" }
-$tagWithPublish = "${tagBase}:publish"
+$tagBase = if ($track -eq "internal") { "v$version" } else { "v${version}-${track}" }
+$tagWithPublish = "${tagBase}-publish"
 
 Write-Host "This will delete:" -ForegroundColor Yellow
 Write-Host "  - Local git tag(s)" -ForegroundColor White
@@ -35,7 +35,7 @@ if ($confirm -ne "y") {
 
 Write-Host ""
 
-# Try to delete both tag variants (with and without :publish)
+# Try to delete both tag variants (with and without -publish)
 foreach ($tagName in @($tagBase, $tagWithPublish)) {
     # Delete local tag
     Write-Host "Checking local tag: $tagName..." -ForegroundColor Cyan

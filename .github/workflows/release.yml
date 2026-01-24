@@ -46,7 +46,7 @@ jobs:
         if: github.event_name == 'push'
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          VERSION=${VERSION%%:*}  # Extract version number before any colons
+          VERSION=${VERSION%%-*}  # Extract version number before any hyphens
           
           if gh release view "$VERSION" >/dev/null 2>&1; then
             echo "Release $VERSION already exists, skipping duplicate run"
@@ -77,8 +77,8 @@ jobs:
             # Tag trigger - extract version, track, and publish flag from tag
             TAG=${GITHUB_REF#refs/tags/v}
             
-            # Parse tag format: v1.0.0:alpha:publish or v1.0.0:publish or v1.0.0
-            IFS=':' read -ra PARTS <<< "$TAG"
+            # Parse tag format: v1.0.0-alpha-publish or v1.0.0-publish or v1.0.0
+            IFS='-' read -ra PARTS <<< "$TAG"
             VERSION="${PARTS[0]}"
             TRACK="internal"
             PUBLISH_PLAYSTORE="false"
@@ -119,10 +119,10 @@ jobs:
           # Build tag name (same logic as release.ps1)
           TAG_NAME="v${VERSION}"
           if [ "$TRACK" != "internal" ]; then
-            TAG_NAME="${TAG_NAME}:${TRACK}"
+            TAG_NAME="${TAG_NAME}-${TRACK}"
           fi
           if [ "$PUBLISH_PLAYSTORE" == "true" ]; then
-            TAG_NAME="${TAG_NAME}:publish"
+            TAG_NAME="${TAG_NAME}-publish"
           fi
           
           # Create tag message

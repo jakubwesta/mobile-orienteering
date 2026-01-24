@@ -52,7 +52,7 @@ if ($track -eq "production" -and $PublishToPlayStore) {
 }
 
 # Create tag with track info and publish flag
-# Format: v1.0.0:alpha:publish or v1.0.0 (GitHub only, internal)
+# Format: v1.0.0-alpha-publish or v1.0.0 (GitHub only, internal)
 $tagParts = @("v$version")
 if ($track -ne "internal") {
     $tagParts += $track
@@ -60,7 +60,7 @@ if ($track -ne "internal") {
 if ($PublishToPlayStore) {
     $tagParts += "publish"
 }
-$tagName = $tagParts -join ":"
+$tagName = $tagParts -join "-"
 
 Write-Host "Creating tag $tagName..." -ForegroundColor Cyan
 $tagMessage = "Release version $version"
