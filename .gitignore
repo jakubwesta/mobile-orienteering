@@ -22,6 +22,7 @@ uv.lock
 .cursor
 .vscode
 app-release.*
+play-console-credentials.json
 output-metadata.json
 settings.json
 local.properties
