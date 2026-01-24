@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+    branches-ignore:
+      - '**'
   workflow_dispatch:
     inputs:
       version:
@@ -29,6 +31,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.actor != 'github-actions[bot]')
 
     permissions:
       contents: write
@@ -36,6 +39,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check if release already exists (skip duplicate runs)
+        if: github.event_name == 'push'
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=${VERSION%%:*}  # Extract version number before any colons
+          
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists, skipping duplicate run"
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -90,6 +108,47 @@ jobs:
           else
             echo "GitHub only (Play Store publishing disabled)"
           fi
+
+      - name: Create and push git tag (manual trigger only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          TRACK="${{ steps.version.outputs.TRACK }}"
+          PUBLISH_PLAYSTORE="${{ steps.version.outputs.PUBLISH_PLAYSTORE }}"
+          
+          # Build tag name (same logic as release.ps1)
+          TAG_NAME="v${VERSION}"
+          if [ "$TRACK" != "internal" ]; then
+            TAG_NAME="${TAG_NAME}:${TRACK}"
+          fi
+          if [ "$PUBLISH_PLAYSTORE" == "true" ]; then
+            TAG_NAME="${TAG_NAME}:publish"
+          fi
+          
+          # Create tag message
+          TAG_MESSAGE="Release version ${VERSION}"
+          if [ "$TRACK" != "internal" ]; then
+            TAG_MESSAGE="${TAG_MESSAGE} (${TRACK} track)"
+          fi
+          if [ "$PUBLISH_PLAYSTORE" == "true" ]; then
+            TAG_MESSAGE="${TAG_MESSAGE} with Play Store publishing"
+          else
+            TAG_MESSAGE="${TAG_MESSAGE} (GitHub only)"
+          fi
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Error: Tag $TAG_NAME already exists"
+            exit 1
+          fi
+          
+          # Create and push tag
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
+          git push origin "$TAG_NAME"
+          
+          echo "Created and pushed tag: $TAG_NAME"
 
       - name: Decode Keystore
         env:
