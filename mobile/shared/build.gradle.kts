@@ -15,7 +15,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(kotlin("stdlib"))
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+            implementation(libs.kotlinx.coroutines.core)
         }
 
         commonTest.dependencies {
@@ -23,7 +23,7 @@ kotlin {
         }
 
         androidMain.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+            implementation(libs.kotlinx.coroutines.android)
         }
 
         iosMain.dependencies {
@@ -34,7 +34,7 @@ kotlin {
 
 android {
     namespace = "com.mobileorienteering.shared"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
