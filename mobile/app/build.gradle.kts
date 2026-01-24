@@ -1,5 +1,58 @@
 import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
+import org.gradle.api.GradleException
+
+object AppConfig {
+    private lateinit var localProperties: Properties
+    private lateinit var project: Project
+
+    fun init(localProps: Properties, proj: Project) {
+        localProperties = localProps
+        project = proj
+    }
+
+    private fun getProperty(vararg keys: String, default: String? = null): String {
+        for (key in keys) {
+            val value = System.getenv(key.replace(".", "_").uppercase())
+                ?: localProperties.getProperty(key)
+                ?: project.findProperty(key) as String?
+            if (!value.isNullOrEmpty()) return value
+        }
+
+        return default ?: throw GradleException(
+            "Required property not found. Please set one of: ${keys.joinToString(", ")}\n" +
+                    "Add it to gradle.properties or local.properties"
+        )
+    }
+
+    // Build configuration
+    val compileSdk: Int get() = getProperty("app.compileSdk").toInt()
+    val minSdk: Int get() = getProperty("app.minSdk").toInt()
+    val targetSdk: Int get() = getProperty("app.targetSdk").toInt()
+
+    // API URLs
+    val releaseBaseUrl: String get() = getProperty(
+        "RELEASE_BASE_URL",
+        "app.release.baseUrl"
+    )
+
+    val debugBaseUrl: String get() = getProperty(
+        "DEBUG_BASE_URL",
+        "app.debug.baseUrl"
+    )
+
+    // Secrets
+    val googleWebClientId: String get() = getProperty(
+        "GOOGLE_WEB_CLIENT_ID",
+        default = ""
+    )
+
+    // Feature flags
+    val loggingEnabled: Boolean get() = getProperty(
+        "app.feature.loggingEnabled",
+        default = "true"
+    ).toBoolean()
+}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -15,7 +68,6 @@ kotlin {
 
 configure<ApplicationExtension> {
     namespace = "com.mobileorienteering"
-    compileSdk = 36
 
     val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
@@ -23,17 +75,19 @@ configure<ApplicationExtension> {
         localPropertiesFile.inputStream().use { localProperties.load(it) }
     }
 
+    AppConfig.init(localProperties, project)
+
+    compileSdk = AppConfig.compileSdk
+
     defaultConfig {
         applicationId = "com.mobileorienteering"
-        minSdk = 26
-        //noinspection OldTargetApi
-        targetSdk = 35
-        versionCode = 1 // Handled via workflow 1.23.45 -> '12345'. Not to be changed manually!
-        versionName = "0.1.0" // Handled via workflow and TAG. Not to be changed manually!
+        minSdk = AppConfig.minSdk
+        targetSdk = AppConfig.targetSdk
+        versionCode = 1
+        versionName = "0.1.0"
         testInstrumentationRunner = "com.mobileorienteering.HiltTestRunner"
 
-        val googleWebClientId = localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${AppConfig.googleWebClientId}\"")
     }
 
     signingConfigs {
@@ -55,7 +109,11 @@ configure<ApplicationExtension> {
 
     buildTypes {
         getByName("debug") {
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+
+            buildConfigField("String", "BASE_URL", "\"${AppConfig.debugBaseUrl}\"")
+            buildConfigField("Boolean", "LOGGING_ENABLED", "${AppConfig.loggingEnabled}")
         }
 
         getByName("release") {
@@ -69,9 +127,8 @@ configure<ApplicationExtension> {
 
             signingConfig = signingConfigs.getByName("release")
 
-            val releaseUrl =
-                localProperties.getProperty("RELEASE_BASE_URL", "http://10.0.2.2:8080/")
-            buildConfigField("String", "BASE_URL", "\"$releaseUrl\"")
+            buildConfigField("String", "BASE_URL", "\"${AppConfig.releaseBaseUrl}\"")
+            buildConfigField("Boolean", "LOGGING_ENABLED", "false")
         }
     }
 
@@ -135,7 +192,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    // Media3 (ExoPlayer) for video playback
+    // Media3 (ExoPlayer)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
 
@@ -162,11 +219,11 @@ dependencies {
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.compiler)
 
-    // Flow testing (highly recommended)
+    // Flow testing
     testImplementation(libs.turbine)
     androidTestImplementation(libs.turbine)
 
-    // Debug - Required for Compose UI testing
+    // Debug - Compose UI testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

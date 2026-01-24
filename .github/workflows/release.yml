@@ -62,10 +62,12 @@ jobs:
         run: echo "VERSION=${{ steps.version.outputs.VERSION }}"
 
       - name: Build Release AAB
-        run: ./mobile/gradlew bundleRelease --no-configuration-cache --stacktrace
+        working-directory: mobile
+        run: ./gradlew bundleRelease --stacktrace
 
       - name: Build Release APK
-        run: ./mobile/gradlew assembleRelease --no-configuration-cache --stacktrace
+        working-directory: mobile
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Rename release files with version
         run: |
