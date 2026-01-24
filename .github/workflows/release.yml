@@ -75,17 +75,30 @@ jobs:
           mv mobile/app/build/outputs/bundle/release/app-release.aab mobile/app/build/outputs/bundle/release/app-release-$VERSION.aab
           mv mobile/app/build/outputs/apk/release/app-release.apk mobile/app/build/outputs/apk/release/app-release-$VERSION.apk
 
+      - name: Extract release notes from CHANGELOG
+        id: changelog
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          
+          if [ -f "CHANGELOG.md" ]; then
+            NOTES=$(awk "/## \[$VERSION\]/,/^## / {if (/^## / && !/## \[$VERSION\]/) exit; if (!/## \[$VERSION\]/) print}" CHANGELOG.md)
+            
+            if [ -z "$NOTES" ]; then
+              NOTES="No release notes available for version $VERSION"
+            fi
+            
+            echo "$NOTES" > release-notes.txt
+            echo "NOTES_FILE=release-notes.txt" >> $GITHUB_OUTPUT
+          else
+            echo "No release notes available" > release-notes.txt
+            echo "NOTES_FILE=release-notes.txt" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ steps.version.outputs.VERSION }}
-          body: |
-            ## Mobile Orienteering ${{ steps.version.outputs.VERSION }}
-
-            ### Files
-            - `app-release-${{ steps.version.outputs.VERSION }}.aab` - Android App Bundle for Google Play
-            - `app-release-${{ steps.version.outputs.VERSION }}.apk` - APK for direct installation  
-            - `mapping.txt` - ProGuard mapping file
+          body_path: release-notes.txt
           files: |
             mobile/app/build/outputs/bundle/release/app-release-${{ steps.version.outputs.VERSION }}.aab
             mobile/app/build/outputs/apk/release/app-release-${{ steps.version.outputs.VERSION }}.apk
