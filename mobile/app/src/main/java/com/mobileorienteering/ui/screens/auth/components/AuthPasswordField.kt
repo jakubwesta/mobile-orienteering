@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.annotation.DrawableRes
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 
 @Composable
 fun AuthPasswordField(
@@ -46,7 +47,9 @@ fun AuthPasswordField(
                         else
                             R.drawable.ic_visibility_off_outlined
                     ),
-                    contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                    contentDescription =
+                        if (passwordVisible) Strings.Accessibility.hidePassword
+                        else Strings.Accessibility.showPassword
                 )
             }
         },

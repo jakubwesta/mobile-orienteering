@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.mobileorienteering.MainActivity
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
 import javax.inject.Inject
@@ -40,7 +41,7 @@ class NotificationManager @Inject constructor(
             "Run Tracking",
             AndroidNotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Shows run progress"
+            description = Strings.Notification.runTrackingDescription(context)
             setShowBadge(false)
         }
 
@@ -98,8 +99,15 @@ class NotificationManager @Inject constructor(
         )
 
         return NotificationCompat.Builder(context, RUN_TRACKING_CHANNEL_ID)
-            .setContentTitle("Run in progress • $time")
-            .setContentText("$checkpoints checkpoints • $distance")
+            .setContentTitle(Strings.Formatted.notificationRunInProgress(context, time))
+            .setContentText(
+                Strings.Plurals.NotificationCheckpointProgress(
+                    context,
+                    totalCheckpoints,
+                    visitedCheckpoints,
+                    distance
+                )
+            )
             .setSmallIcon(R.drawable.ic_runs_filled)
             .setOngoing(true)
             .setContentIntent(pendingIntent)

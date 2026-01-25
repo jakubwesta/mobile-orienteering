@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import com.mobileorienteering.util.calculateDistanceBetweenPoints
 import com.mobileorienteering.util.calculatePaceBetweenInstants
@@ -82,8 +83,8 @@ fun RunTimeline(
             }
 
             val checkpointLabel = when {
-                isFirst -> "Start"
-                isLast -> "Finish"
+                isFirst -> Strings.Run.detailsStart
+                isLast -> Strings.Run.detailsFinish
                 else -> visitedPoint.controlPointName.ifEmpty { "Control Point ${visitedPoint.order}" }
             }
 
@@ -184,7 +185,7 @@ private fun TimelineItem(
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Interval:",
+                        text = Strings.Run.detailsIntervalLabel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -197,7 +198,7 @@ private fun TimelineItem(
                 if (distanceFromPrevious != null) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "Dist:",
+                            text = Strings.Run.detailsDistLabel,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -216,7 +217,7 @@ private fun TimelineItem(
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "Pace:",
+                            text = Strings.Run.detailsPaceLabel,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -235,7 +236,7 @@ private fun TimelineItem(
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Total:",
+                        text = Strings.Run.detailsTotalLabel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -248,7 +249,7 @@ private fun TimelineItem(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Total Dist:",
+                        text = Strings.Run.detailsTotalDistLabel,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

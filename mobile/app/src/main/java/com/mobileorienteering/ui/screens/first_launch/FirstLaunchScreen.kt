@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.core.components.VideoPlayerFromRaw
 import com.mobileorienteering.ui.screens.first_launch.components.FeatureItem
 
@@ -35,13 +36,13 @@ fun FirstLaunchScreen(
             Spacer(Modifier.height(48.dp))
 
             Text(
-                text = "Welcome to",
+                text = Strings.Welcome.welcome,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
-                text = "Mobile Orienteering",
+                text = Strings.App.name,
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -57,7 +58,7 @@ fun FirstLaunchScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "Create orienteering maps, track your runs, and analyze your performance.",
+                text = Strings.Welcome.description,
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -78,7 +79,7 @@ fun FirstLaunchScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    text = "Get Started",
+                    text = Strings.Welcome.getStarted,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -96,15 +97,15 @@ private fun FeaturesList() {
     ) {
         FeatureItem(
             icon = R.drawable.ic_map_outlined,
-            text = "Create custom orienteering courses"
+            text = Strings.Welcome.createCustomCourses
         )
         FeatureItem(
             icon = R.drawable.ic_runs_outlined,
-            text = "Track your runs with GPS"
+            text = Strings.Welcome.trackWithGps
         )
         FeatureItem(
             icon = R.drawable.ic_library_outlined,
-            text = "Save and share your maps"
+            text = Strings.Welcome.saveAndShare
         )
     }
 }

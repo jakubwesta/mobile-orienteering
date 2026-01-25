@@ -17,6 +17,7 @@ import com.mobileorienteering.R
 import com.mobileorienteering.ui.screens.auth.components.AuthPasswordField
 import com.mobileorienteering.ui.screens.auth.components.AuthTextField
 import com.mobileorienteering.ui.core.AppScreen
+import com.mobileorienteering.ui.core.Strings
 
 @Composable
 fun RegisterScreen(
@@ -53,7 +54,7 @@ fun RegisterScreen(
         ) {
             Spacer(Modifier.height(48.dp))
             Text(
-                text = "Register",
+                text = Strings.Auth.register,
                 style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
@@ -69,7 +70,7 @@ fun RegisterScreen(
                 AuthTextField(
                     value = username,
                     onValueChange = { authViewModel.username.value = it },
-                    label = "Username",
+                    label = Strings.Auth.username,
                     leadingIconRes = R.drawable.ic_person_otlined,
                     imeAction = ImeAction.Next,
                     enabled = !isLoading,
@@ -79,7 +80,7 @@ fun RegisterScreen(
                 AuthTextField(
                     value = email,
                     onValueChange = { authViewModel.email.value = it },
-                    label = "Email",
+                    label = Strings.Auth.email,
                     leadingIconRes = R.drawable.ic_mail_outlined,
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next,
@@ -90,7 +91,7 @@ fun RegisterScreen(
                 AuthPasswordField(
                     value = password,
                     onValueChange = { authViewModel.password.value = it },
-                    label = "Password",
+                    label = Strings.Auth.password,
                     leadingIconRes = R.drawable.ic_lock_outlined,
                     imeAction = ImeAction.Next,
                     onImeAction = { focusManager.moveFocus(FocusDirection.Down) },
@@ -101,7 +102,7 @@ fun RegisterScreen(
                 AuthTextField(
                     value = fullName ?: "",
                     onValueChange = { authViewModel.fullName.value = it.ifEmpty { null } },
-                    label = "Full Name (Optional)",
+                    label = Strings.Auth.fullNameOptional,
                     leadingIconRes = R.drawable.ic_badge_outlined,
                     imeAction = ImeAction.Next,
                     enabled = !isLoading,
@@ -111,7 +112,7 @@ fun RegisterScreen(
                 AuthTextField(
                     value = phoneNumber ?: "",
                     onValueChange = { authViewModel.phoneNumber.value = it.ifEmpty { null } },
-                    label = "Phone Number (Optional)",
+                    label = Strings.Auth.phoneNumberOptional,
                     leadingIconRes = R.drawable.ic_phone_outlined,
                     keyboardType = KeyboardType.Phone,
                     imeAction = ImeAction.Done,
@@ -137,7 +138,7 @@ fun RegisterScreen(
                         )
                     } else {
                         Text(
-                            "Create account",
+                            Strings.Auth.createAccount,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -152,7 +153,7 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Already have an account?",
+                    text = Strings.Auth.alreadyHaveAccount,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -165,7 +166,7 @@ fun RegisterScreen(
                     enabled = !isLoading
                 ) {
                     Text(
-                        "Log in",
+                        Strings.Auth.logIn,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

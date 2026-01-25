@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mobileorienteering.ui.core.Strings
 
 @Composable
 fun SaveRouteDialog(
@@ -21,28 +22,28 @@ fun SaveRouteDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                if (showOptions) "Save map"
-                else if (isEditingExistingMap) "Save as new"
-                else "Save route"
+                if (showOptions) Strings.Map.saveMap
+                else if (isEditingExistingMap) Strings.Map.saveAsNew
+                else Strings.Map.saveRoute
             )
         },
         text = {
             Column {
                 if (showOptions) {
                     Text(
-                        "You are editing \"$existingMapName\". What would you like to do?",
+                        Strings.Formatted.mapUpdatePrompt(existingMapName!!),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
                     Button(
                         onClick = {
-                            onUpdate?.invoke(existingMapName!!)
+                            onUpdate?.invoke(existingMapName)
                             onDismiss()
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Update existing map")
+                        Text(Strings.Map.updateExisting)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -51,13 +52,13 @@ fun SaveRouteDialog(
                         onClick = { showOptions = false },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Save as new map")
+                        Text(Strings.Map.saveAsNewMap)
                     }
                 } else {
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("Name of the route") },
+                        label = { Text(Strings.Map.routeNameLabel) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -75,7 +76,7 @@ fun SaveRouteDialog(
                     },
                     enabled = name.isNotBlank()
                 ) {
-                    Text("Save")
+                    Text(Strings.Action.save)
                 }
             }
         },
@@ -83,12 +84,12 @@ fun SaveRouteDialog(
             TextButton(onClick = {
                 if (!showOptions && isEditingExistingMap) {
                     showOptions = true
-                    name = existingMapName ?: ""
+                    name = existingMapName
                 } else {
                     onDismiss()
                 }
             }) {
-                Text(if (!showOptions && isEditingExistingMap) "Back" else "Cancel")
+                Text(if (!showOptions && isEditingExistingMap) Strings.Action.back else Strings.Action.cancel)
             }
         }
     )

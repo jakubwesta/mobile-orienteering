@@ -12,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.mobileorienteering.ui.core.Strings
 
 @Composable
 fun LocationPermissionRationaleDialog(
@@ -21,18 +22,18 @@ fun LocationPermissionRationaleDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-        title = { Text("Location Permission Required") },
+        title = { Text(Strings.Permission.locationRequiredTitle) },
         text = {
-            Text("Precise location access is essential for tracking your position during runs and detecting when you reach checkpoints. Without it, the app cannot function.")
+            Text(Strings.Permission.locationRequiredMessage)
         },
         confirmButton = {
             TextButton(onClick = onGrantPermission) {
-                Text("Grant Permission")
+                Text(Strings.Permission.grant)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(Strings.Action.cancel)
             }
         }
     )
@@ -46,9 +47,9 @@ fun LocationPermissionSettingsDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-        title = { Text("Location Permission Required") },
+        title = { Text(Strings.Permission.locationRequiredTitle) },
         text = {
-            Text("Location permission is required for this app to work. Please enable it in Settings under Permissions > Location.")
+            Text(Strings.Permission.locationRequiredSettings)
         },
         confirmButton = {
             TextButton(
@@ -60,12 +61,12 @@ fun LocationPermissionSettingsDialog(
                     context.startActivity(intent)
                 }
             ) {
-                Text("Open Settings")
+                Text(Strings.Permission.openSettings)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(Strings.Action.cancel)
             }
         }
     )
@@ -78,8 +79,8 @@ fun GpsSettingsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Location Services Disabled") },
-        text = { Text("Location services are turned off. Would you like to enable them in settings?") },
+        title = { Text(Strings.Permission.locationDisabledTitle) },
+        text = { Text(Strings.Permission.locationDisabledMessage) },
         confirmButton = {
             TextButton(
                 onClick = {
@@ -88,12 +89,12 @@ fun GpsSettingsDialog(
                     context.startActivity(intent)
                 }
             ) {
-                Text("Open Settings")
+                Text(Strings.Permission.openSettings)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(Strings.Action.cancel)
             }
         }
     )

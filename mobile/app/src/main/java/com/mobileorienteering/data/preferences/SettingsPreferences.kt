@@ -3,6 +3,7 @@ package com.mobileorienteering.data.preferences
 import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.mobileorienteering.data.model.domain.AppLanguage
 import com.mobileorienteering.data.model.domain.ContrastLevel
 import com.mobileorienteering.data.model.domain.SettingsModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,6 +22,7 @@ class SettingsPreferences @Inject constructor(
     companion object {
         private val DARK_MODE = booleanPreferencesKey("dark_mode")
         private val CONTRAST_LEVEL = stringPreferencesKey("contrast_level")
+        private val LANGUAGE = stringPreferencesKey("language")
         private val CONTROL_POINT_SOUND = booleanPreferencesKey("control_point_sound")
         private val CONTROL_POINT_VIBRATION = booleanPreferencesKey("control_point_vibration")
         private val GPS_ACCURACY = intPreferencesKey("gps_accuracy")
@@ -36,6 +38,10 @@ class SettingsPreferences @Inject constructor(
             contrastLevel = prefs[CONTRAST_LEVEL]?.let {
                 ContrastLevel.valueOf(it)
             } ?: SettingsModel().contrastLevel,
+
+            language = prefs[LANGUAGE]?.let {
+                AppLanguage.valueOf(it)
+            } ?: SettingsModel().language,
 
             controlPointSound = prefs[CONTROL_POINT_SOUND]
                 ?: SettingsModel().controlPointSound,
@@ -61,6 +67,10 @@ class SettingsPreferences @Inject constructor(
     suspend fun updateContrastLevel(
         level: ContrastLevel
     ) = context.settingsDataStore.edit { it[CONTRAST_LEVEL] = level.name }
+
+    suspend fun updateLanguage(
+        language: AppLanguage
+    ) = context.settingsDataStore.edit { it[LANGUAGE] = language.name }
 
     suspend fun updateControlPointSound(
         enabled: Boolean

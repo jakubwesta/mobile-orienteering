@@ -16,9 +16,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.library.components.MapCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +54,7 @@ fun LibraryScreen(
                             TextField(
                                 value = searchQuery,
                                 onValueChange = { viewModel.updateSearchQuery(it) },
-                                placeholder = { Text("Search maps...") },
+                                placeholder = { Text(Strings.Library.searchHint) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .focusRequester(focusRequester),
@@ -69,7 +71,7 @@ fun LibraryScreen(
                                 )
                             )
                         } else {
-                            Text("Maps")
+                            Text(Strings.Library.maps)
                         }
                     }
                 },
@@ -80,7 +82,7 @@ fun LibraryScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_search),
-                                contentDescription = "Search"
+                                contentDescription = Strings.Accessibility.search
                             )
                         }
                     }
@@ -96,7 +98,7 @@ fun LibraryScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_close),
-                                contentDescription = "Close search"
+                                contentDescription = Strings.Accessibility.closeSearch
                             )
                         }
                     } else {
@@ -104,7 +106,7 @@ fun LibraryScreen(
                             IconButton(onClick = { showSortMenu = true }) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_sort),
-                                    contentDescription = "Sort"
+                                    contentDescription = Strings.Accessibility.sort
                                 )
                             }
 
@@ -113,7 +115,7 @@ fun LibraryScreen(
                                 onDismissRequest = { showSortMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Newest first") },
+                                    text = { Text(Strings.Library.newestFirst) },
                                     onClick = {
                                         viewModel.setSortOrder(SortOrder.DATE_DESC)
                                         showSortMenu = false
@@ -129,7 +131,7 @@ fun LibraryScreen(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Oldest first") },
+                                    text = { Text(Strings.Library.oldestFirst) },
                                     onClick = {
                                         viewModel.setSortOrder(SortOrder.DATE_ASC)
                                         showSortMenu = false
@@ -147,7 +149,7 @@ fun LibraryScreen(
                                 HorizontalDivider()
 
                                 DropdownMenuItem(
-                                    text = { Text("Title (A-Z)") },
+                                    text = { Text(Strings.Library.sortTitleAz) },
                                     onClick = {
                                         viewModel.setSortOrder(SortOrder.TITLE_ASC)
                                         showSortMenu = false
@@ -201,21 +203,23 @@ fun LibraryScreen(
                     modifier = Modifier.padding(32.dp)
                 ) {
                     Text(
-                        "No maps yet",
+                        text = Strings.Library.emptyTitle,
                         style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
                     )
                     Text(
-                        "Create your first map to start orienteering",
+                        text = Strings.Library.emptyMessage,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
                         onClick = onCreateFirstMap,
                         modifier = Modifier.fillMaxWidth(0.7f)
                     ) {
-                        Text("Create First Map")
+                        Text(Strings.Library.createFirstMap)
                     }
                 }
             }

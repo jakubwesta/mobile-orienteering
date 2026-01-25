@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mobileorienteering.ui.core.Strings
 import java.util.Locale
 
 @Composable
@@ -28,7 +29,7 @@ fun RunFinishedDialog(
         onDismissRequest = {},
         title = {
             Text(
-                if (isCompleted) "Run Completed!" else "Run Stopped",
+                if (isCompleted) Strings.Run.completed else Strings.Run.stopped,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -41,14 +42,14 @@ fun RunFinishedDialog(
                 OutlinedTextField(
                     value = runTitle,
                     onValueChange = { runTitle = it },
-                    label = { Text("Run name") },
+                    label = { Text(Strings.Run.nameLabel) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text("Time: $duration")
+                Text(Strings.Formatted.runTimeWithDuration(duration))
                 Text("Control Points: $visitedCount/$totalCount")
                 Text("Distance: ${formatDistance(distance)}")
 
@@ -66,12 +67,12 @@ fun RunFinishedDialog(
         },
         confirmButton = {
             Button(onClick = { onSave(runTitle) }) {
-                Text("Save")
+                Text(Strings.Action.save)
             }
         },
         dismissButton = {
             TextButton(onClick = onDiscard) {
-                Text("Discard", color = MaterialTheme.colorScheme.error)
+                Text(Strings.Action.discard, color = MaterialTheme.colorScheme.error)
             }
         }
     )

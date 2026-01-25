@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.data.model.domain.Activity
 import com.mobileorienteering.util.formatDate
 import com.mobileorienteering.util.formatDistance
@@ -70,7 +71,7 @@ fun ActivityCard(
                         }
                     ) {
                         Text(
-                            text = if (activity.isCompleted) "Completed" else "Uncompleted",
+                            text = if (activity.isCompleted) Strings.Run.detailsCompleted else Strings.Run.detailsAbandoned,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (activity.isCompleted) {
@@ -88,7 +89,7 @@ fun ActivityCard(
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_menu_dots_vertical),
-                            contentDescription = "More options",
+                            contentDescription = Strings.Accessibility.moreOptions,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -98,7 +99,7 @@ fun ActivityCard(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = { Text(Strings.Action.delete) },
                             onClick = {
                                 showMenu = false
                                 showDeleteDialog = true
@@ -143,7 +144,7 @@ fun ActivityCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        "Map: $mapName",
+                        Strings.Formatted.runDetailsMapFormat(mapName),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium,
@@ -152,7 +153,7 @@ fun ActivityCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        "$controlPointCount CP",
+                        Strings.Formatted.runDetailsCpCount(controlPointCount),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         softWrap = false
@@ -167,14 +168,14 @@ fun ActivityCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Distance: ${formatDistance(activity.distance)}",
+                    text = Strings.Formatted.runsDistanceLabel(formatDistance(activity.distance)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    "Duration: ${formatDuration(activity.duration)}",
+                    text = Strings.Formatted.runsDurationLabel(formatDuration(activity.duration)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
@@ -208,8 +209,8 @@ fun ActivityCard(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Run") },
-            text = { Text("Are you sure you want to delete \"${activity.title}\"?") },
+            title = { Text(Strings.Runs.deleteRunTitle) },
+            text = { Text(Strings.Formatted.runsDeleteRunMessage(activity.title)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -217,12 +218,12 @@ fun ActivityCard(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(Strings.Action.delete, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(Strings.Action.cancel)
                 }
             }
         )

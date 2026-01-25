@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.text.input.TextFieldValue
+import com.mobileorienteering.ui.core.Strings
 import org.maplibre.spatialk.geojson.Position
 
 @Composable
@@ -17,15 +18,15 @@ fun CheckpointDialog(
 
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text("Add control point") },
+            title = { Text(Strings.Map.addControlPoint) },
             text = {
                 Column {
-                    Text("Enter the name of the point:")
+                    Text(Strings.Map.checkpointPrompt)
                     TextField(
                         value = nameText,
                         onValueChange = { nameText = it },
                         singleLine = true,
-                        placeholder = { Text("Name of the point (optional)") }
+                        placeholder = { Text(Strings.Map.checkpointNameOptional) }
                     )
                 }
             },
@@ -36,12 +37,12 @@ fun CheckpointDialog(
                         onDismiss()
                     }
                 ) {
-                    Text("Add")
+                    Text(Strings.Action.add)
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(Strings.Action.cancel)
                 }
             }
         )

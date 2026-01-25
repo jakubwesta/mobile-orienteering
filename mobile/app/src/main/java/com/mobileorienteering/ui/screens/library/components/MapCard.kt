@@ -30,9 +30,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.data.model.domain.OrienteeringMap
 import com.mobileorienteering.util.formatDate
 
@@ -45,6 +47,7 @@ fun MapCard(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -68,19 +71,11 @@ fun MapCard(
 
                     Spacer(Modifier.height(4.dp))
 
-                    if (map.controlPoints.size >= 2) {
-                        Text(
-                            "${map.controlPoints.size} control points",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Text(
-                            "${map.controlPoints.size} control point",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        Strings.Plurals.ControlPointCount(map.controlPoints.size, map.controlPoints.size),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
                     if (map.location.isNotBlank()) {
                         Text(
@@ -101,7 +96,7 @@ fun MapCard(
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_menu_dots_vertical),
-                            contentDescription = "More options",
+                            contentDescription = Strings.Accessibility.moreOptions,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -111,7 +106,7 @@ fun MapCard(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Edit") },
+                            text = { Text(Strings.Action.edit) },
                             onClick = {
                                 showMenu = false
                                 onEdit()
@@ -125,7 +120,7 @@ fun MapCard(
                         )
 
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = { Text(Strings.Action.delete) },
                             onClick = {
                                 showMenu = false
                                 showDeleteDialog = true
@@ -160,7 +155,7 @@ fun MapCard(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("Start Run")
+                Text(Strings.Runs.startRun)
             }
         }
     }
@@ -168,8 +163,8 @@ fun MapCard(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Map") },
-            text = { Text("Are you sure you want to delete \"${map.name}\"?") },
+            title = { Text(Strings.Map.deleteMapTitle) },
+            text = { Text(Strings.Formatted.libraryDeleteMapMessage(context, map.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -177,12 +172,12 @@ fun MapCard(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(Strings.Action.delete, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(Strings.Action.cancel)
                 }
             }
         )

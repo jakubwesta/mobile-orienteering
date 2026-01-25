@@ -1,5 +1,6 @@
 package com.mobileorienteering.ui.screens.auth
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,8 +11,10 @@ import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.preferences.MapStatePreferences
 import com.mobileorienteering.ui.core.snackbar.SnackbarManager
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.util.manager.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -20,6 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val repo: AuthRepository,
     private val activityRepository: ActivityRepository,
     private val mapRepository: MapRepository,
@@ -62,11 +66,11 @@ class AuthViewModel @Inject constructor(
                 result.onSuccess { authModel ->
                     syncDataForUser(authModel.userId)
                 }.onFailure { e ->
-                    val errorMessage = e.message ?: "Login failed"
+                    val errorMessage = e.message ?: Strings.Error.loginFailed(context)
                     snackbarManager.showError(errorMessage)
                 }
             } catch (e: Exception) {
-                val errorMessage = e.message ?: "Unknown error"
+                val errorMessage = e.message ?: Strings.Error.unknown(context)
                 snackbarManager.showError(errorMessage)
             } finally {
                 isLoading.value = false
@@ -82,11 +86,11 @@ class AuthViewModel @Inject constructor(
                 result.onSuccess { authModel ->
                     syncDataForUser(authModel.userId)
                 }.onFailure { e ->
-                    val errorMessage = e.message ?: "Google login failed"
+                    val errorMessage = e.message ?: Strings.Error.googleLoginFailed(context)
                     snackbarManager.showError(errorMessage)
                 }
             } catch (e: Exception) {
-                val errorMessage = e.message ?: "Unknown error"
+                val errorMessage = e.message ?: Strings.Error.unknown(context)
                 snackbarManager.showError(errorMessage)
             } finally {
                 isGoogleSignInLoading.value = false
@@ -108,14 +112,14 @@ class AuthViewModel @Inject constructor(
                     )
                 )
                 result.onSuccess { authModel ->
-                    snackbarManager.showSuccess("Account created successfully!")
+                    snackbarManager.showSuccess(Strings.Auth.accountCreated(context))
                     syncDataForUser(authModel.userId)
                 }.onFailure { e ->
-                    val errorMessage = e.message ?: "Registration failed"
+                    val errorMessage = e.message ?: Strings.Error.registrationFailed(context)
                     snackbarManager.showError(errorMessage)
                 }
             } catch (e: Exception) {
-                val errorMessage = e.message ?: "Unknown error"
+                val errorMessage = e.message ?: Strings.Error.unknown(context)
                 snackbarManager.showError(errorMessage)
             } finally {
                 isLoading.value = false
@@ -131,11 +135,11 @@ class AuthViewModel @Inject constructor(
                 result.onSuccess {
                     // No sync needed for guest mode
                 }.onFailure { e ->
-                    val errorMessage = e.message ?: "Guest login failed"
+                    val errorMessage = e.message ?: Strings.Error.guestLoginFailed(context)
                     snackbarManager.showError(errorMessage)
                 }
             } catch (e: Exception) {
-                val errorMessage = e.message ?: "Unknown error"
+                val errorMessage = e.message ?: Strings.Error.unknown(context)
                 snackbarManager.showError(errorMessage)
             } finally {
                 isLoading.value = false

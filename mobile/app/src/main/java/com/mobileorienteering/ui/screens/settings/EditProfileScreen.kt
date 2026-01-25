@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.auth.components.AuthTextField
 import com.mobileorienteering.ui.screens.auth.UserViewModel
 
@@ -51,12 +52,12 @@ fun EditProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit Profile") },
+                title = { Text(Strings.Settings.editProfile) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_left),
-                            contentDescription = "Back"
+                            contentDescription = Strings.Action.back
                         )
                     }
                 }
@@ -93,7 +94,7 @@ fun EditProfileScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    "Update your profile information",
+                    Strings.Settings.editProfileDescription,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -101,7 +102,7 @@ fun EditProfileScreen(
                 AuthTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = "Username",
+                    label = Strings.Auth.username,
                     leadingIconRes = R.drawable.ic_person_otlined,
                     imeAction = ImeAction.Next,
                     enabled = !isLoading,
@@ -111,7 +112,7 @@ fun EditProfileScreen(
                 AuthTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
-                    label = "Full Name",
+                    label = Strings.Auth.fullName,
                     leadingIconRes = R.drawable.ic_badge_outlined,
                     imeAction = ImeAction.Next,
                     enabled = !isLoading,
@@ -121,7 +122,7 @@ fun EditProfileScreen(
                 AuthTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = "Email",
+                    label = Strings.Auth.email,
                     leadingIconRes = R.drawable.ic_mail_outlined,
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next,
@@ -132,7 +133,7 @@ fun EditProfileScreen(
                 AuthTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
-                    label = "Phone Number",
+                    label = Strings.Auth.phoneNumber,
                     leadingIconRes = R.drawable.ic_phone_outlined,
                     keyboardType = KeyboardType.Phone,
                     imeAction = ImeAction.Done,
@@ -160,7 +161,7 @@ fun EditProfileScreen(
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
-                        Text("Save Changes")
+                        Text(Strings.Settings.saveChanges)
                     }
                 }
             }

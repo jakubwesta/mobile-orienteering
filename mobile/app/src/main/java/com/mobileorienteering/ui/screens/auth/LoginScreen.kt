@@ -21,6 +21,7 @@ import com.mobileorienteering.R
 import com.mobileorienteering.ui.screens.auth.components.AuthPasswordField
 import com.mobileorienteering.ui.screens.auth.components.AuthTextField
 import com.mobileorienteering.ui.core.AppScreen
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.util.GoogleSignInHelper
 import kotlinx.coroutines.launch
 import com.mobileorienteering.BuildConfig
@@ -49,7 +50,7 @@ fun LoginScreen(
             if (idToken != null) {
                 authViewModel.loginWithGoogle(idToken)
             } else {
-                authViewModel.showGoogleSignInError("Google Sign-In was cancelled or failed")
+                authViewModel.showGoogleSignInError(Strings.Error.googleLoginFailed(context))
             }
         }
     }
@@ -85,7 +86,7 @@ fun LoginScreen(
                 )
             ) {
                 Text(
-                    text = "Cloud features disabled. Please continue as guest.",
+                    text = Strings.Misc.cloudFeaturesDisabled,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     textAlign = TextAlign.Center,
@@ -96,7 +97,7 @@ fun LoginScreen(
             Spacer(Modifier.height(35.dp))
 
             Text(
-                text = "Log In",
+                text = Strings.Auth.logIn,
                 style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
@@ -115,7 +116,7 @@ fun LoginScreen(
                     onValueChange = {
                         authViewModel.username.value = it
                     },
-                    label = "Username",
+                    label = Strings.Auth.username,
                     leadingIconRes = R.drawable.ic_person_otlined,
                     imeAction = ImeAction.Next,
                     enabled = !isLoading && !isGoogleSignInLoading,
@@ -127,7 +128,7 @@ fun LoginScreen(
                     onValueChange = {
                         authViewModel.password.value = it
                     },
-                    label = "Password",
+                    label = Strings.Auth.password,
                     leadingIconRes = R.drawable.ic_lock_outlined,
                     imeAction = ImeAction.Done,
                     onImeAction = {
@@ -155,7 +156,7 @@ fun LoginScreen(
                         )
                     } else {
                         Text(
-                            "Log in",
+                            Strings.Auth.logIn,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -169,7 +170,7 @@ fun LoginScreen(
                 ) {
                     HorizontalDivider(modifier = Modifier.weight(1f))
                     Text(
-                        text = "OR",
+                        text = Strings.Misc.or.uppercase(),
                         modifier = Modifier.padding(horizontal = 16.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -187,7 +188,9 @@ fun LoginScreen(
                                     IntentSenderRequest.Builder(intentSender).build()
                                 )
                             } else {
-                                authViewModel.showGoogleSignInError("Failed to start Google Sign-In")
+                                authViewModel.showGoogleSignInError(
+                                    Strings.Error.googleLoginFailed(context)
+                                )
                             }
                         }
                     },
@@ -214,7 +217,7 @@ fun LoginScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                "Sign in with Google",
+                                Strings.Auth.signInWithGoogle,
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
@@ -235,13 +238,13 @@ fun LoginScreen(
                     enabled = !isLoading && !isGoogleSignInLoading
                 ) {
                     Text(
-                        "Continue as Guest",
+                        Strings.Auth.continueAsGuest,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
 
                 Text(
-                    text = "Don't have an account?",
+                    text = Strings.Auth.dontHaveAccount,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -254,7 +257,7 @@ fun LoginScreen(
                     enabled = !isLoading && !isGoogleSignInLoading
                 ) {
                     Text(
-                        "Register",
+                        Strings.Auth.register,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

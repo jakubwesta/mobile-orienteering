@@ -2,6 +2,7 @@ package com.mobileorienteering.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mobileorienteering.data.model.domain.AppLanguage
 import com.mobileorienteering.data.model.domain.ContrastLevel
 import com.mobileorienteering.data.model.domain.SettingsModel
 import com.mobileorienteering.data.preferences.SettingsPreferences
@@ -30,6 +31,10 @@ class SettingsViewModel @Inject constructor(
 
     fun updateContrastLevel(level: ContrastLevel) = viewModelScope.launch {
         repo.updateContrastLevel(level)
+    }
+
+    fun updateLanguage(language: AppLanguage) = viewModelScope.launch {
+        repo.updateLanguage(language)
     }
 
     fun updateControlPointSound(enabled: Boolean) = viewModelScope.launch {

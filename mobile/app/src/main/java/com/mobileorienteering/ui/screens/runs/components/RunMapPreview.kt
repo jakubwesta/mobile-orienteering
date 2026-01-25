@@ -27,7 +27,6 @@ import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 
-
 @Composable
 fun RunMapPreview(
     pathData: List<PathPoint>,

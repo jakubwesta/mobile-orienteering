@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mobileorienteering.ui.core.Strings
 
 @Composable
 fun DraggingInfoBanner(
@@ -25,13 +26,13 @@ fun DraggingInfoBanner(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Tap on map to move Control Point $checkpointNumber",
+                Strings.Formatted.mapDraggingInfo(checkpointNumber),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Spacer(modifier = Modifier.width(8.dp))
             TextButton(onClick = onCancel) {
-                Text("Cancel")
+                Text(Strings.Action.cancel)
             }
         }
     }

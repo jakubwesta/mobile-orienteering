@@ -16,6 +16,7 @@ uv.lock
 /build
 /mobile/build
 **/build
+**/GeneratedStrings.kt
 /captures
 .externalNativeBuild
 .cxx

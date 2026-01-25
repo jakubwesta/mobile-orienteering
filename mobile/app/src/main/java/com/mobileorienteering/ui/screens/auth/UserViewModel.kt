@@ -1,18 +1,22 @@
 package com.mobileorienteering.ui.screens.auth
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.network.response.UserResponse
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.UserRepository
+import com.mobileorienteering.ui.core.Strings
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val userRepository: UserRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {
@@ -43,10 +47,10 @@ class UserViewModel @Inject constructor(
                 result.onSuccess { user ->
                     currentUser.value = user
                 }.onFailure { e ->
-                    error.value = e.message ?: "Failed to load user"
+                    error.value = e.message ?: Strings.Error.failedToLoadUser(context)
                 }
             } catch (e: Exception) {
-                error.value = e.message ?: "Unknown error"
+                error.value = e.message ?: Strings.Error.unknown(context)
             } finally {
                 isLoading.value = false
             }
@@ -67,7 +71,7 @@ class UserViewModel @Inject constructor(
             try {
                 val auth = authRepository.getCurrentAuth()
                 if (auth?.isGuestMode == true) {
-                    error.value = "Profile editing is not available in guest mode"
+                    error.value = Strings.Error.profileEditingNotAvailableGuest(context)
                     isLoading.value = false
                     return@launch
                 }
@@ -90,10 +94,10 @@ class UserViewModel @Inject constructor(
                         authRepository.updateUsername(username)
                     }
                 }.onFailure { e ->
-                    error.value = e.message ?: "Failed to update profile"
+                    error.value = e.message ?: Strings.Error.failedToUpdateProfile(context)
                 }
             } catch (e: Exception) {
-                error.value = e.message ?: "Unknown error"
+                error.value = e.message ?: Strings.Error.unknown(context)
             } finally {
                 isLoading.value = false
             }
@@ -111,7 +115,7 @@ class UserViewModel @Inject constructor(
             try {
                 val auth = authRepository.getCurrentAuth()
                 if (auth?.isGuestMode == true) {
-                    error.value = "Password change is not available in guest mode"
+                    error.value = Strings.Error.passwordChangeNotAvailableGuest(context)
                     isLoading.value = false
                     return@launch
                 }
@@ -126,10 +130,10 @@ class UserViewModel @Inject constructor(
                 )
 
                 result.onFailure { e ->
-                    error.value = e.message ?: "Failed to change password"
+                    error.value = e.message ?: Strings.Error.failedToChangePassword(context)
                 }
             } catch (e: Exception) {
-                error.value = e.message ?: "Unknown error"
+                error.value = e.message ?: Strings.Error.unknown(context)
             } finally {
                 isLoading.value = false
             }

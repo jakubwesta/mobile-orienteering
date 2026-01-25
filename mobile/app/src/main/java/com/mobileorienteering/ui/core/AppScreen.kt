@@ -1,13 +1,18 @@
 package com.mobileorienteering.ui.core
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import com.mobileorienteering.R
 
 sealed class AppScreen(
     val route: String,
-    val label: String? = null,
     val iconFilled: Int? = null,
     val iconOutlined: Int? = null
 ) {
+    @get:Composable
+    @get:ReadOnlyComposable
+    open val label: String? get() = null
+
     object Welcome : AppScreen("welcome")
     object Login : AppScreen("login")
     object Register : AppScreen("register")
@@ -17,24 +22,36 @@ sealed class AppScreen(
 
     object Map : AppScreen(
         route = "map",
-        label = "Map",
         iconFilled = R.drawable.ic_map_filled,
         iconOutlined = R.drawable.ic_map_outlined
-    )
+    ) {
+        override val label: String
+            @Composable
+            @ReadOnlyComposable
+            get() = Strings.Nav.map
+    }
 
     object Library : AppScreen(
         route = "library",
-        label = "Library",
         iconFilled = R.drawable.ic_library_filled,
         iconOutlined = R.drawable.ic_library_outlined
-    )
+    ) {
+        override val label: String
+            @Composable
+            @ReadOnlyComposable
+            get() = Strings.Nav.library
+    }
 
     object Runs : AppScreen(
         route = "runs",
-        label = "Runs",
         iconFilled = R.drawable.ic_runs_filled,
         iconOutlined = R.drawable.ic_runs_outlined
-    )
+    ) {
+        override val label: String
+            @Composable
+            @ReadOnlyComposable
+            get() = Strings.Nav.runs
+    }
 
     object RunDetails : AppScreen("run_details/{activityId}") {
         fun createRoute(activityId: Long) = "run_details/$activityId"
@@ -42,10 +59,14 @@ sealed class AppScreen(
 
     object Settings : AppScreen(
         route = "settings",
-        label = "Settings",
         iconFilled = R.drawable.ic_settings_filled,
         iconOutlined = R.drawable.ic_settings_outlined
-    )
+    ) {
+        override val label: String
+            @Composable
+            @ReadOnlyComposable
+            get() = Strings.Nav.settings
+    }
 
     companion object {
         val mainScreens = listOf(Map, Library, Runs, Settings)

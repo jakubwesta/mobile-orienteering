@@ -32,6 +32,7 @@ import com.mobileorienteering.ui.screens.map.components.NextCheckpointLineLayer
 import com.mobileorienteering.ui.screens.map.components.RoutePathLayer
 import com.mobileorienteering.ui.screens.map.components.RunFinishedDialog
 import com.mobileorienteering.ui.screens.map.components.RunProgressPanel
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.map.components.SaveRouteDialog
 import com.mobileorienteering.ui.screens.map.components.UserLocationLayer
 import kotlinx.coroutines.launch
@@ -56,7 +57,10 @@ fun MapScreen(
     val mapZoom by viewModel.mapZoom.collectAsStateWithLifecycle()
     val showLocationDuringRun by viewModel.showLocationDuringRun.collectAsStateWithLifecycle()
     val centerCameraOnce by viewModel.centerCameraOnce.collectAsStateWithLifecycle()
+    val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsStateWithLifecycle()
+
     val cameraState = rememberCameraState()
+
     val context = LocalContext.current
 
     val isRunActive = runState.isActive
@@ -74,8 +78,6 @@ fun MapScreen(
     var showLocationPermissionRationale by remember { mutableStateOf(false) }
     var showLocationPermissionSettings by remember { mutableStateOf(false) }
     var pendingRunStart by remember { mutableStateOf(false) }
-    val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsStateWithLifecycle()
-
     var draggingCheckpointIndex by remember { mutableStateOf<Int?>(null) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -331,7 +333,7 @@ fun MapScreen(
                     )
                 ) {
                     Text(
-                        text = "Click on map to add your first control point",
+                        text = Strings.Map.clickToAddFirst,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(16.dp)
@@ -399,7 +401,7 @@ fun MapScreen(
                 )
             }
 
-            if (draggingCheckpointIndex == null) {
+            if (draggingCheckpointIndex == null && !isRunActive) {
                 CheckpointDialog(
                     position = tapPosition,
                     onDismiss = { tapPosition = null },
@@ -477,7 +479,7 @@ fun MapScreen(
                     visitedCount = run.visitedControlPoints.size,
                     totalCount = run.totalCheckpoints,
                     distance = run.distance,
-                    defaultTitle = "Run: ${run.mapName}",
+                    defaultTitle = Strings.Formatted.runTitleLabel(run.mapName),
                     onSave = { title -> viewModel.saveFinishedRun(title) },
                     onDiscard = { viewModel.discardFinishedRun() }
                 )

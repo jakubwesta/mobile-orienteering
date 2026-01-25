@@ -41,7 +41,7 @@ fun SettingsClickableItem(
 
         Spacer(Modifier.width(16.dp))
 
-        if (subtitle != null && subtitle.isNotEmpty()) {
+        if (!subtitle.isNullOrEmpty()) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,

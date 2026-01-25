@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mobileorienteering.ui.core.Strings
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
@@ -93,7 +94,7 @@ fun RunProgressPanel(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Run in Progress",
+                            Strings.Run.inProgress,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -116,7 +117,7 @@ fun RunProgressPanel(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                contentDescription = if (isExpanded) Strings.Accessibility.collapse else Strings.Accessibility.expand,
                                 modifier = Modifier.rotate(rotationAngle),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -125,7 +126,7 @@ fun RunProgressPanel(
                         IconButton(onClick = { showStopDialog = true }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Stop",
+                                contentDescription = Strings.Accessibility.stop,
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -148,7 +149,7 @@ fun RunProgressPanel(
                             ) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "Next: Control Point ${nextCheckpointIndex + 1}",
+                                    Strings.Formatted.mapNextControlPointLabel(nextCheckpointIndex + 1),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -165,15 +166,15 @@ fun RunProgressPanel(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         StatItem(
-                            label = "Time",
+                            label = Strings.Run.timeLabel,
                             value = formatDuration(elapsedSeconds)
                         )
                         StatItem(
-                            label = "Points",
+                            label = Strings.Run.pointsLabel,
                             value = "$visitedCount/$totalCount"
                         )
                         StatItem(
-                            label = "Distance",
+                            label = Strings.Run.distanceLabel,
                             value = formatDistance(distance)
                         )
                     }
@@ -190,7 +191,7 @@ fun RunProgressPanel(
                     )
 
                     Text(
-                        "${(progress * 100).toInt()}% complete",
+                        Strings.Formatted.runsCompletion((progress * 100).toInt()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
@@ -232,8 +233,8 @@ fun RunProgressPanel(
     if (showStopDialog) {
         AlertDialog(
             onDismissRequest = { showStopDialog = false },
-            title = { Text("Stop Run?") },
-            text = { Text("Are you sure you want to stop this run? Your progress will be saved.") },
+            title = { Text(Strings.Run.stopConfirmTitle) },
+            text = { Text(Strings.Run.stopConfirmMessage) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -241,12 +242,12 @@ fun RunProgressPanel(
                         onStopClick()
                     }
                 ) {
-                    Text("Stop", color = MaterialTheme.colorScheme.error)
+                    Text(Strings.Accessibility.stop, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStopDialog = false }) {
-                    Text("Continue")
+                    Text(Strings.Action.`continue`)
                 }
             }
         )

@@ -1,58 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
-import org.gradle.api.GradleException
-
-object AppConfig {
-    private lateinit var localProperties: Properties
-    private lateinit var project: Project
-
-    fun init(localProps: Properties, proj: Project) {
-        localProperties = localProps
-        project = proj
-    }
-
-    private fun getProperty(vararg keys: String, default: String? = null): String {
-        for (key in keys) {
-            val value = System.getenv(key.replace(".", "_").uppercase())
-                ?: localProperties.getProperty(key)
-                ?: project.findProperty(key) as String?
-            if (!value.isNullOrEmpty()) return value
-        }
-
-        return default ?: throw GradleException(
-            "Required property not found. Please set one of: ${keys.joinToString(", ")}\n" +
-                    "Add it to gradle.properties or local.properties"
-        )
-    }
-
-    // Build configuration
-    val compileSdk: Int get() = getProperty("app.compileSdk").toInt()
-    val minSdk: Int get() = getProperty("app.minSdk").toInt()
-    val targetSdk: Int get() = getProperty("app.targetSdk").toInt()
-
-    // API URLs
-    val releaseBaseUrl: String get() = getProperty(
-        "RELEASE_BASE_URL",
-        "app.release.baseUrl"
-    )
-
-    val debugBaseUrl: String get() = getProperty(
-        "DEBUG_BASE_URL",
-        "app.debug.baseUrl"
-    )
-
-    // Secrets
-    val googleWebClientId: String get() = getProperty(
-        "GOOGLE_WEB_CLIENT_ID",
-        default = ""
-    )
-
-    // Feature flags
-    val loggingEnabled: Boolean get() = getProperty(
-        "app.feature.loggingEnabled",
-        default = "true"
-    ).toBoolean()
-}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -135,6 +82,13 @@ configure<ApplicationExtension> {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    sourceSets {
+        getByName("main") {
+            java.directories.add(file("build/generated/source/strings").toString())
+            kotlin.directories.add(file("build/generated/source/strings").toString())
+        }
     }
 }
 
@@ -228,9 +182,40 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
-// Fix KSP + BuildConfig timing issue with AGP 9.0 built-in Kotlin
-tasks.matching { it.name.startsWith("ksp") && it.name.contains("Kotlin") }.configureEach {
-    dependsOn(tasks.matching { it.name.startsWith("generate") && it.name.contains("BuildConfig") })
+val generateStringsTask: TaskProvider<Task> = tasks.register("generateStrings") {
+    description = "Generates Strings.kt from strings.xml"
+    group = "code generation"
+
+    val stringsXmlFile = file("src/main/res/values/strings.xml")
+    val outputDir = file("build/generated/source/strings")
+
+    inputs.file(stringsXmlFile)
+    outputs.dir(outputDir)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        outputDir.mkdirs()
+        val generator = StringsGenerator(
+            stringsXmlFile = stringsXmlFile,
+            outputDir = outputDir,
+            packageName = "com.mobileorienteering.ui.core"
+        )
+        generator.generate()
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn(generateStringsTask)
+}
+
+tasks.matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }.configureEach {
+    dependsOn(generateStringsTask)
+}
+
+afterEvaluate {
+    tasks.matching { it.name.startsWith("ksp") && it.name.contains("Kotlin") }.configureEach {
+        dependsOn(generateStringsTask)
+    }
 }
 
 tasks.withType<Test> {

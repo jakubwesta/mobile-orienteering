@@ -10,10 +10,6 @@ class SnackbarManager @Inject constructor() {
     private val _messages = MutableSharedFlow<SnackbarEvent>(replay = 0)
     val messages = _messages.asSharedFlow()
 
-    suspend fun showSnackbar(message: String) {
-        _messages.emit(SnackbarEvent.ShowSnackbar(message))
-    }
-
     suspend fun showError(message: String) {
         _messages.emit(SnackbarEvent.ShowError(message))
     }

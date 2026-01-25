@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.util.calculatePace
 import com.mobileorienteering.util.formatDistance
@@ -61,19 +62,19 @@ fun RunStatsCard(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             StatItem(
-                label = "Distance",
+                label = Strings.Run.distanceLabel,
                 value = formatDistance(distance),
                 icon = R.drawable.ic_route
             )
 
             StatItem(
-                label = "Duration",
+                label = Strings.Run.durationLabel,
                 value = formatDuration(duration),
                 icon = R.drawable.ic_runs_outlined
             )
 
             StatItem(
-                label = "Pace",
+                label = Strings.Run.paceLabel,
                 value = calculatePace(distance, durationSeconds),
                 icon = R.drawable.ic_play_arrow
             )

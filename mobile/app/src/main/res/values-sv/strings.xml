@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- App -->
+	<string name="app_name">Mobil orientering</string>
+	<string name="app_version">Version %1$s (%2$d)</string>
+	<!-- Actions -->
+	<string name="action_add">Lägg till</string>
+	<string name="action_back">Tillbaka</string>
+	<string name="action_cancel">Avbryt</string>
+	<string name="action_close">Stäng</string>
+	<string name="action_continue">Fortsätt</string>
+	<string name="action_delete">Radera</string>
+	<string name="action_discard">Ignorera</string>
+	<string name="action_edit">Redigera</string>
+	<string name="action_save">Spara</string>
+	<!-- Navigation -->
+	<string name="nav_library">Bibliotek</string>
+	<string name="nav_map">Karta</string>
+	<string name="nav_runs">Körningar</string>
+	<string name="nav_settings">Inställningar</string>
+	<!-- Permissions -->
+	<string name="permission_grant">Bevilja tillstånd</string>
+	<string name="permission_location_disabled_message">Platstjänster är inaktiverade. Vill du aktivera dem i inställningarna</string>
+	<string name="permission_location_disabled_title">Platstjänster inaktiverade</string>
+	<string name="permission_location_required_message">Exakt platsåtkomst är avgörande för att spåra din position under körningar och upptäcka när du når kontrollpunkter. Utan den kan appen inte fungera</string>
+	<string name="permission_location_required_settings">Platsbehörighet krävs för att denna app ska fungera. Aktivera den i Inställningar under Behörigheter &gt; Plats</string>
+	<string name="permission_location_required_title">Platsbehörighet krävs</string>
+	<string name="permission_open_settings">Öppna inställningar</string>
+	<!-- Accessibility -->
+	<string name="accessibility_close_search">Stäng sökning</string>
+	<string name="accessibility_collapse">Komprimera</string>
+	<string name="accessibility_disable_location">Inaktivera platsspårning</string>
+	<string name="accessibility_edit_name">Redigera namn</string>
+	<string name="accessibility_enable_location">Aktivera platsspårning</string>
+	<string name="accessibility_expand">Expandera</string>
+	<string name="accessibility_hide_password">Dölj lösenord</string>
+	<string name="accessibility_more_options">Fler alternativ</string>
+	<string name="accessibility_move_down">Flytta ner</string>
+	<string name="accessibility_move_up">Flytta upp</string>
+	<string name="accessibility_navigate">Navigate</string>
+	<string name="accessibility_play">Spela</string>
+	<string name="accessibility_search">Sök</string>
+	<string name="accessibility_select">Välj</string>
+	<string name="accessibility_show_password">Visa lösenord</string>
+	<string name="accessibility_sort">Sortera</string>
+	<string name="accessibility_stop">Stoppa</string>
+	<!-- Notifications -->
+	<string name="notification_run_tracking_title">Kör spårning</string>
+	<string name="notification_run_tracking_description">Serier körförlopp</string>
+	<string name="notification_run_in_progress">Kör pågår • %1$s</string>
+	<!-- Misc -->
+	<string name="misc_cloud_features_disabled">Molnfunktioner inaktiverade. Fortsätt som gäst</string>
+	<string name="misc_video_unavailable">Video ej tillgänglig</string>
+	<string name="misc_or">Eller</string>
+	<!-- Auth Screen -->
+	<string name="auth_account_created">Kontot har skapats!</string>
+	<string name="auth_already_have_account">Har du redan ett konto?</string>
+	<string name="auth_change_password">Ändra lösenord</string>
+	<string name="auth_confirm_new_password">Bekräfta nytt lösenord</string>
+	<string name="auth_continue_as_guest">Fortsätt som gäst</string>
+	<string name="auth_create_account">Skapa konto</string>
+	<string name="auth_current_password">Nuvarande lösenord</string>
+	<string name="auth_dont_have_account">Har du inget konto?</string>
+	<string name="auth_email">E-post</string>
+	<string name="auth_full_name">Fullständigt namn</string>
+	<string name="auth_full_name_optional">Fullständigt namn (valfritt)</string>
+	<string name="auth_google_logo_desc">Google-logotyp</string>
+	<string name="auth_google_sign_in_canceled">Google Logga in avbröts eller misslyckades</string>
+	<string name="auth_google_sign_in_failed">Det gick inte att starta Google-inloggning</string>
+	<string name="auth_guest">Gäst</string>
+	<string name="auth_log_in">Logga in</string>
+	<string name="auth_log_in_title">Logga in</string>
+	<string name="auth_new_password">Nytt lösenord</string>
+	<string name="auth_password">Lösenord</string>
+	<string name="auth_phone_number">Telefonnummer</string>
+	<string name="auth_phone_number_optional">Telefonnummer (valfritt)</string>
+	<string name="auth_register">Registrera</string>
+	<string name="auth_sign_in">Logga in</string>
+	<string name="auth_sign_in_with_google">Logga in med Google</string>
+	<string name="auth_username">Användarnamn</string>
+	<!-- Welcome Screen -->
+	<string name="welcome_create_custom_courses">Skapa anpassade orienteringskurser</string>
+	<string name="welcome_description">Skapa orienteringskartor, spåra dina körningar och analysera dina prestationer.</string>
+	<string name="welcome_get_started">Kom igång</string>
+	<string name="welcome_save_and_share">Spara och dela dina kartor</string>
+	<string name="welcome_track_with_gps">Spåra dina körningar med GPS</string>
+	<string name="welcome_welcome">Välkommen till</string>
+	<!-- Library Screen -->
+	<string name="library_create_first_map">Skapa första kartan</string>
+	<string name="library_empty_message">Skapa din första karta för att starta orientering</string>
+	<string name="library_empty_title">Inga kartor ännu</string>
+	<string name="library_maps">Kartor</string>
+	<string name="library_newest_first">Nyaste först</string>
+	<string name="library_oldest_first">Äldsta först</string>
+	<string name="library_search_hint">Sök kartor...</string>
+	<string name="library_sort_title_az">Titel (A-Z)</string>
+	<string name="library_delete_map_message">Är du säker på att du vill ta bort \"%1$s\"?</string>
+	<!-- Map Screen -->
+	<string name="map_add_control_point">Lägg till kontrollpunkt</string>
+	<string name="map_control_point_label">Kontrollpunkt %1$d</string>
+	<string name="map_next_control_point_label">Nästa kontrollpunkt: %1$d</string>
+	<string name="map_checkpoint_name_label">Namn</string>
+	<string name="map_checkpoint_name_optional">Namnet på punkten (valfritt)</string>
+	<string name="map_checkpoint_prompt">Ange namnet på punkten:</string>
+	<string name="map_click_to_add_first">Klicka på kartan för att lägga till din första kontrollpunkt</string>
+	<string name="map_control_points">Kontrollpunkter</string>
+	<string name="map_delete_all">Ta bort alla</string>
+	<string name="map_delete_all_confirm_message">Är du säker på att du vill ta bort alla kontrollpunkter? Denna åtgärd kan inte ångras.</string>
+	<string name="map_delete_all_confirm_title">Ta bort alla kontrollpunkter</string>
+	<string name="map_delete_map_title">Ta bort karta</string>
+	<string name="map_detach">Detach</string>
+	<string name="map_dragging_info">Tryck på kartan för att flytta Kontrollpunkt %1$d</string>
+	<string name="map_edit_checkpoint_name">Redigera kontrollpunktens namn</string>
+	<string name="map_editing_map">Redigerar karta</string>
+	<string name="map_route_name_label">Namn på rutten</string>
+	<string name="map_save_as_new">Spara som ny</string>
+	<string name="map_save_as_new_map">Spara som ny karta</string>
+	<string name="map_save_map">Spara karta</string>
+	<string name="map_save_route">Spara rutt</string>
+	<string name="map_save_the_route">Spara rutten</string>
+	<string name="map_update_existing">Uppdatera befintlig karta</string>
+	<string name="map_update_prompt">Du redigerar \"%1$s\". Vad vill du göra</string>
+	<!-- Runs Screen -->
+	<string name="runs_create_first_map">Skapa första kartan</string>
+	<string name="runs_delete_run_title">Ta bort körning</string>
+	<string name="runs_delete_run_message">Är du säker på att du vill ta bort \"%1$s\"?</string>
+	<string name="runs_empty_message">Skapa din första karta för att starta orientering</string>
+	<string name="runs_empty_no_runs_message">Gå till dina kartor och starta din första körning</string>
+	<string name="runs_empty_no_runs_title">Inga körningar än</string>
+	<string name="runs_empty_title">Inga körningar än</string>
+	<string name="runs_go_to_maps">Gå till Kartor</string>
+	<string name="runs_longest_distance">Längsta avstånd</string>
+	<string name="runs_newest_first">Nyaste först</string>
+	<string name="runs_oldest_first">Äldsta först</string>
+	<string name="runs_search_hint">Sök körningar...</string>
+	<string name="runs_shortest_distance">Kortaste avståndet</string>
+	<string name="runs_sort_title_az">Titel (A-Z)</string>
+	<string name="runs_start_run">Börja köra</string>
+	<string name="runs_uncompleted">Oavslutad</string>
+	<string name="runs_distance_label">Avstånd: %1$s</string>
+	<string name="runs_duration_label">Varaktighet: %1$s</string>
+	<!-- Run -->
+	<string name="run_checkpoints_format">0/0 kontrollpunkter</string>
+	<string name="run_completed">Kör slutförd</string>
+	<string name="run_distance_label">Avstånd</string>
+	<string name="run_duration_label">Varaktighet</string>
+	<string name="run_format_km">%.2f km</string>
+	<string name="run_format_m">%.0f m</string>
+	<string name="run_in_progress">Kör pågår</string>
+	<string name="run_name_label">Kör namn</string>
+	<string name="run_pace_label">Takt</string>
+	<string name="run_points_label">Poäng</string>
+	<string name="run_starting">Startar körning...</string>
+	<string name="run_stop_confirm_message">Är du säker på att du vill stoppa denna körning? Dina framsteg kommer att sparas</string>
+	<string name="run_stop_confirm_title">Sluta köra</string>
+	<string name="run_stopped">Kör stoppad</string>
+	<string name="run_time_label">Tid</string>
+	<string name="run_time_with_duration">Tid: %1$s</string>
+	<string name="run_unknown_map">Okänd</string>
+	<string name="run_title_label">Kör: %1$s</string>
+	<string name="run_details_abandoned">Övergiven</string>
+	<string name="run_details_completed">Slutförd</string>
+	<string name="run_details_cp_count">%1$d CP</string>
+	<string name="run_details_dist_label">Dist</string>
+	<string name="run_details_finish">Avsluta</string>
+	<string name="run_details_in_progress">Under utveckling</string>
+	<string name="run_details_interval_label">Intervall</string>
+	<string name="run_details_map_format">Karta: %1$s</string>
+	<string name="run_details_no_control_points">Inga kontrollpunkter har besökts</string>
+	<string name="run_details_pace_label">Takt</string>
+	<string name="run_details_splits">Delningar</string>
+	<string name="run_details_start">Starta</string>
+	<string name="run_details_title">Kör detaljer</string>
+	<string name="run_details_total_dist_label">Totalt Dist</string>
+	<string name="run_details_total_label">Totalt</string>
+	<!-- Settings Screen -->
+	<string name="settings_about_app">Om appen</string>
+	<string name="settings_account">Konto</string>
+	<string name="settings_advanced">Avancerat</string>
+	<string name="settings_appearance">Utseende</string>
+	<string name="settings_gps">GPS</string>
+	<string name="settings_authors">Författare</string>
+	<string name="settings_authors_names">Jakub Westa &amp; Dawid Pilarski</string>
+	<string name="settings_change_password">Ändra lösenord</string>
+	<string name="settings_change_password_description">Ange ditt nuvarande lösenord och välj ett nytt</string>
+	<string name="settings_language">Språk</string>
+	<string name="settings_contrast_level">Kontrast Nivå</string>
+	<string name="settings_contrast_high">Hög</string>
+	<string name="settings_contrast_low">Låg</string>
+	<string name="settings_contrast_medium">Medel</string>
+	<string name="settings_control_points">Kontrollpunkter</string>
+	<string name="settings_dark_mode">Mörkt läge</string>
+	<string name="settings_detection_radius">Detektion Radie</string>
+	<string name="settings_edit_profile">Redigera profil</string>
+	<string name="settings_edit_profile_description">Uppdatera din profilinformation</string>
+	<string name="settings_guest_mode_message">Du använder appen som gäst. Logga in för att synkronisera dina data mellan enheter och få tillgång till molnfunktioner</string>
+	<string name="settings_guest_mode_title">Gäst läge</string>
+	<string name="settings_license">Licens</string>
+	<string name="settings_license_name">Elastisk licens 2.0</string>
+	<string name="settings_location_during_run">Visa plats under körning</string>
+	<string name="settings_logout">Utloggning</string>
+	<string name="settings_logout_confirm_message">Är du säker på att du vill logga ut</string>
+	<string name="settings_logout_confirm_title">Utloggning</string>
+	<string name="settings_map_zoom">Karta Zoom</string>
+	<string name="settings_privacy_policy">Integritetspolicy</string>
+	<string name="settings_save_changes">Spara ändringar</string>
+	<string name="settings_sound">Ljud</string>
+	<string name="settings_sync_action">Synk</string>
+	<string name="settings_sync_data">Synkronisera data med servern</string>
+	<string name="settings_sync_dialog_message_1">Är du säker på att du vill synkronisera data med servern</string>
+	<string name="settings_sync_dialog_message_2">Detta kan ta bort din lokala, osynkade data</string>
+	<string name="settings_sync_dialog_message_3">Gör bara detta om du har loggat in på ny enhet</string>
+	<string name="settings_sync_dialog_title">Synkronisera data</string>
+	<string name="settings_sync_success">Data synkades framgångsrikt</string>
+	<string name="settings_title">Inställningar</string>
+	<string name="settings_vibration">Vibration</string>
+	<!-- Errors -->
+	<string name="error_sync_error">Synkronisera fel</string>
+	<string name="error_sync_failed">Synk misslyckades</string>
+	<string name="error_location_permission_required">Platstillstånd krävs</string>
+	<string name="error_location_services_disabled">Platstjänster inaktiverade</string>
+	<string name="error_map_not_found">Karta hittades inte</string>
+	<string name="error_no_control_points_to_run">Inga kontrollpunkter att köra</string>
+	<string name="error_no_map_to_update">Ingen karta att uppdatera</string>
+	<string name="error_failed_to_change_password">Det gick inte att ändra lösenord</string>
+	<string name="error_failed_to_load_user">Det gick inte att ladda användaren</string>
+	<string name="error_failed_to_update_profile">Det gick inte att uppdatera profil</string>
+	<string name="error_google_login_failed">Google-inloggning misslyckades</string>
+	<string name="error_guest_login_failed">Gästinloggning misslyckades</string>
+	<string name="error_login_failed">Inloggning misslyckades</string>
+	<string name="error_password_change_not_available_guest">Lösenordsändringen är inte tillgänglig i gästläget</string>
+	<string name="error_password_min_length">Lösenordet måste vara minst 6 tecken</string>
+	<string name="error_passwords_do_not_match">Lösenorden matchar inte</string>
+	<string name="error_please_enter_current_password">Ange ditt nuvarande lösenord</string>
+	<string name="error_please_enter_new_password">Ange ett nytt lösenord</string>
+	<string name="error_profile_editing_not_available_guest">Profilredigering är inte tillgänglig i gästläge</string>
+	<string name="error_registration_failed">Registreringen misslyckades</string>
+	<string name="error_unknown">Okänt fel</string>
+	<!-- Plurals -->
+	<plurals name="checkpoint_count">
+		<item quantity="one">%1$d checkpoint</item>
+		<item quantity="other">%1$d kontrollpunkter</item>
+	</plurals>
+	<plurals name="control_point_count">
+		<item quantity="one">%1$d kontrollpunkt</item>
+		<item quantity="other">%1$d kontrollpunkter</item>
+	</plurals>
+	<plurals name="map_count">
+		<item quantity="one">%1$d karta</item>
+		<item quantity="other">%1$d kartor</item>
+	</plurals>
+	<plurals name="run_count">
+		<item quantity="one">%1$d kör</item>
+		<item quantity="other">%1$d körningar</item>
+	</plurals>
+	<plurals name="point_count">
+		<item quantity="one">%1$d punkt</item>
+		<item quantity="other">%1$d poäng</item>
+	</plurals>
+	<plurals name="item_count">
+		<item quantity="one">%1$d objekt</item>
+		<item quantity="other">%1$d objekt</item>
+	</plurals>
+	<plurals name="checkpoint_progress">
+		<item quantity="one">%1$d/%2$d checkpoint</item>
+		<item quantity="other">%1$d/%2$d checkpoints</item>
+	</plurals>
+	<plurals name="notification_checkpoint_progress">
+		<item quantity="one">%1$d checkpoint • %2$s</item>
+		<item quantity="other">%1$d kontrollpunkter • %2$s</item>
+	</plurals>
+	<plurals name="gps_accuracy_value">
+		<item quantity="one">%1$d meter</item>
+		<item quantity="other">%1$d meter</item>
+	</plurals>
+</resources>

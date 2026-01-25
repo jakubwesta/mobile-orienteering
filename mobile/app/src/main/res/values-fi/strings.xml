@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- App -->
+	<string name="app_name">Mobiilin Suunnistus</string>
+	<string name="app_version">Versio %1$s (%2$d)</string>
+	<!-- Actions -->
+	<string name="action_add">Lisää</string>
+	<string name="action_back">Takaisin</string>
+	<string name="action_cancel">Peruuta</string>
+	<string name="action_close">Sulje</string>
+	<string name="action_continue">Jatka</string>
+	<string name="action_delete">Poista</string>
+	<string name="action_discard">Hylkää</string>
+	<string name="action_edit">Muokkaa</string>
+	<string name="action_save">Tallenna</string>
+	<!-- Navigation -->
+	<string name="nav_library">Kirjasto</string>
+	<string name="nav_map">Kartta</string>
+	<string name="nav_runs">Juoksut</string>
+	<string name="nav_settings">Asetukset</string>
+	<!-- Permissions -->
+	<string name="permission_grant">Myönnä Käyttöoikeus</string>
+	<string name="permission_location_disabled_message">Sijaintipalvelut on poistettu käytöstä. Haluatko ottaa ne käyttöön asetuksissa</string>
+	<string name="permission_location_disabled_title">Sijaintipalvelut Pois Käytöstä</string>
+	<string name="permission_location_required_message">Tarkka pääsy sijaintiin on tärkeää, jotta voit seurata sijaintiasi suoritusten aikana ja havaita kun saavutat tarkistuspisteitä. Ilman sitä, sovellus ei voi toimia</string>
+	<string name="permission_location_required_settings">Tämä sovellus tarvitsee käyttöoikeuden sijaintiin. Ole hyvä ja ota se käyttöön kohdassa Asetukset &gt; Sijainti</string>
+	<string name="permission_location_required_title">Sijainnin Käyttöoikeus Vaaditaan</string>
+	<string name="permission_open_settings">Avaa Asetukset</string>
+	<!-- Accessibility -->
+	<string name="accessibility_close_search">Sulje haku</string>
+	<string name="accessibility_collapse">Kutista</string>
+	<string name="accessibility_disable_location">Poista sijainnin seuranta käytöstä</string>
+	<string name="accessibility_edit_name">Muokkaa nimeä</string>
+	<string name="accessibility_enable_location">Salli sijainnin seuranta</string>
+	<string name="accessibility_expand">Laajenna</string>
+	<string name="accessibility_hide_password">Piilota salasana</string>
+	<string name="accessibility_more_options">Lisää vaihtoehtoja</string>
+	<string name="accessibility_move_down">Siirrä alas</string>
+	<string name="accessibility_move_up">Siirrä ylös</string>
+	<string name="accessibility_navigate">Navigate</string>
+	<string name="accessibility_play">Toista</string>
+	<string name="accessibility_search">Etsi</string>
+	<string name="accessibility_select">Valitse</string>
+	<string name="accessibility_show_password">Näytä salasana</string>
+	<string name="accessibility_sort">Järjestä</string>
+	<string name="accessibility_stop">Pysäytä</string>
+	<!-- Notifications -->
+	<string name="notification_run_tracking_title">Suorita Seuranta</string>
+	<string name="notification_run_tracking_description">Ohjelmien eteneminen</string>
+	<string name="notification_run_in_progress">Suorita käynnissä • %1$s</string>
+	<!-- Misc -->
+	<string name="misc_cloud_features_disabled">Pilviominaisuudet eivät ole käytössä. Jatka vieraana</string>
+	<string name="misc_video_unavailable">Video ei käytettävissä</string>
+	<string name="misc_or">Tai</string>
+	<!-- Auth Screen -->
+	<string name="auth_account_created">Tili luotiin onnistuneesti!</string>
+	<string name="auth_already_have_account">Onko sinulla jo tili?</string>
+	<string name="auth_change_password">Vaihda Salasana</string>
+	<string name="auth_confirm_new_password">Vahvista Uusi Salasana</string>
+	<string name="auth_continue_as_guest">Jatka vieraana</string>
+	<string name="auth_create_account">Luo tili</string>
+	<string name="auth_current_password">Nykyinen Salasana</string>
+	<string name="auth_dont_have_account">Eikö sinulla ole tiliä?</string>
+	<string name="auth_email">Sähköposti</string>
+	<string name="auth_full_name">Koko Nimi</string>
+	<string name="auth_full_name_optional">Koko Nimi (valinnainen)</string>
+	<string name="auth_google_logo_desc">Googlen logo</string>
+	<string name="auth_google_sign_in_canceled">Googlen kirjautuminen peruutettiin tai se epäonnistui</string>
+	<string name="auth_google_sign_in_failed">Sisäänkirjautumisen käynnistäminen epäonnistui</string>
+	<string name="auth_guest">Vieras</string>
+	<string name="auth_log_in">Kirjaudu sisään</string>
+	<string name="auth_log_in_title">Kirjaudu Sisään</string>
+	<string name="auth_new_password">Uusi Salasana</string>
+	<string name="auth_password">Salasana</string>
+	<string name="auth_phone_number">Puhelinnumero</string>
+	<string name="auth_phone_number_optional">Puhelinnumero (valinnainen)</string>
+	<string name="auth_register">Rekisteröidy</string>
+	<string name="auth_sign_in">Kirjaudu Sisään</string>
+	<string name="auth_sign_in_with_google">Kirjaudu sisään Googlella</string>
+	<string name="auth_username">Käyttäjätunnus</string>
+	<!-- Welcome Screen -->
+	<string name="welcome_create_custom_courses">Luo mukautettuja suunnistuskursseja</string>
+	<string name="welcome_description">Luo suunnistus karttoja, seuraa ajojasi ja analysoi suorituskykyäsi.</string>
+	<string name="welcome_get_started">Aloita Alusta</string>
+	<string name="welcome_save_and_share">Tallenna ja jaa karttojasi</string>
+	<string name="welcome_track_with_gps">Seuraa ajojasi GPS:llä</string>
+	<string name="welcome_welcome">Tervetuloa</string>
+	<!-- Library Screen -->
+	<string name="library_create_first_map">Luo Ensimmäinen Kartta</string>
+	<string name="library_empty_message">Luo ensimmäinen karttasi aloittaaksesi suunnistuksen</string>
+	<string name="library_empty_title">Ei vielä karttoja</string>
+	<string name="library_maps">Kartat</string>
+	<string name="library_newest_first">Uusin ensin</string>
+	<string name="library_oldest_first">Vanhin ensin</string>
+	<string name="library_search_hint">Hae karttoja...</string>
+	<string name="library_sort_title_az">Osasto (A-Z)</string>
+	<string name="library_delete_map_message">Oletko varma, että haluat poistaa \"%1$s\"?</string>
+	<!-- Map Screen -->
+	<string name="map_add_control_point">Lisää hallintapiste</string>
+	<string name="map_control_point_label">Tarkastuspiste %1$d</string>
+	<string name="map_next_control_point_label">Seuraava valvontapiste: %1$d</string>
+	<string name="map_checkpoint_name_label">Nimi</string>
+	<string name="map_checkpoint_name_optional">Kohdan nimi (valinnainen)</string>
+	<string name="map_checkpoint_prompt">Anna pisteen nimi:</string>
+	<string name="map_click_to_add_first">Klikkaa karttaa lisätäksesi ensimmäisen ohjauspisteen</string>
+	<string name="map_control_points">Tarkastuspisteet</string>
+	<string name="map_delete_all">Poista kaikki</string>
+	<string name="map_delete_all_confirm_message">Oletko varma, että haluat poistaa kaikki ohjauspisteet? Tätä toimintoa ei voi peruuttaa.</string>
+	<string name="map_delete_all_confirm_title">Poista kaikki ohjauspisteet</string>
+	<string name="map_delete_map_title">Poista Kartta</string>
+	<string name="map_detach">Detach</string>
+	<string name="map_dragging_info">Napauta karttaa siirtääksesi ohjauspisteen %1$d</string>
+	<string name="map_edit_checkpoint_name">Muokkaa tarkistuspisteen nimeä</string>
+	<string name="map_editing_map">Muokataan karttaa</string>
+	<string name="map_route_name_label">Reitin nimi</string>
+	<string name="map_save_as_new">Tallenna uutena</string>
+	<string name="map_save_as_new_map">Tallenna uudeksi kartaksi</string>
+	<string name="map_save_map">Tallenna kartta</string>
+	<string name="map_save_route">Tallenna reitti</string>
+	<string name="map_save_the_route">Tallenna reitti</string>
+	<string name="map_update_existing">Päivitä olemassa oleva kartta</string>
+	<string name="map_update_prompt">Olet muokkaamassa \"%1$s\". Mitä haluat tehdä</string>
+	<!-- Runs Screen -->
+	<string name="runs_create_first_map">Luo Ensimmäinen Kartta</string>
+	<string name="runs_delete_run_title">Poista Suoritus</string>
+	<string name="runs_delete_run_message">Oletko varma, että haluat poistaa \"%1$s\"?</string>
+	<string name="runs_empty_message">Luo ensimmäinen karttasi aloittaaksesi suunnistuksen</string>
+	<string name="runs_empty_no_runs_message">Mene karttoihin ja aloita ensimmäinen ajo</string>
+	<string name="runs_empty_no_runs_title">Ei vielä juoksuja</string>
+	<string name="runs_empty_title">Ei vielä juoksuja</string>
+	<string name="runs_go_to_maps">Siirry karttoihin</string>
+	<string name="runs_longest_distance">Pisin etäisyys</string>
+	<string name="runs_newest_first">Uusin ensin</string>
+	<string name="runs_oldest_first">Vanhin ensin</string>
+	<string name="runs_search_hint">Etsi suorituksia...</string>
+	<string name="runs_shortest_distance">Lyhin etäisyys</string>
+	<string name="runs_sort_title_az">Osasto (A-Z)</string>
+	<string name="runs_start_run">Aloita Suoritus</string>
+	<string name="runs_uncompleted">Keskeneräinen</string>
+	<string name="runs_distance_label">Etäisyys: %1$s</string>
+	<string name="runs_duration_label">Kesto: %1$s</string>
+	<!-- Run -->
+	<string name="run_checkpoints_format">0/0 tarkastuspistettä</string>
+	<string name="run_completed">Suoritettu</string>
+	<string name="run_distance_label">Etäisyys</string>
+	<string name="run_duration_label">Kesto</string>
+	<string name="run_format_km">%.2f km</string>
+	<string name="run_format_m">%.0f m</string>
+	<string name="run_in_progress">Suorita käynnissä</string>
+	<string name="run_name_label">Suorita nimi</string>
+	<string name="run_pace_label">Tahti</string>
+	<string name="run_points_label">Pisteet</string>
+	<string name="run_starting">Aloitetaan ajamista...</string>
+	<string name="run_stop_confirm_message">Oletko varma, että haluat pysäyttää tämän ajon? Edistyksesi tallennetaan</string>
+	<string name="run_stop_confirm_title">Pysäytä Suoritus</string>
+	<string name="run_stopped">Suorita Pysäytetty</string>
+	<string name="run_time_label">Aika</string>
+	<string name="run_time_with_duration">Aika: %1$s</string>
+	<string name="run_unknown_map">Tuntematon</string>
+	<string name="run_title_label">%1$s</string>
+	<string name="run_details_abandoned">Hylätty</string>
+	<string name="run_details_completed">Valmis</string>
+	<string name="run_details_cp_count">%1$d CP</string>
+	<string name="run_details_dist_label">Levy</string>
+	<string name="run_details_finish">Valmis</string>
+	<string name="run_details_in_progress">Käynnissä</string>
+	<string name="run_details_interval_label">Aikaväli</string>
+	<string name="run_details_map_format">Kartta: %1$s</string>
+	<string name="run_details_no_control_points">Ei tarkastuspisteitä vieraillut</string>
+	<string name="run_details_pace_label">Tahti</string>
+	<string name="run_details_splits">Jakaa</string>
+	<string name="run_details_start">Aloita</string>
+	<string name="run_details_title">Suorita Yksityiskohdat</string>
+	<string name="run_details_total_dist_label">Levy Yhteensä</string>
+	<string name="run_details_total_label">Yhteensä</string>
+	<!-- Settings Screen -->
+	<string name="settings_about_app">Tietoja sovelluksesta</string>
+	<string name="settings_account">Tili</string>
+	<string name="settings_advanced">Lisäasetukset</string>
+	<string name="settings_appearance">Ulkoasu</string>
+	<string name="settings_gps">GPS</string>
+	<string name="settings_authors">Tekijät</string>
+	<string name="settings_authors_names">Jakub Westa &amp; Dawid Pilarski</string>
+	<string name="settings_change_password">Vaihda Salasana</string>
+	<string name="settings_change_password_description">Syötä nykyinen salasana ja valitse uusi salasana</string>
+	<string name="settings_language">Kieli</string>
+	<string name="settings_contrast_level">Kontrastitaso</string>
+	<string name="settings_contrast_high">Korkea</string>
+	<string name="settings_contrast_low">Matala</string>
+	<string name="settings_contrast_medium">Keskitaso</string>
+	<string name="settings_control_points">Ohjauspisteet</string>
+	<string name="settings_dark_mode">Tumma Tila</string>
+	<string name="settings_detection_radius">Havaitsemisen Säde</string>
+	<string name="settings_edit_profile">Muokkaa Profiilia</string>
+	<string name="settings_edit_profile_description">Päivitä profiilisi tiedot</string>
+	<string name="settings_guest_mode_message">Käytät sovellusta vieraana. Kirjaudu sisään synkronoidaksesi datasi eri laitteiden välillä ja pääset käyttämään pilviominaisuuksia</string>
+	<string name="settings_guest_mode_title">Vieras Tila</string>
+	<string name="settings_license">Lisenssi</string>
+	<string name="settings_license_name">Elastinen Lisenssi 2.0</string>
+	<string name="settings_location_during_run">Näytä sijainti ajon aikana</string>
+	<string name="settings_logout">Kirjaudu Ulos</string>
+	<string name="settings_logout_confirm_message">Oletko varma, että haluat kirjautua ulos</string>
+	<string name="settings_logout_confirm_title">Kirjaudu Ulos</string>
+	<string name="settings_map_zoom">Kartan Suurennus</string>
+	<string name="settings_privacy_policy">Yksityisyyden Suoja</string>
+	<string name="settings_save_changes">Tallenna Muutokset</string>
+	<string name="settings_sound">Ääni</string>
+	<string name="settings_sync_action">Synkronointi</string>
+	<string name="settings_sync_data">Synkronoi tiedot palvelimen kanssa</string>
+	<string name="settings_sync_dialog_message_1">Oletko varma, että haluat synkronoida tiedot palvelimen kanssa</string>
+	<string name="settings_sync_dialog_message_2">Tämä voi poistaa paikalliset, synkronoimattomat tiedot</string>
+	<string name="settings_sync_dialog_message_3">Tee tämä vain, jos kirjaudut sisään uudella laitteella</string>
+	<string name="settings_sync_dialog_title">Synkronoi tiedot</string>
+	<string name="settings_sync_success">Tiedot synkronoitu onnistuneesti</string>
+	<string name="settings_title">Asetukset</string>
+	<string name="settings_vibration">Värinä</string>
+	<!-- Errors -->
+	<string name="error_sync_error">Virhe synkronoinnissa</string>
+	<string name="error_sync_failed">Synkronointi epäonnistui</string>
+	<string name="error_location_permission_required">Oikeus sijaintiin vaaditaan</string>
+	<string name="error_location_services_disabled">Sijaintipalvelut pois käytöstä</string>
+	<string name="error_map_not_found">Karttaa ei löydy</string>
+	<string name="error_no_control_points_to_run">Ei suoritettavia ohjauspisteitä</string>
+	<string name="error_no_map_to_update">Ei karttaa päivitettäväksi</string>
+	<string name="error_failed_to_change_password">Salasanan vaihtaminen epäonnistui</string>
+	<string name="error_failed_to_load_user">Käyttäjän lataaminen epäonnistui</string>
+	<string name="error_failed_to_update_profile">Profiilin päivitys epäonnistui</string>
+	<string name="error_google_login_failed">Googlen kirjautuminen epäonnistui</string>
+	<string name="error_guest_login_failed">Vieraan kirjautuminen epäonnistui</string>
+	<string name="error_login_failed">Kirjautuminen epäonnistui</string>
+	<string name="error_password_change_not_available_guest">Salasanan vaihto ei ole käytettävissä vierastilassa</string>
+	<string name="error_password_min_length">Salasanan on oltava vähintään 6 merkkiä</string>
+	<string name="error_passwords_do_not_match">Salasanat eivät täsmää</string>
+	<string name="error_please_enter_current_password">Syötä nykyinen salasanasi</string>
+	<string name="error_please_enter_new_password">Anna uusi salasana</string>
+	<string name="error_profile_editing_not_available_guest">Profiilin muokkaus ei ole käytettävissä vierastilassa</string>
+	<string name="error_registration_failed">Rekisteröinti epäonnistui</string>
+	<string name="error_unknown">Tuntematon virhe</string>
+	<!-- Plurals -->
+	<plurals name="checkpoint_count">
+		<item quantity="one">%1$d tarkistuspiste</item>
+		<item quantity="other">%1$d tarkistuspistettä</item>
+	</plurals>
+	<plurals name="control_point_count">
+		<item quantity="one">%1$d tarkastuspiste</item>
+		<item quantity="other">%1$d tarkastuspistettä</item>
+	</plurals>
+	<plurals name="map_count">
+		<item quantity="one">%1$d kartta</item>
+		<item quantity="other">%1$d karttaa</item>
+	</plurals>
+	<plurals name="run_count">
+		<item quantity="one">%1$d ajaa</item>
+		<item quantity="other">%1$d ajaa</item>
+	</plurals>
+	<plurals name="point_count">
+		<item quantity="one">%1$d piste</item>
+		<item quantity="other">%1$d pistettä</item>
+	</plurals>
+	<plurals name="item_count">
+		<item quantity="one">%1$d kohde</item>
+		<item quantity="other">%1$d kohdetta</item>
+	</plurals>
+	<plurals name="checkpoint_progress">
+		<item quantity="one">%1$d/%2$d tarkistuspiste</item>
+		<item quantity="other">%1$d/%2$d tarkistuspistettä</item>
+	</plurals>
+	<plurals name="notification_checkpoint_progress">
+		<item quantity="one">%1$d tarkastuspiste • %2$s</item>
+		<item quantity="other">%1$d tarkistuspistettä • %2$s</item>
+	</plurals>
+	<plurals name="gps_accuracy_value">
+		<item quantity="one">%1$d metriä</item>
+		<item quantity="other">%1$d metriä</item>
+	</plurals>
+</resources>

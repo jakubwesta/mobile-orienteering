@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- App -->
+	<string name="app_name">Orientación móvil</string>
+	<string name="app_version">Versión %1$s (%2$d)</string>
+	<!-- Actions -->
+	<string name="action_add">Añadir</string>
+	<string name="action_back">Atrás</string>
+	<string name="action_cancel">Cancelar</string>
+	<string name="action_close">Cerrar</string>
+	<string name="action_continue">Continuar</string>
+	<string name="action_delete">Eliminar</string>
+	<string name="action_discard">Descartar</string>
+	<string name="action_edit">Editar</string>
+	<string name="action_save">Guardar</string>
+	<!-- Navigation -->
+	<string name="nav_library">Biblioteca</string>
+	<string name="nav_map">Mapa</string>
+	<string name="nav_runs">Ejecutar</string>
+	<string name="nav_settings">Ajustes</string>
+	<!-- Permissions -->
+	<string name="permission_grant">Otorgar permiso</string>
+	<string name="permission_location_disabled_message">Los servicios de ubicación están desactivados. Te gustaría activarlos en la configuración</string>
+	<string name="permission_location_disabled_title">Servicios de ubicación desactivados</string>
+	<string name="permission_location_required_message">El acceso preciso a la ubicación es esencial para seguir tu posición durante las ejecuciones y detectar cuando llegas a puntos de control. Sin él, la aplicación no puede funcionar</string>
+	<string name="permission_location_required_settings">Se requiere permiso de ubicación para que esta aplicación funcione. Actívalo en Ajustes bajo Permisos &gt; Ubicación</string>
+	<string name="permission_location_required_title">Permiso de ubicación requerido</string>
+	<string name="permission_open_settings">Abrir ajustes</string>
+	<!-- Accessibility -->
+	<string name="accessibility_close_search">Cerrar búsqueda</string>
+	<string name="accessibility_collapse">Colapso</string>
+	<string name="accessibility_disable_location">Desactivar seguimiento de ubicación</string>
+	<string name="accessibility_edit_name">Editar nombre</string>
+	<string name="accessibility_enable_location">Habilitar seguimiento de ubicación</string>
+	<string name="accessibility_expand">Expandir</string>
+	<string name="accessibility_hide_password">Ocultar contraseña</string>
+	<string name="accessibility_more_options">Más opciones</string>
+	<string name="accessibility_move_down">Bajar</string>
+	<string name="accessibility_move_up">Subir</string>
+	<string name="accessibility_navigate">Navigate</string>
+	<string name="accessibility_play">Jugar</string>
+	<string name="accessibility_search">Buscar</string>
+	<string name="accessibility_select">Seleccionar</string>
+	<string name="accessibility_show_password">Mostrar contraseña</string>
+	<string name="accessibility_sort">Ordenar</string>
+	<string name="accessibility_stop">Parar</string>
+	<!-- Notifications -->
+	<string name="notification_run_tracking_title">Ejecutar seguimiento</string>
+	<string name="notification_run_tracking_description">Progreso de ejecución de series</string>
+	<string name="notification_run_in_progress">Ejecución en progreso • %1$s</string>
+	<!-- Misc -->
+	<string name="misc_cloud_features_disabled">Características de la nube desactivadas. Por favor continúe como invitado</string>
+	<string name="misc_video_unavailable">Video no disponible</string>
+	<string name="misc_or">O</string>
+	<!-- Auth Screen -->
+	<string name="auth_account_created">¡Cuenta creada con éxito!</string>
+	<string name="auth_already_have_account">¿Ya tienes una cuenta?</string>
+	<string name="auth_change_password">Cambiar contraseña</string>
+	<string name="auth_confirm_new_password">Confirmar nueva contraseña</string>
+	<string name="auth_continue_as_guest">Continuar como invitado</string>
+	<string name="auth_create_account">Crear cuenta</string>
+	<string name="auth_current_password">Contraseña actual</string>
+	<string name="auth_dont_have_account">¿No tienes una cuenta?</string>
+	<string name="auth_email">E-mail</string>
+	<string name="auth_full_name">Nombre completo</string>
+	<string name="auth_full_name_optional">Nombre completo (opcional)</string>
+	<string name="auth_google_logo_desc">Logo de Google</string>
+	<string name="auth_google_sign_in_canceled">Se ha cancelado o fallado el inicio de sesión de Google</string>
+	<string name="auth_google_sign_in_failed">Error al iniciar el inicio de sesión de Google</string>
+	<string name="auth_guest">Invitado</string>
+	<string name="auth_log_in">Iniciar sesión</string>
+	<string name="auth_log_in_title">Iniciar sesión</string>
+	<string name="auth_new_password">Nueva contraseña</string>
+	<string name="auth_password">Contraseña</string>
+	<string name="auth_phone_number">Número de teléfono</string>
+	<string name="auth_phone_number_optional">Número de teléfono (opcional)</string>
+	<string name="auth_register">Registrarse</string>
+	<string name="auth_sign_in">Iniciar sesión</string>
+	<string name="auth_sign_in_with_google">Iniciar sesión con Google</string>
+	<string name="auth_username">Usuario</string>
+	<!-- Welcome Screen -->
+	<string name="welcome_create_custom_courses">Crear cursos de orientación personalizados</string>
+	<string name="welcome_description">Crea mapas de orientación, rastrea tus ejecuciones y analiza tu rendimiento.</string>
+	<string name="welcome_get_started">Empezar</string>
+	<string name="welcome_save_and_share">Guarda y comparte tus mapas</string>
+	<string name="welcome_track_with_gps">Rastrea tus carreras con GPS</string>
+	<string name="welcome_welcome">Bienvenido a</string>
+	<!-- Library Screen -->
+	<string name="library_create_first_map">Crear Primer Mapa</string>
+	<string name="library_empty_message">Crea tu primer mapa para empezar a orientarte</string>
+	<string name="library_empty_title">Aún no hay mapas</string>
+	<string name="library_maps">Mapas</string>
+	<string name="library_newest_first">Más nuevo primero</string>
+	<string name="library_oldest_first">Lo más antiguo primero</string>
+	<string name="library_search_hint">Buscar mapas...</string>
+	<string name="library_sort_title_az">Título (A-Z)</string>
+	<string name="library_delete_map_message">¿Está seguro que desea eliminar \"%1$s\"?</string>
+	<!-- Map Screen -->
+	<string name="map_add_control_point">Añadir punto de control</string>
+	<string name="map_control_point_label">Punto de control %1$d</string>
+	<string name="map_next_control_point_label">Próximo punto de control: %1$d</string>
+	<string name="map_checkpoint_name_label">Nombre</string>
+	<string name="map_checkpoint_name_optional">Nombre del punto (opcional)</string>
+	<string name="map_checkpoint_prompt">Introduzca el nombre del punto:</string>
+	<string name="map_click_to_add_first">Haga clic en el mapa para añadir su primer punto de control</string>
+	<string name="map_control_points">Puntos de control</string>
+	<string name="map_delete_all">Borrar todo</string>
+	<string name="map_delete_all_confirm_message">¿Está seguro que desea eliminar todos los puntos de control? Esta acción no se puede deshacer.</string>
+	<string name="map_delete_all_confirm_title">Borrar todos los puntos de control</string>
+	<string name="map_delete_map_title">Eliminar mapa</string>
+	<string name="map_detach">Detach</string>
+	<string name="map_dragging_info">Pulsa sobre el mapa para mover el punto de control %1$d</string>
+	<string name="map_edit_checkpoint_name">Editar nombre del checkpoint</string>
+	<string name="map_editing_map">Editando mapa</string>
+	<string name="map_route_name_label">Nombre de la ruta</string>
+	<string name="map_save_as_new">Guardar como nuevo</string>
+	<string name="map_save_as_new_map">Guardar como nuevo mapa</string>
+	<string name="map_save_map">Guardar mapa</string>
+	<string name="map_save_route">Guardar ruta</string>
+	<string name="map_save_the_route">Guardar la ruta</string>
+	<string name="map_update_existing">Actualizar mapa existente</string>
+	<string name="map_update_prompt">Estás editando \"%1$s\". Qué te gustaría hacer</string>
+	<!-- Runs Screen -->
+	<string name="runs_create_first_map">Crear Primer Mapa</string>
+	<string name="runs_delete_run_title">Eliminar Ejecutar</string>
+	<string name="runs_delete_run_message">¿Está seguro que desea eliminar \"%1$s\"?</string>
+	<string name="runs_empty_message">Crea tu primer mapa para empezar a orientarte</string>
+	<string name="runs_empty_no_runs_message">Ve a tus mapas y empieza tu primera ejecución</string>
+	<string name="runs_empty_no_runs_title">Aún no hay ejecuciones</string>
+	<string name="runs_empty_title">Aún no hay ejecuciones</string>
+	<string name="runs_go_to_maps">Ir a Mapas</string>
+	<string name="runs_longest_distance">Distancia más larga</string>
+	<string name="runs_newest_first">Más nuevo primero</string>
+	<string name="runs_oldest_first">Lo más antiguo primero</string>
+	<string name="runs_search_hint">Buscar ejecuciones...</string>
+	<string name="runs_shortest_distance">Distancia más corta</string>
+	<string name="runs_sort_title_az">Título (A-Z)</string>
+	<string name="runs_start_run">Iniciar ejecución</string>
+	<string name="runs_uncompleted">Sin completar</string>
+	<string name="runs_distance_label">Distancia: %1$s</string>
+	<string name="runs_duration_label">Duración: %1$s</string>
+	<!-- Run -->
+	<string name="run_checkpoints_format">Puntos de control 0/0</string>
+	<string name="run_completed">Ejecutar completado</string>
+	<string name="run_distance_label">Distancia</string>
+	<string name="run_duration_label">Duración</string>
+	<string name="run_format_km">%.2f km</string>
+	<string name="run_format_m">%.0f min</string>
+	<string name="run_in_progress">Ejecutar en progreso</string>
+	<string name="run_name_label">Nombre de ejecución</string>
+	<string name="run_pace_label">Ritmo</string>
+	<string name="run_points_label">Puntos</string>
+	<string name="run_starting">Iniciando ejecución...</string>
+	<string name="run_stop_confirm_message">¿Está seguro de que desea detener esta ejecución? Su progreso se guardará</string>
+	<string name="run_stop_confirm_title">Detener ejecución</string>
+	<string name="run_stopped">Ejecutar detenido</string>
+	<string name="run_time_label">Hora</string>
+	<string name="run_time_with_duration">Época: %1$s</string>
+	<string name="run_unknown_map">Desconocido</string>
+	<string name="run_title_label">Ejecutar: %1$s</string>
+	<string name="run_details_abandoned">Abandonado</string>
+	<string name="run_details_completed">Completado</string>
+	<string name="run_details_cp_count">CP %1$d</string>
+	<string name="run_details_dist_label">Dista</string>
+	<string name="run_details_finish">Finalizar</string>
+	<string name="run_details_in_progress">En curso</string>
+	<string name="run_details_interval_label">Intervalo</string>
+	<string name="run_details_map_format">Mapa: %1$s</string>
+	<string name="run_details_no_control_points">No hay puntos de control visitados</string>
+	<string name="run_details_pace_label">Ritmo</string>
+	<string name="run_details_splits">Destruir</string>
+	<string name="run_details_start">Comenzar</string>
+	<string name="run_details_title">Detalles de ejecución</string>
+	<string name="run_details_total_dist_label">Dist total</string>
+	<string name="run_details_total_label">Total</string>
+	<!-- Settings Screen -->
+	<string name="settings_about_app">Acerca de app</string>
+	<string name="settings_account">Cuenta</string>
+	<string name="settings_advanced">Avanzado</string>
+	<string name="settings_appearance">Apariencia</string>
+	<string name="settings_gps">GPS</string>
+	<string name="settings_authors">Autores</string>
+	<string name="settings_authors_names">Jakub Westa &amp; Dawid Pilarski</string>
+	<string name="settings_change_password">Cambiar contraseña</string>
+	<string name="settings_change_password_description">Introduzca su contraseña actual y elija una nueva</string>
+	<string name="settings_language">Idioma</string>
+	<string name="settings_contrast_level">Nivel del contrato</string>
+	<string name="settings_contrast_high">Alta</string>
+	<string name="settings_contrast_low">Baja</string>
+	<string name="settings_contrast_medium">Medio</string>
+	<string name="settings_control_points">Puntos de control</string>
+	<string name="settings_dark_mode">Modo Oscuro</string>
+	<string name="settings_detection_radius">Radio de detección</string>
+	<string name="settings_edit_profile">Editar perfil</string>
+	<string name="settings_edit_profile_description">Actualiza la información de tu perfil</string>
+	<string name="settings_guest_mode_message">Estás usando la aplicación como invitado. Inicia sesión para sincronizar tus datos entre dispositivos y acceder a funciones en la nube</string>
+	<string name="settings_guest_mode_title">Modo invitado</string>
+	<string name="settings_license">Licencia</string>
+	<string name="settings_license_name">Licencia Elástica 2.0</string>
+	<string name="settings_location_during_run">Mostrar ubicación durante la ejecución</string>
+	<string name="settings_logout">Cerrar sesión</string>
+	<string name="settings_logout_confirm_message">¿Está seguro de que desea cerrar sesión</string>
+	<string name="settings_logout_confirm_title">Cerrar sesión</string>
+	<string name="settings_map_zoom">Mapa de zoom</string>
+	<string name="settings_privacy_policy">Política de privacidad</string>
+	<string name="settings_save_changes">Guardar Cambios</string>
+	<string name="settings_sound">Sonido</string>
+	<string name="settings_sync_action">Sincronizar</string>
+	<string name="settings_sync_data">Sincronizar datos con el servidor</string>
+	<string name="settings_sync_dialog_message_1">¿Está seguro que desea sincronizar los datos con el servidor</string>
+	<string name="settings_sync_dialog_message_2">Esto puede eliminar sus datos locales y no sincronizados</string>
+	<string name="settings_sync_dialog_message_3">Hacer esto sólo si inicias sesión en un nuevo dispositivo</string>
+	<string name="settings_sync_dialog_title">Sincronizar datos</string>
+	<string name="settings_sync_success">Datos sincronizados correctamente</string>
+	<string name="settings_title">Ajustes</string>
+	<string name="settings_vibration">Vibración</string>
+	<!-- Errors -->
+	<string name="error_sync_error">Error de sincronización</string>
+	<string name="error_sync_failed">Sincronización fallida</string>
+	<string name="error_location_permission_required">Permiso de ubicación requerido</string>
+	<string name="error_location_services_disabled">Servicios de ubicación desactivados</string>
+	<string name="error_map_not_found">Mapa no encontrado</string>
+	<string name="error_no_control_points_to_run">No hay puntos de control para ejecutar</string>
+	<string name="error_no_map_to_update">No hay mapa para actualizar</string>
+	<string name="error_failed_to_change_password">Error al cambiar la contraseña</string>
+	<string name="error_failed_to_load_user">Error al cargar el usuario</string>
+	<string name="error_failed_to_update_profile">Error al actualizar el perfil</string>
+	<string name="error_google_login_failed">Error al iniciar sesión en Google</string>
+	<string name="error_guest_login_failed">Error al iniciar sesión</string>
+	<string name="error_login_failed">Error al iniciar sesión</string>
+	<string name="error_password_change_not_available_guest">El cambio de contraseña no está disponible en modo invitado</string>
+	<string name="error_password_min_length">La contraseña debe tener al menos 6 caracteres</string>
+	<string name="error_passwords_do_not_match">Las contraseñas no coinciden</string>
+	<string name="error_please_enter_current_password">Por favor, introduzca su contraseña actual</string>
+	<string name="error_please_enter_new_password">Por favor, introduzca una nueva contraseña</string>
+	<string name="error_profile_editing_not_available_guest">La edición del perfil no está disponible en modo invitado</string>
+	<string name="error_registration_failed">Error en el registro</string>
+	<string name="error_unknown">Error desconocido</string>
+	<!-- Plurals -->
+	<plurals name="checkpoint_count">
+		<item quantity="one">Punto de control %1$d</item>
+		<item quantity="other">%1$d puntos de control</item>
+	</plurals>
+	<plurals name="control_point_count">
+		<item quantity="one">Punto de control %1$d</item>
+		<item quantity="other">Puntos de control %1$d</item>
+	</plurals>
+	<plurals name="map_count">
+		<item quantity="one">Mapa %1$d</item>
+		<item quantity="other">Mapa %1$d</item>
+	</plurals>
+	<plurals name="run_count">
+		<item quantity="one">%1$d ejecución</item>
+		<item quantity="other">%1$d corre</item>
+	</plurals>
+	<plurals name="point_count">
+		<item quantity="one">%1$d punto</item>
+		<item quantity="other">%1$d puntos</item>
+	</plurals>
+	<plurals name="item_count">
+		<item quantity="one">Objeto %1$d</item>
+		<item quantity="other">%1$d elementos</item>
+	</plurals>
+	<plurals name="checkpoint_progress">
+		<item quantity="one">Punto de control %1$d/%2$d</item>
+		<item quantity="other">Puntos de control %1$d/%2$d</item>
+	</plurals>
+	<plurals name="notification_checkpoint_progress">
+		<item quantity="one">Punto de control %1$d • %2$s</item>
+		<item quantity="other">%1$d puntos de control • %2$s</item>
+	</plurals>
+	<plurals name="gps_accuracy_value">
+		<item quantity="one">%1$d metro</item>
+		<item quantity="other">%1$d metros</item>
+	</plurals>
+</resources>

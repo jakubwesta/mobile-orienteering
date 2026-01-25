@@ -32,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.data.model.domain.Activity
 import com.mobileorienteering.data.model.domain.ActivityStatus
 import com.mobileorienteering.data.model.domain.Checkpoint
@@ -61,12 +62,12 @@ fun RunDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Run Details") },
+                title = { Text(Strings.Run.detailsTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_left),
-                            contentDescription = "Back"
+                            contentDescription = Strings.Action.back
                         )
                     }
                 }
@@ -186,7 +187,7 @@ private fun RunDetailsContent(
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
                 Text(
-                    "Splits",
+                    Strings.Run.detailsSplits,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
@@ -194,7 +195,7 @@ private fun RunDetailsContent(
                 val startPoint = if (stablePathData.isNotEmpty()) {
                     val firstPath = stablePathData.minByOrNull { it.timestamp }!!
                     VisitedControlPoint(
-                        controlPointName = "Start",
+                        controlPointName = Strings.Run.detailsStart,
                         order = 0,
                         visitedAt = activity.startTime,
                         latitude = firstPath.latitude,
@@ -217,7 +218,7 @@ private fun RunDetailsContent(
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
                 Text(
-                    "No control points visited",
+                    Strings.Run.detailsNoControlPoints,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp)
@@ -251,9 +252,9 @@ private fun RunHeader(
 
             Text(
                 text = when (status) {
-                    ActivityStatus.COMPLETED -> "Completed"
-                    ActivityStatus.ABANDONED -> "Abandoned"
-                    ActivityStatus.IN_PROGRESS -> "In Progress"
+                    ActivityStatus.COMPLETED -> Strings.Run.detailsCompleted
+                    ActivityStatus.ABANDONED -> Strings.Run.detailsAbandoned
+                    ActivityStatus.IN_PROGRESS -> Strings.Run.detailsInProgress
                 },
                 style = MaterialTheme.typography.labelMedium,
                 color = when (status) {

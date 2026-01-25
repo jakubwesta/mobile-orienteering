@@ -15,10 +15,12 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.runs.components.ActivityCard
 import com.mobileorienteering.ui.core.AppScreen
 
@@ -60,7 +62,7 @@ fun RunsScreen(
                             TextField(
                                 value = searchQuery,
                                 onValueChange = { viewModel.updateSearchQuery(it) },
-                                placeholder = { Text("Search runs...") },
+                                placeholder = { Text(Strings.Runs.searchHint) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .focusRequester(focusRequester),
@@ -77,7 +79,7 @@ fun RunsScreen(
                                 )
                             )
                         } else {
-                            Text("Runs")
+                            Text(Strings.Nav.runs)
                         }
                     }
                 },
@@ -88,7 +90,7 @@ fun RunsScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_search),
-                                contentDescription = "Search"
+                                contentDescription = Strings.Accessibility.search
                             )
                         }
                     }
@@ -104,7 +106,7 @@ fun RunsScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_close),
-                                contentDescription = "Close search"
+                                contentDescription = Strings.Accessibility.closeSearch
                             )
                         }
                     } else {
@@ -112,7 +114,7 @@ fun RunsScreen(
                             IconButton(onClick = { showSortMenu = true }) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_sort),
-                                    contentDescription = "Sort"
+                                    contentDescription = Strings.Accessibility.sort
                                 )
                             }
 
@@ -121,7 +123,7 @@ fun RunsScreen(
                                 onDismissRequest = { showSortMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Newest first") },
+                                    text = { Text(Strings.Runs.newestFirst) },
                                     onClick = {
                                         viewModel.setSortOrder(SortOrder.DATE_DESC)
                                         showSortMenu = false
@@ -137,7 +139,7 @@ fun RunsScreen(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Oldest first") },
+                                    text = { Text(Strings.Runs.oldestFirst) },
                                     onClick = {
                                         viewModel.setSortOrder(SortOrder.DATE_ASC)
                                         showSortMenu = false
@@ -155,7 +157,7 @@ fun RunsScreen(
                                 HorizontalDivider()
 
                                 DropdownMenuItem(
-                                    text = { Text("Longest distance") },
+                                    text = { Text(Strings.Runs.longestDistance) },
                                     onClick = {
                                         viewModel.setSortOrder(SortOrder.DISTANCE_DESC)
                                         showSortMenu = false
@@ -171,7 +173,7 @@ fun RunsScreen(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Shortest distance") },
+                                    text = { Text(Strings.Runs.shortestDistance) },
                                     onClick = {
                                         viewModel.setSortOrder(SortOrder.DISTANCE_ASC)
                                         showSortMenu = false
@@ -189,7 +191,7 @@ fun RunsScreen(
                                 HorizontalDivider()
 
                                 DropdownMenuItem(
-                                    text = { Text("Title (A-Z)") },
+                                    text = { Text(Strings.Runs.sortTitleAz) },
                                     onClick = {
                                         viewModel.setSortOrder(SortOrder.TITLE_ASC)
                                         showSortMenu = false
@@ -243,39 +245,47 @@ fun RunsScreen(
                 ) {
                     if (maps.isEmpty()) {
                         Text(
-                            "No runs yet",
+                            Strings.Runs.emptyTitle,
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
                         )
+
                         Text(
-                            "Create your first map to start orienteering",
+                            Strings.Library.emptyMessage,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
+
                         Spacer(modifier = Modifier.height(8.dp))
+
                         Button(
                             onClick = { navController.navigate(AppScreen.Map.route) },
                             modifier = Modifier.fillMaxWidth(0.7f)
                         ) {
-                            Text("Create First Map")
+                            Text(Strings.Library.createFirstMap)
                         }
                     } else {
                         Text(
-                            "No runs yet",
+                            Strings.Runs.emptyTitle,
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
+
                         Text(
-                            "Go to your maps and start your first run",
+                            Strings.Runs.emptyMessage,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+
                         Spacer(modifier = Modifier.height(8.dp))
+
                         Button(
                             onClick = { navController.navigate(AppScreen.Library.route) },
                             modifier = Modifier.fillMaxWidth(0.7f)
                         ) {
-                            Text("Go to Maps")
+                            Text(Strings.Runs.goToMaps)
                         }
                     }
                 }

@@ -11,6 +11,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.map.MapViewModel
 import com.mobileorienteering.data.model.domain.MapState
 
@@ -30,7 +31,7 @@ fun CheckpointBottomSheetContent(
             .padding(16.dp)
     ) {
         Text(
-            "Control points",
+            Strings.Map.controlPoints,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -59,7 +60,7 @@ fun CheckpointBottomSheetContent(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_edit),
-                            contentDescription = "Edit name",
+                            contentDescription = Strings.Accessibility.editName,
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -70,7 +71,7 @@ fun CheckpointBottomSheetContent(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_up),
-                            contentDescription = "Move up"
+                            contentDescription = Strings.Accessibility.moveUp
                         )
                     }
 
@@ -80,7 +81,7 @@ fun CheckpointBottomSheetContent(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_down),
-                            contentDescription = "Move down"
+                            contentDescription = Strings.Accessibility.moveDown
                         )
                     }
 
@@ -107,7 +108,7 @@ fun CheckpointBottomSheetContent(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Editing map",
+                            Strings.Map.editingMap,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -127,7 +128,7 @@ fun CheckpointBottomSheetContent(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("Detach")
+                        Text(Strings.Map.detach)
                     }
                 }
             }
@@ -147,14 +148,14 @@ fun CheckpointBottomSheetContent(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text("Delete all")
+                    Text(Strings.Map.deleteAll)
                 }
 
                 Button(
                     onClick = onSaveRoute,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Save the route")
+                    Text(Strings.Map.saveRoute)
                 }
             }
         }
@@ -163,12 +164,12 @@ fun CheckpointBottomSheetContent(
     if (editingCheckpointId != null) {
         AlertDialog(
             onDismissRequest = { editingCheckpointId = null },
-            title = { Text("Edit checkpoint name") },
+            title = { Text(Strings.Map.editCheckpointName) },
             text = {
                 OutlinedTextField(
                     value = editingName,
                     onValueChange = { editingName = it },
-                    label = { Text("Name") },
+                    label = { Text(Strings.Map.checkpointNameLabel) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -180,12 +181,12 @@ fun CheckpointBottomSheetContent(
                         editingCheckpointId = null
                     }
                 ) {
-                    Text("Save")
+                    Text(Strings.Action.save)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { editingCheckpointId = null }) {
-                    Text("Cancel")
+                    Text(Strings.Action.cancel)
                 }
             }
         )
@@ -194,8 +195,8 @@ fun CheckpointBottomSheetContent(
     if (showDeleteAllDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteAllDialog = false },
-            title = { Text("Delete all control points") },
-            text = { Text("Are you sure you want to delete all control points? This action cannot be undone.") },
+            title = { Text(Strings.Map.deleteAllConfirmTitle) },
+            text = { Text(Strings.Map.deleteAllConfirmMessage) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -203,12 +204,12 @@ fun CheckpointBottomSheetContent(
                         showDeleteAllDialog = false
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(Strings.Action.delete, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteAllDialog = false }) {
-                    Text("Cancel")
+                    Text(Strings.Action.cancel)
                 }
             }
         )

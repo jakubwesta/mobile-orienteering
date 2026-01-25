@@ -1,7 +1,7 @@
 package com.mobileorienteering.ui.screens.map
 
+import android.content.Context
 import android.location.Location
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.domain.ActivityStatus
@@ -17,9 +17,11 @@ import com.mobileorienteering.data.model.domain.Checkpoint
 import com.mobileorienteering.data.model.domain.MapState
 import com.mobileorienteering.service.RunServiceManager
 import com.mobileorienteering.service.RunState
+import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.util.manager.LocationManager
 import com.mobileorienteering.util.manager.PermissionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -36,7 +38,8 @@ class MapViewModel @Inject constructor(
     private val mapStatePreferences: MapStatePreferences,
     private val settingsPreferences: SettingsPreferences,
     private val activityRepository: ActivityRepository,
-    private val runServiceManager: RunServiceManager
+    private val runServiceManager: RunServiceManager,
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MapState())
@@ -228,7 +231,7 @@ class MapViewModel @Inject constructor(
             activityRepository.createRunActivity(
                 userId = userId,
                 mapId = finishedRun.mapId,
-                title = title.ifBlank { "Run: ${finishedRun.mapName}" },
+                title = title.ifBlank { Strings.Formatted.runTitleLabel(context, finishedRun.mapName) },
                 startTime = finishedRun.startTime,
                 duration = finishedRun.duration,
                 distance = finishedRun.distance,
@@ -346,7 +349,10 @@ class MapViewModel @Inject constructor(
     fun addCheckpoint(longitude: Double, latitude: Double, name: String = "") {
         val checkpoint = Checkpoint(
             position = Position(longitude = longitude, latitude = latitude),
-            name = name.ifEmpty { "Control Point ${_state.value.checkpoints.size + 1}" }
+            name = name.ifEmpty { Strings.Formatted.mapControlPointLabel(
+                context,
+                _state.value.checkpoints.size + 1
+            ) }
         )
         _state.update {
             it.copy(checkpoints = it.checkpoints + checkpoint)
@@ -452,10 +458,8 @@ class MapViewModel @Inject constructor(
 
     fun updateCurrentMap(name: String, description: String = "", location: String = "") {
         val mapId = _state.value.currentMapId
-        Log.d("MapViewModel", "updateCurrentMap called, mapId=$mapId, name=$name")
 
         if (mapId == null) {
-            Log.e("MapViewModel", "No map to update - currentMapId is null")
             _state.update { it.copy(error = "No map to update") }
             return
         }
@@ -473,8 +477,6 @@ class MapViewModel @Inject constructor(
                 )
             }
 
-            Log.d("MapViewModel", "Calling mapRepository.updateMap for mapId=$mapId")
-
             val result = mapRepository.updateMap(
                 mapId = mapId,
                 userId = userId,
@@ -485,7 +487,6 @@ class MapViewModel @Inject constructor(
             )
 
             result.onSuccess {
-                Log.d("MapViewModel", "Update successful")
                 _state.update {
                     it.copy(
                         currentMapName = name,
@@ -493,10 +494,7 @@ class MapViewModel @Inject constructor(
                     )
                 }
                 saveCurrentMapInfo()
-            }.onFailure { e ->
-                Log.e("MapViewModel", "Update failed: ${e.message}")
-                _state.update { it.copy(error = "Update error: ${e.message}") }
-            }
+            }.onFailure { e -> _state.update { it.copy(error = "Update error: ${e.message}") } }
         }
     }
 
@@ -511,7 +509,10 @@ class MapViewModel @Inject constructor(
             val checkpoints = map.controlPoints.mapIndexed { index, cp ->
                 Checkpoint(
                     position = Position(cp.longitude, cp.latitude),
-                    name = cp.name.ifEmpty { "Point ${index + 1}" }
+                    name = cp.name.ifEmpty {Strings.Formatted.mapControlPointLabel(
+                        context,
+                        index + 1
+                    ) }
                 )
             }
 
