@@ -5,10 +5,22 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from jose import JWTError
 
 from app.core.config import config
 from app.core.router import api_router
 from app.core.db import db_lifespan_context
+from app.core.exceptions import AppException
+from app.core.error_handlers import (
+  app_exception_handler,
+  validation_exception_handler,
+  integrity_error_handler,
+  sqlalchemy_error_handler,
+  jwt_error_handler,
+  generic_exception_handler,
+)
 
 logging.basicConfig(
   level=logging.INFO,
@@ -43,6 +55,13 @@ app = FastAPI(
   debug=True
 )
 
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(IntegrityError, integrity_error_handler)
+app.add_exception_handler(SQLAlchemyError, sqlalchemy_error_handler)
+app.add_exception_handler(JWTError, jwt_error_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
+
 app.add_middleware(
   CORSMiddleware,
   allow_origins=[
@@ -50,22 +69,21 @@ app.add_middleware(
     "https://www.mobileorienteering.com"
   ],
   allow_credentials=True,
-  allow_methods=["*"],
-  allow_headers=["*"],
+  allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allow_headers=["Authorization", "Content-Type"],
 )
+
 
 @app.get("/")
 async def root():
   return {
     "message": "Mobile Orienteering Backend",
     "version": config.VERSION,
-    "docs": "/docs",
     "health": f"{config.API_PREFIX}/health"
   }
 
-app.include_router(api_router, prefix=config.API_PREFIX)
 
-logger.info(f"Mobile Orienteering Backend configured.")
+app.include_router(api_router, prefix=config.API_PREFIX)
 
 
 def main():

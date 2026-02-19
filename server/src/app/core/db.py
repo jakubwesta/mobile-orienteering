@@ -125,8 +125,10 @@ class DatabaseManager:
     logger.info("Database tables created successfully")
 
 
-# from app.modules.user.models import * 
-# etc.
+from app.modules.user.models import User
+from app.modules.auth.models import UserIdentity, RefreshToken
+from app.modules.map.models import Map, ControlPoint
+from app.modules.run.models import Run, RunSettings, PathPoint
 
 db_manager = DatabaseManager()
 
