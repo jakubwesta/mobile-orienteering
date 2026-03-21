@@ -21,7 +21,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import android.location.LocationManager as AndroidLocationManager
 
-
 data class LocationUpdate(
     val raw: Location,
     val filtered: Location
@@ -47,12 +46,12 @@ class LocationManager @Inject constructor(
 
     fun isLocationEnabled(): Boolean {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE)
-                as android.location.LocationManager
+                as AndroidLocationManager
         val isGpsEnabled = locationManager.isProviderEnabled(
-            android.location.LocationManager.GPS_PROVIDER
+            AndroidLocationManager.GPS_PROVIDER
         )
         val isNetworkEnabled = locationManager.isProviderEnabled(
-            android.location.LocationManager.NETWORK_PROVIDER
+            AndroidLocationManager.NETWORK_PROVIDER
         )
         return isGpsEnabled || isNetworkEnabled
     }

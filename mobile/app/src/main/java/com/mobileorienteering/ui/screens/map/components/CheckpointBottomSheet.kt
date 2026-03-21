@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.map.MapViewModel
-import com.mobileorienteering.data.model.domain.MapState
+import com.mobileorienteering.data.model.app.MapState
 
 @Composable
 fun CheckpointBottomSheetContent(

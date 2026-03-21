@@ -35,12 +35,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.core.Strings
-import com.mobileorienteering.data.model.domain.OrienteeringMap
+import com.mobileorienteering.data.model.domain.Map
 import com.mobileorienteering.util.formatDate
 
 @Composable
 fun MapCard(
-    map: OrienteeringMap,
+    map: Map,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onStartRun: () -> Unit
@@ -76,14 +76,6 @@ fun MapCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-
-                    if (map.location.isNotBlank()) {
-                        Text(
-                            map.location,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
 
                     Text(
                         formatDate(map.createdAt),

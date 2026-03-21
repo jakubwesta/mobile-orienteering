@@ -1,16 +1,11 @@
 package com.mobileorienteering.data.model.network.response
 
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class AuthResponse(
-    val token: String,
-    val username: String,
-    val refreshToken: String
-)
-
-@JsonClass(generateAdapter = true)
-data class RefreshTokenResponse(
-    val accessToken: String,
-    val refreshToken: String
+data class TokenResponse(
+    @param:Json(name = "access_token") val accessToken: String,
+    @param:Json(name = "refresh_token") val refreshToken: String,
+    @param:Json(name = "token_type") val tokenType: String
 )

@@ -1,5 +1,6 @@
 package com.mobileorienteering.data.model.network.request
 
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
@@ -11,19 +12,18 @@ data class LoginRequest(
 @JsonClass(generateAdapter = true)
 data class RegisterRequest(
     val username: String,
-    val fullName: String?,
     val email: String,
-    val phoneNumber: String?,
     val password: String,
-    @field:com.squareup.moshi.Json(name = "private") val private: Boolean = false
-)
-
-@JsonClass(generateAdapter = true)
-data class RefreshTokenRequest(
-    val refreshToken: String
+    @param:Json(name = "full_name") val fullName: String? = null,
+    @param:Json(name = "phone_number") val phoneNumber: String? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class GoogleLoginRequest(
-    val idToken: String
+    @param:Json(name = "id_token") val idToken: String
+)
+
+@JsonClass(generateAdapter = true)
+data class RefreshTokenRequest(
+    @param:Json(name = "refresh_token") val refreshToken: String
 )

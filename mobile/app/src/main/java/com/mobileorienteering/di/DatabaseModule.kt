@@ -5,8 +5,11 @@ import androidx.room.Room
 import com.mobileorienteering.BuildConfig
 import com.mobileorienteering.data.local.AppDatabase
 import com.mobileorienteering.data.local.addAllMigrations
-import com.mobileorienteering.data.local.dao.ActivityDao
+import com.mobileorienteering.data.local.dao.ControlPointDao
+import com.mobileorienteering.data.local.dao.RunDao
 import com.mobileorienteering.data.local.dao.MapDao
+import com.mobileorienteering.data.local.dao.PathPointDao
+import com.mobileorienteering.data.local.dao.RunSettingsDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,13 +42,31 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideActivityDao(database: AppDatabase): ActivityDao {
-        return database.activityDao()
+    fun provideMapDao(database: AppDatabase): MapDao {
+        return database.mapDao()
     }
 
     @Provides
     @Singleton
-    fun provideMapDao(database: AppDatabase): MapDao {
-        return database.mapDao()
+    fun provideControlPointDao(database: AppDatabase): ControlPointDao {
+        return database.controlPointDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRunDao(database: AppDatabase): RunDao {
+        return database.runDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRunSettingsDao(database: AppDatabase): RunSettingsDao {
+        return database.runSettingsDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePathPointDao(database: AppDatabase): PathPointDao {
+        return database.pathPointDao()
     }
 }

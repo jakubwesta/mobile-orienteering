@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.data.model.domain.PathPoint
-import com.mobileorienteering.data.model.domain.Checkpoint
+import com.mobileorienteering.data.model.app.Checkpoint
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const

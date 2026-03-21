@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete as sql_delete
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -48,6 +48,15 @@ async def authenticate_user(db: AsyncSession, username: str, password: str) -> U
 
 
 async def create_tokens_for_user(db: AsyncSession, user_id: int) -> tuple[str, str]:
+  await db.execute(
+    sql_delete(RefreshToken)
+    .where(RefreshToken.user_id == user_id)
+    .where(
+      (RefreshToken.revoked_at.isnot(None)) |
+      (RefreshToken.expires_at <= datetime.now(timezone.utc))
+    )
+  )
+  
   access_token = create_access_token(user_id)
   refresh_token_str = create_refresh_token(user_id)
   
@@ -63,34 +72,37 @@ async def create_tokens_for_user(db: AsyncSession, user_id: int) -> tuple[str, s
   return access_token, refresh_token_str
 
 
-async def refresh_access_token(db: AsyncSession, refresh_token_str: str) -> str:
+async def refresh_access_token(db: AsyncSession, refresh_token_str: str) -> tuple[str, str]:
   from app.core.security import get_user_id_from_token
-  
+
   try:
     user_id = get_user_id_from_token(refresh_token_str)
   except Exception:
     raise UnauthorizedException("Invalid refresh token")
-  
+
   result = await db.execute(
     select(RefreshToken)
     .where(RefreshToken.user_id == user_id)
     .where(RefreshToken.revoked_at.is_(None))
     .where(RefreshToken.expires_at > datetime.now(timezone.utc))
   )
-  
+
   stored_tokens = result.scalars().all()
-  
+
   valid_token = None
   for token in stored_tokens:
     if verify_password(refresh_token_str, token.token_hash):
       valid_token = token
       break
-  
+
   if not valid_token:
     raise UnauthorizedException("Invalid or expired refresh token")
-  
-  access_token = create_access_token(user_id)
-  return access_token
+
+  valid_token.revoked_at = datetime.now(timezone.utc)
+
+  access_token, new_refresh_token = await create_tokens_for_user(db, user_id)
+
+  return access_token, new_refresh_token
 
 
 async def get_or_create_user_by_google(db: AsyncSession, google_sub: str, email: str, name: Optional[str]) -> User:

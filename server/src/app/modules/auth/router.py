@@ -19,6 +19,7 @@ from app.modules.auth.crud import (
   get_or_create_user_by_google
 )
 from app.core.exceptions import UnauthorizedException
+from app.core.config import config
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -60,7 +61,7 @@ async def login_google(
     idinfo = id_token.verify_oauth2_token(
       data.id_token,
       requests.Request(),
-      None
+      config.GOOGLE_CLIENT_ID
     )
     
     google_sub = idinfo.get("sub")
@@ -86,9 +87,9 @@ async def refresh(
   data: RefreshRequest,
   db: AsyncSession = Depends(get_db)
 ):
-  access_token = await refresh_access_token(db, data.refresh_token)
+  access_token, refresh_token = await refresh_access_token(db, data.refresh_token)
   
   return TokenResponse(
     access_token=access_token,
-    refresh_token=data.refresh_token
+    refresh_token=refresh_token
   )

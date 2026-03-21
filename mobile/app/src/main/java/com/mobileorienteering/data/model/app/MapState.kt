@@ -1,7 +1,8 @@
-package com.mobileorienteering.data.model.domain
+package com.mobileorienteering.data.model.app
 
 import android.location.Location
 import org.maplibre.spatialk.geojson.Position
+import java.util.UUID
 
 data class MapState(
     val currentLocation: Location? = null,
@@ -15,12 +16,11 @@ data class MapState(
 )
 
 data class Checkpoint(
-    val id: String = java.util.UUID.randomUUID().toString(),
+    val id: String = UUID.randomUUID().toString(),
     val position: Position,
     val name: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )
-
 
 data class SavedMapState(
     val checkpoints: List<Checkpoint> = emptyList(),
@@ -28,7 +28,6 @@ data class SavedMapState(
     val currentMapName: String? = null,
     val isTracking: Boolean = false
 )
-
 
 data class CheckpointDto(
     val id: String,

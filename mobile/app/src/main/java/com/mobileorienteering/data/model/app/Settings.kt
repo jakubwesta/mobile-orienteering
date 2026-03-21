@@ -1,4 +1,4 @@
-package com.mobileorienteering.data.model.domain
+package com.mobileorienteering.data.model.app
 
 import com.mobileorienteering.ui.theme.ContrastLevel as ThemeLevel
 

@@ -49,28 +49,43 @@ async def create_map_snapshot(db: AsyncSession, original_map_id: int, user_id: i
 
 async def create_run(db: AsyncSession, user_id: int, data: RunCreate) -> Run:
   snapshot = await create_map_snapshot(db, data.map_id, user_id)
-  
-  run_settings = RunSettings(detection_radius=data.detection_radius)
-  db.add(run_settings)
-  await db.flush()
-  
+
   run = Run(
     user_id=user_id,
     map_id=snapshot.id,
-    run_settings_id=run_settings.id,
     name=data.name,
-    started_at=data.started_at
+    started_at=data.started_at,
+    finished_at=data.finished_at
   )
-  
+
   db.add(run)
+  await db.flush()
+
+  run_settings = RunSettings(
+    run_id=run.id,
+    detection_radius=data.run_settings.detection_radius
+  )
+  db.add(run_settings)
+  await db.flush()
+
+  for pp in data.path_points:
+    path_point = PathPoint(
+      run_id=run.id,
+      lat=pp.lat,
+      lon=pp.lon,
+      timestamp=pp.timestamp
+    )
+    db.add(path_point)
+
   await db.commit()
   await db.refresh(run)
-  
+
   result = await db.execute(
     select(Run)
     .where(Run.id == run.id)
     .options(selectinload(Run.run_settings))
     .options(selectinload(Run.path_points))
+    .options(selectinload(Run.map).selectinload(Map.control_points))
   )
   return result.scalar_one()
 
@@ -81,6 +96,7 @@ async def get_run_by_id(db: AsyncSession, run_id: int, user_id: int) -> Run:
     .where(Run.id == run_id)
     .options(selectinload(Run.run_settings))
     .options(selectinload(Run.path_points))
+    .options(selectinload(Run.map).selectinload(Map.control_points))
   )
   run = result.scalar_one_or_none()
   
@@ -99,6 +115,7 @@ async def get_user_runs(db: AsyncSession, user_id: int) -> list[Run]:
     .where(Run.user_id == user_id)
     .options(selectinload(Run.run_settings))
     .options(selectinload(Run.path_points))
+    .options(selectinload(Run.map).selectinload(Map.control_points))
     .order_by(Run.started_at.desc())
   )
   return list(result.scalars().all())
@@ -106,6 +123,5 @@ async def get_user_runs(db: AsyncSession, user_id: int) -> list[Run]:
 
 async def delete_run(db: AsyncSession, run_id: int, user_id: int) -> None:
   run = await get_run_by_id(db, run_id, user_id)
-  
   await db.delete(run)
   await db.commit()

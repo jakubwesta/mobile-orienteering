@@ -8,13 +8,13 @@ import com.mobileorienteering.data.model.domain.ActivityStatus
 import com.mobileorienteering.data.model.domain.ControlPoint
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
-import com.mobileorienteering.data.repository.ActivityRepository
+import com.mobileorienteering.data.repository.RunRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.preferences.MapStatePreferences
 import com.mobileorienteering.data.preferences.SettingsPreferences
-import com.mobileorienteering.data.model.domain.Checkpoint
-import com.mobileorienteering.data.model.domain.MapState
+import com.mobileorienteering.data.model.app.Checkpoint
+import com.mobileorienteering.data.model.app.MapState
 import com.mobileorienteering.service.RunServiceManager
 import com.mobileorienteering.service.RunState
 import com.mobileorienteering.ui.core.Strings
@@ -37,7 +37,7 @@ class MapViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val mapStatePreferences: MapStatePreferences,
     private val settingsPreferences: SettingsPreferences,
-    private val activityRepository: ActivityRepository,
+    private val runRepository: RunRepository,
     private val runServiceManager: RunServiceManager,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -228,7 +228,7 @@ class MapViewModel @Inject constructor(
             val auth = authRepository.getCurrentAuth()
             val userId = auth?.userId ?: -1L
 
-            activityRepository.createRunActivity(
+            runRepository.createRunActivity(
                 userId = userId,
                 mapId = finishedRun.mapId,
                 title = title.ifBlank { Strings.Formatted.runTitleLabel(context, finishedRun.mapName) },

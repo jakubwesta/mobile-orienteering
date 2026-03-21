@@ -2,9 +2,9 @@ package com.mobileorienteering.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.domain.AppLanguage
-import com.mobileorienteering.data.model.domain.ContrastLevel
-import com.mobileorienteering.data.model.domain.SettingsModel
+import com.mobileorienteering.data.model.app.AppLanguage
+import com.mobileorienteering.data.model.app.ContrastLevel
+import com.mobileorienteering.data.model.app.SettingsModel
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.util.manager.FeedbackManager
 import dagger.hilt.android.lifecycle.HiltViewModel

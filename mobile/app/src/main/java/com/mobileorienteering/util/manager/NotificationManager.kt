@@ -2,14 +2,10 @@ package com.mobileorienteering.util.manager
 
 import android.app.Notification
 import android.app.NotificationChannel
-import android.app.NotificationManager as AndroidNotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import com.mobileorienteering.MainActivity
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.core.Strings
@@ -17,6 +13,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.app.NotificationManager as AndroidNotificationManager
 
 @Singleton
 class NotificationManager @Inject constructor(

@@ -23,7 +23,7 @@ import com.mobileorienteering.util.formatDuration
 import com.mobileorienteering.util.formatTime
 
 @Composable
-fun ActivityCard(
+fun RunCard(
     activity: Activity,
     mapName: String?,
     controlPointCount: Int?,

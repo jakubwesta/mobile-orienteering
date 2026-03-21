@@ -3,7 +3,6 @@ package com.mobileorienteering.ui.screens.runs
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -21,14 +20,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.core.Strings
-import com.mobileorienteering.ui.screens.runs.components.ActivityCard
+import com.mobileorienteering.ui.screens.runs.components.RunCard
 import com.mobileorienteering.ui.core.AppScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RunsScreen(
     navController: NavController,
-    viewModel: ActivityViewModel = hiltViewModel()
+    viewModel: RunViewModel = hiltViewModel()
 ) {
     val isLoading by remember { viewModel.isLoading }
     val error by remember { viewModel.error }
@@ -300,7 +299,7 @@ fun RunsScreen(
             ) {
                 items(activities, key = { it.id }) { activity ->
                     val activityMap = maps.find { it.id == activity.mapId }
-                    ActivityCard(
+                    RunCard(
                         activity = activity,
                         mapName = activityMap?.name,
                         controlPointCount = activityMap?.controlPoints?.size,

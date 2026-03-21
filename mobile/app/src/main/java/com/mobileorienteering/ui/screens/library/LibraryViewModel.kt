@@ -8,14 +8,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.mobileorienteering.data.model.domain.OrienteeringMap
+import com.mobileorienteering.data.model.domain.Map
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val mapRepository: MapRepository
 ) : ViewModel() {
 
-    private val maps: StateFlow<List<OrienteeringMap>> = mapRepository.getAllMapsFlow()
+    private val maps: StateFlow<List<Map>> = mapRepository.getAllMapsFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     var isLoading = mutableStateOf(false)
@@ -27,8 +27,8 @@ class LibraryViewModel @Inject constructor(
     var sortOrder = mutableStateOf(SortOrder.DATE_DESC)
         private set
 
-    private val _filteredMaps = MutableStateFlow<List<OrienteeringMap>>(emptyList())
-    val filteredMaps: StateFlow<List<OrienteeringMap>> = _filteredMaps.asStateFlow()
+    private val _filteredMaps = MutableStateFlow<List<Map>>(emptyList())
+    val filteredMaps: StateFlow<List<Map>> = _filteredMaps.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -43,13 +43,10 @@ class LibraryViewModel @Inject constructor(
             isLoading.value = true
             error.value = null
 
-            try {
-                mapRepository.deleteMap(mapId)
-            } catch (e: Exception) {
-                error.value = e.message ?: "Unknown error"
-            } finally {
-                isLoading.value = false
-            }
+            mapRepository.deleteMap(mapId)
+                .onFailure { error.value = it.message ?: "Failed to delete map" }
+
+            isLoading.value = false
         }
     }
 
@@ -67,7 +64,7 @@ class LibraryViewModel @Inject constructor(
         error.value = null
     }
 
-    private fun updateFilteredMaps(allMaps: List<OrienteeringMap>) {
+    private fun updateFilteredMaps(allMaps: List<Map>) {
         var filtered = allMaps
 
         val query = searchQuery.value

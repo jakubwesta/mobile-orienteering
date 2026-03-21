@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
-import com.mobileorienteering.data.model.domain.AppLanguage
+import com.mobileorienteering.data.model.app.AppLanguage
 import com.mobileorienteering.ui.core.AppScaffold
 import com.mobileorienteering.ui.screens.auth.AuthViewModel
 import com.mobileorienteering.ui.screens.settings.SettingsViewModel

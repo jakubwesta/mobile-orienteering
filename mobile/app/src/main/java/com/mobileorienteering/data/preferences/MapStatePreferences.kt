@@ -3,11 +3,11 @@ package com.mobileorienteering.data.preferences
 import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
-import com.mobileorienteering.data.model.domain.CheckpointDto
-import com.mobileorienteering.data.model.domain.SavedMapState
-import com.mobileorienteering.data.model.domain.toCheckpoint
-import com.mobileorienteering.data.model.domain.toDto
-import com.mobileorienteering.data.model.domain.Checkpoint
+import com.mobileorienteering.data.model.app.CheckpointDto
+import com.mobileorienteering.data.model.app.SavedMapState
+import com.mobileorienteering.data.model.app.toCheckpoint
+import com.mobileorienteering.data.model.app.toDto
+import com.mobileorienteering.data.model.app.Checkpoint
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory

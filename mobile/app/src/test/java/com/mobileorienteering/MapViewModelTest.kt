@@ -1,10 +1,10 @@
 package com.mobileorienteering
 
-import com.mobileorienteering.data.model.domain.SavedMapState
-import com.mobileorienteering.data.model.domain.SettingsModel
+import com.mobileorienteering.data.model.app.SavedMapState
+import com.mobileorienteering.data.model.app.SettingsModel
 import com.mobileorienteering.data.preferences.MapStatePreferences
 import com.mobileorienteering.data.preferences.SettingsPreferences
-import com.mobileorienteering.data.repository.ActivityRepository
+import com.mobileorienteering.data.repository.RunRepository
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.service.RunServiceManager
@@ -41,7 +41,7 @@ class MapViewModelTest {
     private lateinit var authRepository: AuthRepository
     private lateinit var mapStatePreferences: MapStatePreferences
     private lateinit var settingsPreferences: SettingsPreferences
-    private lateinit var activityRepository: ActivityRepository
+    private lateinit var runRepository: RunRepository
     private lateinit var runServiceManager: RunServiceManager
 
     private lateinit var viewModel: MapViewModel
@@ -56,7 +56,7 @@ class MapViewModelTest {
         authRepository = mock()
         mapStatePreferences = mock()
         settingsPreferences = mock()
-        activityRepository = mock()
+        runRepository = mock()
         runServiceManager = mock()
 
         whenever(locationManager.hasLocationPermission()).thenReturn(false)
@@ -75,7 +75,7 @@ class MapViewModelTest {
             authRepository = authRepository,
             mapStatePreferences = mapStatePreferences,
             settingsPreferences = settingsPreferences,
-            activityRepository = activityRepository,
+            runRepository = runRepository,
             runServiceManager = runServiceManager
         )
     }

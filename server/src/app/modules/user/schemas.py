@@ -15,9 +15,12 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
+  username: Optional[str] = None
+  email: Optional[EmailStr] = None
   full_name: Optional[str] = None
   phone_number: Optional[str] = None
-  email: Optional[EmailStr] = None
+  new_password: Optional[str] = None
+  old_password: Optional[str] = None
 
 
 class UserResponse(UserBase):

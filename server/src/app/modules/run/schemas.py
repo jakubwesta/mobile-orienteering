@@ -2,6 +2,8 @@ from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
+from app.modules.map.schemas import MapResponse
+
 
 class PathPointBase(BaseModel):
   lat: float
@@ -40,8 +42,10 @@ class RunBase(BaseModel):
 
 class RunCreate(RunBase):
   map_id: int
-  detection_radius: float
+  run_settings: RunSettingsCreate
   started_at: datetime
+  finished_at: Optional[datetime] = None
+  path_points: list[PathPointCreate] = []
 
 
 class RunResponse(RunBase):
@@ -49,9 +53,8 @@ class RunResponse(RunBase):
 
   id: int
   user_id: int
-  map_id: int
-  run_settings_id: int
   started_at: datetime
   finished_at: Optional[datetime] = None
   run_settings: RunSettingsResponse
   path_points: list[PathPointResponse] = []
+  map: MapResponse

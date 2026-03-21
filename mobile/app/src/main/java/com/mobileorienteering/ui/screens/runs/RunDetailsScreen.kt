@@ -35,8 +35,8 @@ import com.mobileorienteering.R
 import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.data.model.domain.Activity
 import com.mobileorienteering.data.model.domain.ActivityStatus
-import com.mobileorienteering.data.model.domain.Checkpoint
-import com.mobileorienteering.data.model.domain.OrienteeringMap
+import com.mobileorienteering.data.model.app.Checkpoint
+import com.mobileorienteering.data.model.domain.Map
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import com.mobileorienteering.ui.screens.runs.components.RunMapPreview
 import com.mobileorienteering.ui.screens.runs.components.RunStatsCard
@@ -52,7 +52,7 @@ import java.time.Instant
 fun RunDetailsScreen(
     activityId: Long,
     onNavigateBack: () -> Unit,
-    viewModel: ActivityViewModel = hiltViewModel()
+    viewModel: RunViewModel = hiltViewModel()
 ) {
     val activity by viewModel.getActivity(activityId).collectAsState(initial = null)
     val map by viewModel.getMapForActivity(activityId).collectAsState(initial = null)
@@ -102,7 +102,7 @@ fun RunDetailsScreen(
 @Composable
 private fun RunDetailsContent(
     activity: Activity,
-    map: OrienteeringMap?,
+    map: Map?,
     checkpointRadius: Int,
     modifier: Modifier = Modifier
 ) {

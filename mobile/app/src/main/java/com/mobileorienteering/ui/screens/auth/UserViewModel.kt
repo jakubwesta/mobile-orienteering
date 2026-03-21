@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.network.response.UserResponse
+import com.mobileorienteering.data.model.domain.User
 import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.UserRepository
 import com.mobileorienteering.ui.core.Strings
@@ -21,7 +21,7 @@ class UserViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    val currentUser = MutableStateFlow<UserResponse?>(null)
+    val currentUser = MutableStateFlow<User?>(null)
 
     var isLoading = mutableStateOf(false)
     var error = mutableStateOf<String?>(null)
@@ -32,28 +32,20 @@ class UserViewModel @Inject constructor(
 
     fun loadCurrentUser() {
         viewModelScope.launch {
+            val auth = authRepository.getCurrentAuth()
+            if (auth == null || auth.isGuestMode) {
+                currentUser.value = null
+                return@launch
+            }
+
             isLoading.value = true
             error.value = null
 
-            try {
-                val auth = authRepository.getCurrentAuth()
-                if (auth?.isGuestMode == true) {
-                    currentUser.value = null
-                    isLoading.value = false
-                    return@launch
-                }
+            userRepository.getCurrentUser()
+                .onSuccess { currentUser.value = it }
+                .onFailure { error.value = it.message ?: Strings.Error.failedToLoadUser(context) }
 
-                val result = userRepository.getCurrentUser()
-                result.onSuccess { user ->
-                    currentUser.value = user
-                }.onFailure { e ->
-                    error.value = e.message ?: Strings.Error.failedToLoadUser(context)
-                }
-            } catch (e: Exception) {
-                error.value = e.message ?: Strings.Error.unknown(context)
-            } finally {
-                isLoading.value = false
-            }
+            isLoading.value = false
         }
     }
 
@@ -61,82 +53,52 @@ class UserViewModel @Inject constructor(
         username: String? = null,
         fullName: String? = null,
         email: String? = null,
-        phoneNumber: String? = null,
-        isPrivate: Boolean? = null
+        phoneNumber: String? = null
     ) {
         viewModelScope.launch {
+            if (authRepository.getCurrentAuth()?.isGuestMode == true) {
+                error.value = Strings.Error.profileEditingNotAvailableGuest(context)
+                return@launch
+            }
+
             isLoading.value = true
             error.value = null
 
-            try {
-                val auth = authRepository.getCurrentAuth()
-                if (auth?.isGuestMode == true) {
-                    error.value = Strings.Error.profileEditingNotAvailableGuest(context)
-                    isLoading.value = false
-                    return@launch
+            userRepository.updateProfile(
+                username = username,
+                fullName = fullName,
+                email = email,
+                phoneNumber = phoneNumber
+            ).onSuccess { updatedUser ->
+                currentUser.value = updatedUser
+                if (username != null) {
+                    authRepository.updateUsername(username)
                 }
+            }.onFailure { error.value = it.message ?: Strings.Error.failedToUpdateProfile(context) }
 
-                val userId = auth?.userId
-                    ?: throw Exception("User not logged in")
-
-                val result = userRepository.updateProfile(
-                    userId = userId,
-                    username = username,
-                    fullName = fullName,
-                    email = email,
-                    phoneNumber = phoneNumber,
-                    isPrivate = isPrivate
-                )
-
-                result.onSuccess { updatedUser ->
-                    currentUser.value = updatedUser
-                    if (username != null) {
-                        authRepository.updateUsername(username)
-                    }
-                }.onFailure { e ->
-                    error.value = e.message ?: Strings.Error.failedToUpdateProfile(context)
-                }
-            } catch (e: Exception) {
-                error.value = e.message ?: Strings.Error.unknown(context)
-            } finally {
-                isLoading.value = false
-            }
+            isLoading.value = false
         }
     }
 
     fun changePassword(
-        currentPassword: String,
+        oldPassword: String,
         newPassword: String
     ) {
         viewModelScope.launch {
+            if (authRepository.getCurrentAuth()?.isGuestMode == true) {
+                error.value = Strings.Error.passwordChangeNotAvailableGuest(context)
+                return@launch
+            }
+
             isLoading.value = true
             error.value = null
 
-            try {
-                val auth = authRepository.getCurrentAuth()
-                if (auth?.isGuestMode == true) {
-                    error.value = Strings.Error.passwordChangeNotAvailableGuest(context)
-                    isLoading.value = false
-                    return@launch
-                }
+            userRepository.changePassword(
+                oldPassword = oldPassword,
+                newPassword = newPassword
+            ).onFailure { error.value = it.message ?: Strings.Error.failedToChangePassword(context) }
 
-                val userId = auth?.userId
-                    ?: throw Exception("User not logged in")
-
-                val result = userRepository.changePassword(
-                    userId = userId,
-                    currentPassword = currentPassword,
-                    newPassword = newPassword
-                )
-
-                result.onFailure { e ->
-                    error.value = e.message ?: Strings.Error.failedToChangePassword(context)
-                }
-            } catch (e: Exception) {
-                error.value = e.message ?: Strings.Error.unknown(context)
-            } finally {
-                isLoading.value = false
-            }
+            isLoading.value = false
         }
     }
 

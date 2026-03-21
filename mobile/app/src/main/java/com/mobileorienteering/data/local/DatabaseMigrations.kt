@@ -18,6 +18,8 @@ private val ALL_MIGRATIONS = arrayOf(
             // The Moshi JSON converter will handle the new 'name' field automatically
         }
     }
+
+    // Migration 2->3: Refactoring of whole database, destructive migration
 )
 
 // Extension function that adds all migrations to the database builder

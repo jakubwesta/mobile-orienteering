@@ -75,10 +75,7 @@ async def update_map(db: AsyncSession, map_id: int, user_id: int, data: MapUpdat
   
   map_obj.name = data.name
   map_obj.description = data.description
-  
-  await db.execute(
-    select(ControlPoint).where(ControlPoint.map_id == map_id)
-  )
+
   for cp in map_obj.control_points:
     await db.delete(cp)
   

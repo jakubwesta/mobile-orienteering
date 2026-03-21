@@ -5,7 +5,7 @@ import android.content.Intent
 import android.location.Location
 import android.os.Binder
 import android.os.IBinder
-import com.mobileorienteering.data.model.domain.Checkpoint
+import com.mobileorienteering.data.model.app.Checkpoint
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import com.mobileorienteering.data.preferences.SettingsPreferences
@@ -15,6 +15,7 @@ import com.mobileorienteering.util.manager.NotificationManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import org.maplibre.spatialk.geojson.Position
 import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
@@ -257,7 +258,7 @@ class RunTrackingService : Service() {
 
                 Checkpoint(
                     id = id,
-                    position = org.maplibre.spatialk.geojson.Position(lng, lat),
+                    position = Position(lng, lat),
                     name = name
                 )
             }

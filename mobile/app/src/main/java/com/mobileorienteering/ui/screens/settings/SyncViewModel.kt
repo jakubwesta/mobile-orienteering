@@ -3,19 +3,17 @@ package com.mobileorienteering.ui.screens.settings
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.repository.AuthRepository
-import com.mobileorienteering.util.manager.SyncManager
 import com.mobileorienteering.util.manager.ConnectivityManager
+import com.mobileorienteering.util.manager.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SyncViewModel @Inject constructor(
     private val syncManager: SyncManager,
-    private val connectivityManager: ConnectivityManager,
-    private val authRepository: AuthRepository
+    private val connectivityManager: ConnectivityManager
 ) : ViewModel() {
 
     var isLoading = mutableStateOf(false)
@@ -27,7 +25,7 @@ class SyncViewModel @Inject constructor(
             connectivityManager.isOnline
                 .filter { it }
                 .collect {
-                    syncIfLoggedIn()
+                    syncManager.syncAll()
                 }
         }
     }
@@ -38,33 +36,11 @@ class SyncViewModel @Inject constructor(
             error.value = null
             successMessage.value = null
 
-            try {
-                val userId = authRepository.getCurrentAuth()?.userId
-                    ?: throw Exception("User not logged in")
+            syncManager.syncAll()
+                .onSuccess { successMessage.value = "Data synced successfully" }
+                .onFailure { e -> error.value = e.message ?: "Sync failed" }
 
-                val result = syncManager.syncAllDataForUser(userId)
-
-                result.onSuccess {
-                    successMessage.value = "Data synced successfully"
-                }.onFailure { e ->
-                    error.value = e.message ?: "Sync failed"
-                }
-            } catch (e: Exception) {
-                error.value = e.message ?: "Sync error"
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
-    private suspend fun syncIfLoggedIn() {
-        val auth = authRepository.getCurrentAuth()
-        if (auth != null && !auth.isGuestMode) {
-            try {
-                syncManager.syncAllDataForUser(auth.userId)
-            } catch (_: Exception) {
-
-            }
+            isLoading.value = false
         }
     }
 }

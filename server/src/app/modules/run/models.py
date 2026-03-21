@@ -14,9 +14,10 @@ class RunSettings(Base):
   __tablename__ = "run_settings"
 
   id: Mapped[int] = mapped_column(primary_key=True)
+  run_id: Mapped[int] = mapped_column(ForeignKey("run.id"), nullable=False, unique=True)
   detection_radius: Mapped[float] = mapped_column(Float, nullable=False)
 
-  runs: Mapped[list["Run"]] = relationship("Run", back_populates="run_settings")
+  run: Mapped["Run"] = relationship("Run", back_populates="run_settings")
 
 
 class Run(Base):
@@ -25,14 +26,16 @@ class Run(Base):
   id: Mapped[int] = mapped_column(primary_key=True)
   user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
   map_id: Mapped[int] = mapped_column(ForeignKey("map.id"), nullable=False)
-  run_settings_id: Mapped[int] = mapped_column(ForeignKey("run_settings.id"), nullable=False)
   name: Mapped[str] = mapped_column(nullable=False)
   started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
   finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
   user: Mapped["User"] = relationship("User", back_populates="runs")
   map: Mapped["Map"] = relationship("Map", back_populates="runs")
-  run_settings: Mapped["RunSettings"] = relationship("RunSettings", back_populates="runs")
+  run_settings: Mapped["RunSettings"] = relationship(
+    "RunSettings", back_populates="run",
+    cascade="all, delete-orphan", uselist=False
+  )
   path_points: Mapped[list["PathPoint"]] = relationship("PathPoint", back_populates="run")
 
 
