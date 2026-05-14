@@ -1,6 +1,8 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, computed_field
 from datetime import datetime
 from typing import Optional
+
+from app.core.r2 import get_image_url
 
 
 class ControlPointBase(BaseModel):
@@ -43,3 +45,15 @@ class MapResponse(MapBase):
   original_map_id: Optional[int] = None
   created_at: datetime
   control_points: list[ControlPointResponse] = []
+  image_key: Optional[str] = None
+
+  @computed_field
+  @property
+  def image_url(self) -> Optional[str]:
+    return get_image_url(self.image_key)
+
+
+class MapImageUploadUrlResponse(BaseModel):
+  upload_url: str
+  object_key: str
+  expires_in: int

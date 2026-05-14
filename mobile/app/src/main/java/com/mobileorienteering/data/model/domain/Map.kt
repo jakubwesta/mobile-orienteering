@@ -10,7 +10,9 @@ data class Map(
     val controlPoints: List<ControlPoint>,
     val createdAt: Instant,
     val isSnapshot: Boolean = false,
-    val originalMapId: Long? = null
+    val originalMapId: Long? = null,
+    val imageUrl: String? = null,
+    val localImagePath: String? = null
 )
 
 data class ControlPoint(

@@ -56,8 +56,8 @@ fun RunTimeline(
             } else {
                 val prev = visitedPoints[index - 1]
                 calculateDistanceBetweenPoints(
-                    prev.latitude, prev.longitude,
-                    visitedPoint.latitude, visitedPoint.longitude
+                    prev.lat, prev.lon,
+                    visitedPoint.lat, visitedPoint.lon
                 )
             }
 
@@ -69,8 +69,8 @@ fun RunTimeline(
                     val prevCp = visitedPoints[i - 1]
                     val currCp = visitedPoints[i]
                     sum += calculateDistanceBetweenPoints(
-                        prevCp.latitude, prevCp.longitude,
-                        currCp.latitude, currCp.longitude
+                        prevCp.lat, prevCp.lon,
+                        currCp.lat, currCp.lon
                     )
                 }
                 sum

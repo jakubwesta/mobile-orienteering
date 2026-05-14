@@ -39,10 +39,10 @@ fun RunMapPreview(
 
     val initialCameraPosition = remember(pathData) {
         if (pathData.isNotEmpty()) {
-            val minLat = pathData.minOf { it.latitude }
-            val maxLat = pathData.maxOf { it.latitude }
-            val minLon = pathData.minOf { it.longitude }
-            val maxLon = pathData.maxOf { it.longitude }
+            val minLat = pathData.minOf { it.lat }
+            val maxLat = pathData.maxOf { it.lat }
+            val minLon = pathData.minOf { it.lon }
+            val maxLon = pathData.maxOf { it.lon }
 
             val centerLat = (minLat + maxLat) / 2
             val centerLon = (minLon + maxLon) / 2
@@ -75,7 +75,7 @@ fun RunMapPreview(
 
     val routeFeature = remember(pathData) {
         if (pathData.size >= 2) {
-            val positions = pathData.map { Position(it.longitude, it.latitude) }
+            val positions = pathData.map { Position(it.lon, it.lat) }
             Feature(geometry = LineString(positions), properties = null)
         } else null
     }
@@ -93,7 +93,7 @@ fun RunMapPreview(
         if (pathData.isNotEmpty()) {
             val startPoint = pathData.first()
             Feature(
-                geometry = Point(Position(startPoint.longitude, startPoint.latitude)),
+                geometry = Point(Position(startPoint.lon, startPoint.lat)),
                 properties = null
             )
         } else null
@@ -103,7 +103,7 @@ fun RunMapPreview(
         if (pathData.size > 1) {
             val endPoint = pathData.last()
             Feature(
-                geometry = Point(Position(endPoint.longitude, endPoint.latitude)),
+                geometry = Point(Position(endPoint.lon, endPoint.lat)),
                 properties = null
             )
         } else null

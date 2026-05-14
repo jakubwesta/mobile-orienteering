@@ -32,6 +32,14 @@ class Config:
   # Google OAuth
   GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
 
+  # Cloudflare R2
+  R2_ENDPOINT_URL: str = os.getenv("R2_ENDPOINT_URL", "")
+  R2_ACCESS_KEY_ID: str = os.getenv("R2_ACCESS_KEY_ID", "")
+  R2_SECRET_ACCESS_KEY: str = os.getenv("R2_SECRET_ACCESS_KEY", "")
+  R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "mobile-orienteering")
+  R2_PUBLIC_BASE_URL: str = os.getenv("R2_PUBLIC_BASE_URL", "https://mobileorienteering.com")
+  R2_PRESIGNED_UPLOAD_EXPIRE_SECONDS: int = int(os.getenv("R2_PRESIGNED_UPLOAD_EXPIRE_SECONDS", "300"))
+
 
 @lru_cache()
 def get_config() -> Config:

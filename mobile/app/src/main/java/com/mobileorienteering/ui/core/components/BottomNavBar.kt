@@ -30,7 +30,7 @@ fun BottomNavBar(navController: NavController) {
                 onClick = {
                     if (!selected) {
                         navController.navigate(screen.route) {
-                            popUpTo(AppScreen.Map.route) {
+                            popUpTo(AppScreen.Library.route) {
                                 saveState = true
                                 inclusive = false
                             }

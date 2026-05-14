@@ -13,6 +13,7 @@
 	<string name="action_discard">Discard</string>
 	<string name="action_edit">Edit</string>
 	<string name="action_save">Save</string>
+	<string name="action_view_details">View Details</string>
 
 	<!-- Navigation -->
 	<string name="nav_library">Library</string>
@@ -95,6 +96,7 @@
 
 	<!-- Library Screen -->
 	<string name="library_create_first_map">Create First Map</string>
+	<string name="library_change_image">Change image</string>
 	<string name="library_empty_message">Create your first map to start orienteering</string>
 	<string name="library_empty_title">No maps yet</string>
 	<string name="library_maps">Maps</string>
@@ -126,6 +128,7 @@
 	<string name="map_save_as_new_map">Save as new map</string>
 	<string name="map_save_map">Save map</string>
 	<string name="map_save_route">Save route</string>
+	<string name="map_saving">Saving map...</string>
 	<string name="map_save_the_route">Save the route</string>
 	<string name="map_update_existing">Update existing map</string>
 	<string name="map_update_prompt">You are editing \"%1$s\". What would you like to do</string>
@@ -214,6 +217,15 @@
 	<string name="settings_logout">Logout</string>
 	<string name="settings_logout_confirm_message">Are you sure you want to logout</string>
 	<string name="settings_logout_confirm_title">Logout</string>
+	<string name="settings_map_icon_style">Map Icon Style</string>
+	<string name="settings_map_icon_style_modern">Modern</string>
+	<string name="settings_map_icon_style_orienteering">Orienteering</string>
+	<string name="settings_map_style">Map Style</string>
+	<string name="settings_map_style_classic">Classic</string>
+	<string name="settings_map_style_satellite">Satellite</string>
+	<string name="settings_map_style_outdoor">Outdoor</string>
+	<string name="settings_map_style_orienteering">Orienteering</string>
+	<string name="settings_map_quality">Map quality</string>
 	<string name="settings_map_zoom">Map Zoom</string>
 	<string name="settings_privacy_policy">Privacy Policy</string>
 	<string name="settings_save_changes">Save Changes</string>
@@ -228,6 +240,23 @@
 	<string name="settings_title">Settings</string>
 	<string name="settings_vibration">Vibration</string>
 	<string name="settings_translations_disclaimer">Translations are automatically generated and may not be accurate! Use English if possible.</string>
+
+	<!-- Run Options Bottom Sheet -->
+	<string name="run_options_title">Run Options</string>
+	<string name="run_options_checkpoint_order">Checkpoint Order</string>
+	<string name="run_options_sequential">Sequential</string>
+	<string name="run_options_any_order">Any Order</string>
+	<string name="run_options_timer_start">Timer Start</string>
+	<string name="run_options_start_button">Start Button</string>
+	<string name="run_options_first_checkpoint">First Checkpoint</string>
+	<string name="run_options_run_style">Run Style</string>
+	<string name="run_options_classic">Classic</string>
+	<string name="run_options_azimuth">Azimuth</string>
+	<string name="run_options_orientation_type">Orientation Type</string>
+	<string name="run_options_foot">Foot</string>
+	<string name="run_options_cycling">Cycling</string>
+	<string name="run_options_initialize_course">Initialize Course</string>
+	<string name="run_options_detection_radius">Detection Radius</string>
 
 	<!-- Errors -->
 	<string name="error_sync_error">Sync error</string>

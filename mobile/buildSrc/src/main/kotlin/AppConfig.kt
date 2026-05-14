@@ -111,6 +111,17 @@ object AppConfig {
 		default = ""
 	)
 
+	/**
+	 * MapTiler API key for satellite and outdoor map styles.
+	 *
+	 * Required for satellite and outdoor map tile styles. Defaults to empty string if not provided.
+	 * Can be set via MAPTILER_API_KEY environment variable or local.properties.
+	 */
+	val maptilerApiKey: String get() = getProperty(
+		"MAPTILER_API_KEY",
+		default = ""
+	)
+
 	// Feature flags
 
 	/**

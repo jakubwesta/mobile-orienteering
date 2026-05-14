@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -23,30 +24,25 @@ import com.mobileorienteering.R
 import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.util.calculatePace
+import com.mobileorienteering.util.calculateTotalDistance
 import com.mobileorienteering.util.formatDistance
-import com.mobileorienteering.util.formatDuration
+import com.mobileorienteering.util.formatDurationFromInstants
 import java.time.Duration
 import java.time.Instant
 
 @Composable
 fun RunStatsCard(
-    distance: Double,
-    duration: String,
-    startTime: Instant,
-    pathData: List<PathPoint>,
+    pathPoints: List<PathPoint>,
+    startedAt: Instant,
+    finishedAt: Instant?,
     modifier: Modifier = Modifier
 ) {
-    val durationSeconds = try {
-        Duration.parse(duration).seconds
-    } catch (e: Exception) {
-        val parts = duration.split(":")
-        when (parts.size) {
-            2 -> parts[0].toLongOrNull()?.times(60)?.plus(parts[1].toLongOrNull() ?: 0) ?: 0L
-            3 -> parts[0].toLongOrNull()?.times(3600)
-                ?.plus(parts[1].toLongOrNull()?.times(60) ?: 0)
-                ?.plus(parts[2].toLongOrNull() ?: 0) ?: 0L
-            else -> 0L
-        }
+    val distance = remember(pathPoints) { calculateTotalDistance(pathPoints) }
+    val durationText = remember(startedAt, finishedAt) {
+        finishedAt?.let { formatDurationFromInstants(startedAt, it) } ?: "-"
+    }
+    val durationSeconds = remember(startedAt, finishedAt) {
+        finishedAt?.let { Duration.between(startedAt, it).seconds } ?: 0L
     }
 
     Card(
@@ -69,7 +65,7 @@ fun RunStatsCard(
 
             StatItem(
                 label = Strings.Run.durationLabel,
-                value = formatDuration(duration),
+                value = durationText,
                 icon = R.drawable.ic_runs_outlined
             )
 

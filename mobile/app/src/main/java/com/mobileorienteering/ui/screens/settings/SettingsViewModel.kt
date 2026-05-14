@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.app.AppLanguage
 import com.mobileorienteering.data.model.app.ContrastLevel
+import com.mobileorienteering.data.model.app.MapIconStyle
+import com.mobileorienteering.data.model.app.MapQuality
+import com.mobileorienteering.data.model.app.MapStyle
 import com.mobileorienteering.data.model.app.SettingsModel
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.util.manager.FeedbackManager
@@ -53,15 +56,19 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateGpsAccuracy(value: Int) = viewModelScope.launch {
-        repo.updateGpsAccuracy(value)
-    }
-
-    fun updateMapZoom(value: Int) = viewModelScope.launch {
-        repo.updateMapZoom(value)
-    }
-
     fun updateShowLocationDuringRun(enabled: Boolean) = viewModelScope.launch {
         repo.updateShowLocationDuringRun(enabled)
+    }
+
+    fun updateMapStyle(style: MapStyle) = viewModelScope.launch {
+        repo.updateMapStyle(style)
+    }
+
+    fun updateMapIconStyle(style: MapIconStyle) = viewModelScope.launch {
+        repo.updateMapIconStyle(style)
+    }
+
+    fun updateMapQuality(quality: MapQuality) = viewModelScope.launch {
+        repo.updateMapQuality(quality)
     }
 }

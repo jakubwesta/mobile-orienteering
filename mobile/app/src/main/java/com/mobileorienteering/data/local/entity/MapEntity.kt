@@ -14,5 +14,8 @@ data class MapEntity(
     val originalMapId: Long?,
     val createdAt: Instant,
     val syncedWithServer: Boolean = false,
-    val pendingDeletion: Boolean = false
+    val pendingDeletion: Boolean = false,
+    val imageUrl: String? = null,
+    val localImagePath: String? = null,
+    val imageUploadPending: Boolean = false
 )

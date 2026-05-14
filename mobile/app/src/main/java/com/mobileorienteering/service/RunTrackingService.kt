@@ -8,7 +8,6 @@ import android.os.IBinder
 import com.mobileorienteering.data.model.app.Checkpoint
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
-import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.util.manager.FeedbackManager
 import com.mobileorienteering.util.manager.LocationManager
 import com.mobileorienteering.util.manager.NotificationManager
@@ -26,7 +25,6 @@ class RunTrackingService : Service() {
     @Inject lateinit var locationManager: LocationManager
     @Inject lateinit var feedbackManager: FeedbackManager
     @Inject lateinit var notificationManager: NotificationManager
-    @Inject lateinit var settingsPreferences: SettingsPreferences
 
     private val binder = RunBinder()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -47,6 +45,7 @@ class RunTrackingService : Service() {
         const val EXTRA_CHECKPOINTS = "extra_checkpoints"
         const val EXTRA_MAP_ID = "extra_map_id"
         const val EXTRA_MAP_NAME = "extra_map_name"
+        const val EXTRA_DETECTION_RADIUS = "extra_detection_radius"
     }
 
     inner class RunBinder : Binder() {
@@ -55,25 +54,13 @@ class RunTrackingService : Service() {
 
     override fun onBind(intent: Intent?): IBinder = binder
 
-    override fun onCreate() {
-        super.onCreate()
-        observeSettings()
-    }
-
-    private fun observeSettings() {
-        serviceScope.launch {
-            settingsPreferences.settingsFlow.collect { settings ->
-                checkpointRadius = settings.gpsAccuracy
-            }
-        }
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
                 val checkpointsJson = intent.getStringExtra(EXTRA_CHECKPOINTS)
                 val mapId = intent.getLongExtra(EXTRA_MAP_ID, 0L)
                 val mapName = intent.getStringExtra(EXTRA_MAP_NAME) ?: "Unknown"
+                checkpointRadius = intent.getIntExtra(EXTRA_DETECTION_RADIUS, 15)
 
                 if (checkpointsJson != null) {
                     val checkpoints = deserializeCheckpoints(checkpointsJson)
@@ -141,8 +128,9 @@ class RunTrackingService : Service() {
 
         _runState.update { state ->
             val newPathData = state.pathData + PathPoint(
-                latitude = location.latitude,
-                longitude = location.longitude,
+                id = 0L,
+                lat = location.latitude,
+                lon = location.longitude,
                 timestamp = Instant.now()
             )
 
@@ -175,8 +163,8 @@ class RunTrackingService : Service() {
                 controlPointName = nextCheckpoint.name,
                 order = state.nextCheckpointIndex + 1,
                 visitedAt = Instant.now(),
-                latitude = nextCheckpoint.position.latitude,
-                longitude = nextCheckpoint.position.longitude
+                lat = nextCheckpoint.position.latitude,
+                lon = nextCheckpoint.position.longitude
             )
 
             val newNextIndex = state.nextCheckpointIndex + 1

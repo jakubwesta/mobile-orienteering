@@ -22,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,18 +34,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.BuildConfig
 import com.mobileorienteering.R
 import com.mobileorienteering.data.model.app.AppLanguage
 import com.mobileorienteering.data.model.app.ContrastLevel
+import com.mobileorienteering.data.model.app.MapIconStyle
+import com.mobileorienteering.data.model.app.MapQuality
+import com.mobileorienteering.data.model.app.MapStyle
 import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.auth.AuthViewModel
 import com.mobileorienteering.ui.screens.settings.components.SettingsClickableItem
 import com.mobileorienteering.ui.screens.settings.components.SettingsNavigationItem
 import com.mobileorienteering.ui.screens.settings.components.SettingsSection
 import com.mobileorienteering.ui.screens.settings.components.SettingsSwitchItem
+
+@Composable
+private fun mapStyleDisplayName(style: MapStyle): String = when (style) {
+    MapStyle.CLASSIC -> stringResource(R.string.settings_map_style_classic)
+    MapStyle.SATELLITE -> stringResource(R.string.settings_map_style_satellite)
+    MapStyle.OUTDOOR -> stringResource(R.string.settings_map_style_outdoor)
+    MapStyle.ORIENTEERING -> stringResource(R.string.settings_map_style_orienteering)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +72,9 @@ fun SettingsScreen(
     val authModel by authViewModel.authModel.collectAsState()
     var showContrastDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showMapStyleDialog by remember { mutableStateOf(false) }
+    var showMapIconStyleDialog by remember { mutableStateOf(false) }
+    var showMapQualityDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showSyncDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -164,6 +178,35 @@ fun SettingsScreen(
                     showRightArrow = true,
                     onClick = { showLanguageDialog = true }
                 )
+
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                SettingsClickableItem(
+                    icon = R.drawable.ic_map_outlined,
+                    title = Strings.Settings.mapStyle,
+                    subtitle = mapStyleDisplayName(settings.mapStyle),
+                    showRightArrow = true,
+                    onClick = { showMapStyleDialog = true }
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                SettingsClickableItem(
+                    icon = R.drawable.ic_target,
+                    title = Strings.Settings.mapIconStyle,
+                    subtitle = settings.mapIconStyle.getLabel(),
+                    showRightArrow = true,
+                    onClick = { showMapIconStyleDialog = true }
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                SettingsSwitchItem(
+                    icon = R.drawable.ic_visibility_filled,
+                    title = Strings.Settings.locationDuringRun,
+                    checked = settings.showLocationDuringRun,
+                    onCheckedChange = { viewModel.updateShowLocationDuringRun(it) }
+                )
             }
 
             SettingsSection(title = Strings.Settings.controlPoints) {
@@ -183,103 +226,19 @@ fun SettingsScreen(
                     onCheckedChange = { viewModel.updateControlPointVibration(it) }
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_target),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(Modifier.width(16.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                Strings.Settings.detectionRadius,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = Strings.Plurals.GpsAccuracyValue(
-                                    settings.gpsAccuracy,
-                                    settings.gpsAccuracy
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Slider(
-                        value = settings.gpsAccuracy.toFloat(),
-                        onValueChange = { viewModel.updateGpsAccuracy(it.toInt()) },
-                        valueRange = 5f..50f,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
             }
 
-            SettingsSection(title = Strings.Settings.gps) {
-                SettingsSwitchItem(
-                    icon = R.drawable.ic_visibility_filled,
-                    title = Strings.Settings.locationDuringRun,
-                    checked = settings.showLocationDuringRun,
-                    onCheckedChange = { viewModel.updateShowLocationDuringRun(it) }
+            SettingsSection(title = Strings.Settings.advanced) {
+                SettingsClickableItem(
+                    icon = R.drawable.ic_map_outlined,
+                    title = stringResource(R.string.settings_map_quality),
+                    subtitle = settings.mapQuality.getLabel(),
+                    showRightArrow = true,
+                    onClick = { showMapQualityDialog = true }
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_search),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(Modifier.width(16.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                Strings.Settings.mapZoom,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                "${settings.mapZoom}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Slider(
-                        value = settings.mapZoom.toFloat(),
-                        onValueChange = { viewModel.updateMapZoom(it.toInt()) },
-                        valueRange = 12f..20f,
-                        steps = 7,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            }
-
-            SettingsSection(title = Strings.Settings.advanced) {
                 if (authModel?.isGuestMode != true) {
                     SettingsClickableItem(
                         icon = R.drawable.ic_sync,
@@ -390,6 +349,120 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showLanguageDialog = false }) {
+                    Text(Strings.Action.close)
+                }
+            }
+        )
+    }
+
+    if (showMapStyleDialog) {
+        AlertDialog(
+            onDismissRequest = { showMapStyleDialog = false },
+            title = { Text(Strings.Settings.mapStyle) },
+            text = {
+                Column {
+                    MapStyle.entries.forEach { style ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.updateMapStyle(style)
+                                    showMapStyleDialog = false
+                                }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = settings.mapStyle == style,
+                                onClick = {
+                                    viewModel.updateMapStyle(style)
+                                    showMapStyleDialog = false
+                                }
+                            )
+                            Spacer(Modifier.width(3.dp))
+                            Text(mapStyleDisplayName(style))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showMapStyleDialog = false }) {
+                    Text(Strings.Action.close)
+                }
+            }
+        )
+    }
+
+    if (showMapIconStyleDialog) {
+        AlertDialog(
+            onDismissRequest = { showMapIconStyleDialog = false },
+            title = { Text(Strings.Settings.mapIconStyle) },
+            text = {
+                Column {
+                    MapIconStyle.entries.forEach { style ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.updateMapIconStyle(style)
+                                    showMapIconStyleDialog = false
+                                }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = settings.mapIconStyle == style,
+                                onClick = {
+                                    viewModel.updateMapIconStyle(style)
+                                    showMapIconStyleDialog = false
+                                }
+                            )
+                            Spacer(Modifier.width(3.dp))
+                            Text(style.getLabel())
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showMapIconStyleDialog = false }) {
+                    Text(Strings.Action.close)
+                }
+            }
+        )
+    }
+
+    if (showMapQualityDialog) {
+        AlertDialog(
+            onDismissRequest = { showMapQualityDialog = false },
+            title = { Text(stringResource(R.string.settings_map_quality)) },
+            text = {
+                Column {
+                    MapQuality.entries.forEach { quality ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.updateMapQuality(quality)
+                                    showMapQualityDialog = false
+                                }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = settings.mapQuality == quality,
+                                onClick = {
+                                    viewModel.updateMapQuality(quality)
+                                    showMapQualityDialog = false
+                                }
+                            )
+                            Spacer(Modifier.width(3.dp))
+                            Text(quality.getLabel())
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showMapQualityDialog = false }) {
                     Text(Strings.Action.close)
                 }
             }

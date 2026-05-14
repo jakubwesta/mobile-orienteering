@@ -20,5 +20,10 @@ import androidx.room.PrimaryKey
 data class RunSettingsEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val runId: Long,
-    val detectionRadius: Float
+    val detectionRadius: Float,
+    val showSelfOnMap: Boolean = true,
+    val orderedControlPoints: Boolean = true,
+    val timerStart: String = "race_start",
+    val raceStyle: String = "standard",
+    val orientationType: String = "foot"
 )

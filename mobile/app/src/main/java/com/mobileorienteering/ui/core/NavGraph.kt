@@ -7,6 +7,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.mobileorienteering.data.model.domain.OrientationType
+import com.mobileorienteering.data.model.domain.RaceStyle
+import com.mobileorienteering.data.model.domain.TimerStart
+import com.mobileorienteering.data.model.app.RunSettings
 import com.mobileorienteering.ui.screens.auth.LoginScreen
 import com.mobileorienteering.ui.screens.auth.RegisterScreen
 import com.mobileorienteering.ui.screens.library.LibraryScreen
@@ -50,7 +54,10 @@ fun AppNavGraph(
 
         // Main screens
         composable(
-            route = "${AppScreen.Map.route}?mapId={mapId}&startRun={startRun}",
+            route = "${AppScreen.Map.route}?mapId={mapId}&startRun={startRun}" +
+                    "&orderedCPs={orderedCPs}&timerStart={timerStart}" +
+                    "&raceStyle={raceStyle}&orientationType={orientationType}" +
+                    "&detectionRadius={detectionRadius}",
             arguments = listOf(
                 navArgument("mapId") {
                     type = NavType.LongType
@@ -59,14 +66,58 @@ fun AppNavGraph(
                 navArgument("startRun") {
                     type = NavType.BoolType
                     defaultValue = false
+                },
+                navArgument("orderedCPs") {
+                    type = NavType.BoolType
+                    defaultValue = true
+                },
+                navArgument("timerStart") {
+                    type = NavType.StringType
+                    defaultValue = TimerStart.RACE_START.value
+                },
+                navArgument("raceStyle") {
+                    type = NavType.StringType
+                    defaultValue = RaceStyle.STANDARD.value
+                },
+                navArgument("orientationType") {
+                    type = NavType.StringType
+                    defaultValue = OrientationType.FOOT.value
+                },
+                navArgument("detectionRadius") {
+                    type = NavType.FloatType
+                    defaultValue = 15f
                 }
             )
         ) { backStackEntry ->
-            val mapId = backStackEntry.arguments?.getLong("mapId") ?: -1L
-            val startRun = backStackEntry.arguments?.getBoolean("startRun") ?: false
+            val args = backStackEntry.arguments
+            val mapId = args?.getLong("mapId") ?: -1L
+            val startRun = args?.getBoolean("startRun") ?: false
+            val runSettings = RunSettings(
+                orderedControlPoints = args?.getBoolean("orderedCPs") ?: true,
+                timerStart = TimerStart.fromValue(args?.getString("timerStart") ?: ""),
+                raceStyle = RaceStyle.fromValue(args?.getString("raceStyle") ?: ""),
+                orientationType = OrientationType.fromValue(args?.getString("orientationType") ?: ""),
+                detectionRadius = args?.getFloat("detectionRadius") ?: 15f
+            )
             MapScreen(
                 initialMapId = if (mapId != -1L) mapId else null,
-                startRun = startRun
+                startRun = startRun,
+                runSettings = runSettings,
+                onMapSaved = {
+                    navController.navigate(AppScreen.Library.route) {
+                        popUpTo(AppScreen.Library.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onRunFinished = {
+                    navController.navigate(AppScreen.Library.route) {
+                        popUpTo(AppScreen.Library.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -75,8 +126,15 @@ fun AppNavGraph(
                 onEditMap = { mapId ->
                     navController.navigate("${AppScreen.Map.route}?mapId=$mapId")
                 },
-                onStartRun = { mapId ->
-                    navController.navigate("${AppScreen.Map.route}?mapId=$mapId&startRun=true")
+                onStartRun = { mapId, options ->
+                    navController.navigate(
+                        "${AppScreen.Map.route}?mapId=$mapId&startRun=true" +
+                        "&orderedCPs=${options.orderedControlPoints}" +
+                        "&timerStart=${options.timerStart.value}" +
+                        "&raceStyle=${options.raceStyle.value}" +
+                        "&orientationType=${options.orientationType.value}" +
+                        "&detectionRadius=${options.detectionRadius}"
+                    )
                 },
                 onCreateFirstMap = {
                     navController.navigate(AppScreen.Map.route)
@@ -91,12 +149,12 @@ fun AppNavGraph(
         composable(
             route = AppScreen.RunDetails.route,
             arguments = listOf(
-                navArgument("activityId") { type = NavType.LongType }
+                navArgument("runId") { type = NavType.LongType }
             )
         ) { backStackEntry ->
-            val activityId = backStackEntry.arguments?.getLong("activityId") ?: return@composable
+            val runId = backStackEntry.arguments?.getLong("runId") ?: return@composable
             RunDetailsScreen(
-                activityId = activityId,
+                runId = runId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

@@ -16,22 +16,28 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.core.Strings
-import com.mobileorienteering.data.model.domain.Activity
+import com.mobileorienteering.data.model.domain.Run
+import com.mobileorienteering.util.calculateTotalDistance
 import com.mobileorienteering.util.formatDate
 import com.mobileorienteering.util.formatDistance
-import com.mobileorienteering.util.formatDuration
+import com.mobileorienteering.util.formatDurationFromInstants
 import com.mobileorienteering.util.formatTime
 
 @Composable
 fun RunCard(
-    activity: Activity,
-    mapName: String?,
-    controlPointCount: Int?,
+    run: Run,
     onDelete: () -> Unit,
     onClick: () -> Unit = {}
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+
+    val distance = remember(run.id) { calculateTotalDistance(run.pathPoints) }
+    val isCompleted = run.finishedAt != null
+    val durationText = remember(run.id) {
+        run.finishedAt?.let { formatDurationFromInstants(run.startedAt, it) } ?: "-"
+    }
 
     Card(
         modifier = Modifier
@@ -51,7 +57,7 @@ fun RunCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        activity.title,
+                        run.name,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -64,17 +70,17 @@ fun RunCard(
 
                     Surface(
                         shape = RoundedCornerShape(4.dp),
-                        color = if (activity.isCompleted) {
+                        color = if (isCompleted) {
                             MaterialTheme.colorScheme.tertiaryContainer
                         } else {
                             MaterialTheme.colorScheme.errorContainer
                         }
                     ) {
                         Text(
-                            text = if (activity.isCompleted) Strings.Run.detailsCompleted else Strings.Run.detailsAbandoned,
+                            text = if (isCompleted) Strings.Run.detailsCompleted else Strings.Run.detailsAbandoned,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (activity.isCompleted) {
+                            color = if (isCompleted) {
                                 MaterialTheme.colorScheme.onTertiaryContainer
                             } else {
                                 MaterialTheme.colorScheme.onErrorContainer
@@ -99,6 +105,19 @@ fun RunCard(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
+                            text = { Text(Strings.Action.viewDetails) },
+                            onClick = {
+                                showMenu = false
+                                showSettingsDialog = true
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_info_outlined),
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                        DropdownMenuItem(
                             text = { Text(Strings.Action.delete) },
                             onClick = {
                                 showMenu = false
@@ -121,16 +140,14 @@ fun RunCard(
 
             Spacer(Modifier.height(4.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
-                    formatDate(activity.startTime),
+                    formatDate(run.startedAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    formatTime(activity.startTime),
+                    formatTime(run.startedAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -138,79 +155,62 @@ fun RunCard(
 
             Spacer(Modifier.height(4.dp))
 
-            if (mapName != null && controlPointCount != null) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        Strings.Formatted.runDetailsMapFormat(mapName),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        Strings.Formatted.runDetailsCpCount(controlPointCount),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        softWrap = false
-                    )
-                }
-
-                Spacer(Modifier.height(4.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    Strings.Formatted.runDetailsMapFormat(run.map.name),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    Strings.Formatted.runDetailsCpCount(run.map.controlPoints.size),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    softWrap = false
+                )
             }
+
+            Spacer(Modifier.height(4.dp))
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = Strings.Formatted.runsDistanceLabel(formatDistance(activity.distance)),
+                    text = Strings.Formatted.runsDistanceLabel(formatDistance(distance)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = Strings.Formatted.runsDurationLabel(formatDuration(activity.duration)),
+                    text = Strings.Formatted.runsDurationLabel(durationText),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
                 )
             }
-
-            if (activity.totalControlPoints > 0) {
-                Spacer(Modifier.height(8.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    LinearProgressIndicator(
-                        progress = { activity.progress },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                    )
-                    Text(
-                        "${activity.visitedControlPointCount}/${activity.totalControlPoints}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
         }
+    }
+
+    if (showSettingsDialog) {
+        RunSettingsDialog(
+            settings = run.runSettings,
+            onDismiss = { showSettingsDialog = false }
+        )
     }
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text(Strings.Runs.deleteRunTitle) },
-            text = { Text(Strings.Formatted.runsDeleteRunMessage(activity.title)) },
+            text = { Text(Strings.Formatted.runsDeleteRunMessage(run.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {

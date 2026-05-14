@@ -1,7 +1,9 @@
 package com.mobileorienteering.data.repository
 
+import androidx.room.withTransaction
 import com.mobileorienteering.data.api.ApiHelper
 import com.mobileorienteering.data.api.service.RunApiService
+import com.mobileorienteering.data.local.AppDatabase
 import com.mobileorienteering.data.local.dao.ControlPointDao
 import com.mobileorienteering.data.local.dao.MapDao
 import com.mobileorienteering.data.local.dao.PathPointDao
@@ -19,6 +21,7 @@ import com.mobileorienteering.data.model.network.request.PathPointRequest
 import com.mobileorienteering.data.model.network.request.RunSettingsRequest
 import com.mobileorienteering.data.model.network.response.RunResponse
 import com.mobileorienteering.data.model.network.response.toDomainModel
+import com.mobileorienteering.util.toInstant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -28,6 +31,7 @@ import javax.inject.Singleton
 
 @Singleton
 class RunRepository @Inject constructor(
+    private val db: AppDatabase,
     private val runApi: RunApiService,
     private val runDao: RunDao,
     private val runSettingsDao: RunSettingsDao,
@@ -69,7 +73,9 @@ class RunRepository @Inject constructor(
                     originalMapId = originalMap.id,
                     createdAt = Instant.now(),
                     syncedWithServer = false,
-                    pendingDeletion = false
+                    pendingDeletion = false,
+                    imageUrl = originalMap.imageUrl,
+                    localImagePath = originalMap.localImagePath
                 )
             )
             controlPointDao.insertControlPoints(
@@ -83,8 +89,8 @@ class RunRepository @Inject constructor(
                     userId = userId,
                     mapId = tempSnapshotMapId,
                     name = request.name,
-                    startedAt = Instant.parse(request.startedAt),
-                    finishedAt = request.finishedAt?.let { Instant.parse(it) },
+                    startedAt = request.startedAt.toInstant(),
+                    finishedAt = request.finishedAt?.toInstant(),
                     syncedWithServer = false,
                     pendingDeletion = false
                 )
@@ -94,7 +100,12 @@ class RunRepository @Inject constructor(
                 RunSettingsEntity(
                     id = 0,
                     runId = tempRunId,
-                    detectionRadius = request.runSettings.detectionRadius
+                    detectionRadius = request.runSettings.detectionRadius,
+                    showSelfOnMap = request.runSettings.showSelfOnMap,
+                    orderedControlPoints = request.runSettings.orderedControlPoints,
+                    timerStart = request.runSettings.timerStart,
+                    raceStyle = request.runSettings.raceStyle,
+                    orientationType = request.runSettings.orientationType
                 )
             )
 
@@ -105,7 +116,7 @@ class RunRepository @Inject constructor(
                         runId = tempRunId,
                         lat = pp.lat,
                         lon = pp.lon,
-                        timestamp = Instant.parse(pp.timestamp)
+                        timestamp = pp.timestamp.toInstant()
                     )
                 }
             )
@@ -114,8 +125,10 @@ class RunRepository @Inject constructor(
                 ApiHelper.safeApiCall("Failed to create run") {
                     runApi.createRun(request)
                 }.onSuccess { response ->
-                    deleteLocalRun(tempRunId, tempSnapshotMapId)
-                    saveRunResponseLocally(response, userId)
+                    db.withTransaction {
+                        deleteLocalRun(tempRunId, tempSnapshotMapId)
+                        saveRunResponseLocally(response, userId)
+                    }
                     return Result.success(response.toDomainModel())
                 }
             }
@@ -190,7 +203,14 @@ class RunRepository @Inject constructor(
             val request = CreateRunRequest(
                 name = entity.name,
                 mapId = originalMapId,
-                runSettings = RunSettingsRequest(detectionRadius = runSettings.detectionRadius),
+                runSettings = RunSettingsRequest(
+                    detectionRadius = runSettings.detectionRadius,
+                    showSelfOnMap = runSettings.showSelfOnMap,
+                    orderedControlPoints = runSettings.orderedControlPoints,
+                    timerStart = runSettings.timerStart,
+                    raceStyle = runSettings.raceStyle,
+                    orientationType = runSettings.orientationType
+                ),
                 startedAt = entity.startedAt.toString(),
                 finishedAt = entity.finishedAt?.toString(),
                 pathPoints = pathPoints.map { pp ->
@@ -200,8 +220,10 @@ class RunRepository @Inject constructor(
 
             ApiHelper.safeApiCall { runApi.createRun(request) }
                 .onSuccess { response ->
-                    deleteLocalRun(entity.id, entity.mapId)
-                    saveRunResponseLocally(response, userId)
+                    db.withTransaction {
+                        deleteLocalRun(entity.id, entity.mapId)
+                        saveRunResponseLocally(response, userId)
+                    }
                 }
         }
     }
@@ -217,7 +239,9 @@ class RunRepository @Inject constructor(
                 .forEach { deleteLocalRun(it.run.id, it.run.mapId) }
 
             val userId = authRepository.getCurrentAuth()?.userId ?: return@map
-            serverRuns.forEach { saveRunResponseLocally(it, userId) }
+            serverRuns.forEach { response ->
+                db.withTransaction { saveRunResponseLocally(response, userId) }
+            }
         }
     }
 
@@ -230,9 +254,10 @@ class RunRepository @Inject constructor(
                 description = response.map.description,
                 isSnapshot = true,
                 originalMapId = response.map.originalMapId,
-                createdAt = Instant.parse(response.map.createdAt),
+                createdAt = response.map.createdAt.toInstant(),
                 syncedWithServer = true,
-                pendingDeletion = false
+                pendingDeletion = false,
+                imageUrl = response.map.imageUrl
             )
         )
         controlPointDao.deleteControlPointsForMap(response.map.id)
@@ -255,8 +280,8 @@ class RunRepository @Inject constructor(
                 userId = userId,
                 mapId = response.map.id,
                 name = response.name,
-                startedAt = Instant.parse(response.startedAt),
-                finishedAt = response.finishedAt?.let { Instant.parse(it) },
+                startedAt = response.startedAt.toInstant(),
+                finishedAt = response.finishedAt?.toInstant(),
                 syncedWithServer = true,
                 pendingDeletion = false
             )
@@ -266,7 +291,12 @@ class RunRepository @Inject constructor(
             RunSettingsEntity(
                 id = response.runSettings.id,
                 runId = response.id,
-                detectionRadius = response.runSettings.detectionRadius
+                detectionRadius = response.runSettings.detectionRadius,
+                showSelfOnMap = response.runSettings.showSelfOnMap,
+                orderedControlPoints = response.runSettings.orderedControlPoints,
+                timerStart = response.runSettings.timerStart,
+                raceStyle = response.runSettings.raceStyle,
+                orientationType = response.runSettings.orientationType
             )
         )
 
@@ -278,7 +308,7 @@ class RunRepository @Inject constructor(
                     runId = response.id,
                     lat = pp.lat,
                     lon = pp.lon,
-                    timestamp = Instant.parse(pp.timestamp)
+                    timestamp = pp.timestamp.toInstant()
                 )
             }
         )

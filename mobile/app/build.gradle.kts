@@ -35,6 +35,7 @@ configure<ApplicationExtension> {
         testInstrumentationRunner = "com.mobileorienteering.HiltTestRunner"
 
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${AppConfig.googleWebClientId}\"")
+        buildConfigField("String", "MAPTILER_API_KEY", "\"${AppConfig.maptilerApiKey}\"")
     }
 
     signingConfigs {

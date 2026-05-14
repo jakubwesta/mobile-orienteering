@@ -1,15 +1,16 @@
 package com.mobileorienteering
 
+import android.content.Context
 import com.mobileorienteering.data.model.app.SavedMapState
 import com.mobileorienteering.data.model.app.SettingsModel
 import com.mobileorienteering.data.preferences.MapStatePreferences
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.data.repository.RunRepository
-import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.service.RunServiceManager
 import com.mobileorienteering.service.RunState
 import com.mobileorienteering.ui.screens.map.MapViewModel
+import com.mobileorienteering.util.MapImageExporter
 import com.mobileorienteering.util.manager.LocationManager
 import com.mobileorienteering.util.manager.PermissionManager
 import kotlinx.coroutines.Dispatchers
@@ -38,11 +39,12 @@ class MapViewModelTest {
     private lateinit var locationManager: LocationManager
     private lateinit var permissionManager: PermissionManager
     private lateinit var mapRepository: MapRepository
-    private lateinit var authRepository: AuthRepository
     private lateinit var mapStatePreferences: MapStatePreferences
     private lateinit var settingsPreferences: SettingsPreferences
     private lateinit var runRepository: RunRepository
     private lateinit var runServiceManager: RunServiceManager
+    private lateinit var mapImageExporter: MapImageExporter
+    private lateinit var context: Context
 
     private lateinit var viewModel: MapViewModel
 
@@ -53,11 +55,12 @@ class MapViewModelTest {
         locationManager = mock()
         permissionManager = mock()
         mapRepository = mock()
-        authRepository = mock()
         mapStatePreferences = mock()
         settingsPreferences = mock()
         runRepository = mock()
         runServiceManager = mock()
+        mapImageExporter = mock()
+        context = mock()
 
         whenever(locationManager.hasLocationPermission()).thenReturn(false)
         whenever(locationManager.observeLocationProviderChanges()).thenReturn(flowOf(true))
@@ -72,11 +75,12 @@ class MapViewModelTest {
             locationManager = locationManager,
             permissionManager = permissionManager,
             mapRepository = mapRepository,
-            authRepository = authRepository,
             mapStatePreferences = mapStatePreferences,
             settingsPreferences = settingsPreferences,
             runRepository = runRepository,
-            runServiceManager = runServiceManager
+            runServiceManager = runServiceManager,
+            mapImageExporter = mapImageExporter,
+            context = context
         )
     }
 

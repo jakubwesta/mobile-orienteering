@@ -12,10 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mobileorienteering.R
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,17 +25,22 @@ import com.mobileorienteering.ui.core.components.LocationPermissionRationaleDial
 import com.mobileorienteering.ui.core.components.LocationPermissionSettingsDialog
 import com.mobileorienteering.ui.screens.map.components.CheckpointBottomSheetContent
 import com.mobileorienteering.ui.screens.map.components.CheckpointDialog
-import com.mobileorienteering.ui.screens.map.components.CheckpointsLayer
 import com.mobileorienteering.ui.screens.map.components.DraggingInfoBanner
 import com.mobileorienteering.ui.screens.map.components.LocationFab
 import com.mobileorienteering.ui.screens.map.components.MapBottomSheetHandle
-import com.mobileorienteering.ui.screens.map.components.NextCheckpointLineLayer
-import com.mobileorienteering.ui.screens.map.components.RoutePathLayer
 import com.mobileorienteering.ui.screens.map.components.RunFinishedDialog
 import com.mobileorienteering.ui.screens.map.components.RunProgressPanel
-import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.map.components.SaveRouteDialog
-import com.mobileorienteering.ui.screens.map.components.UserLocationLayer
+import com.mobileorienteering.ui.screens.map.components.layers.CheckpointsLayer
+import com.mobileorienteering.ui.screens.map.components.layers.FogOfWarLayer
+import com.mobileorienteering.ui.screens.map.components.layers.NextCheckpointLineLayer
+import com.mobileorienteering.ui.screens.map.components.layers.RoutePathLayer
+import com.mobileorienteering.ui.screens.map.components.layers.UserLocationLayer
+import com.mobileorienteering.data.model.app.Checkpoint
+import com.mobileorienteering.data.model.app.RunSettings
+import com.mobileorienteering.data.model.domain.RaceStyle
+import com.mobileorienteering.ui.core.Strings
+import com.mobileorienteering.util.boundingCamera
 import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
@@ -49,13 +55,19 @@ import org.maplibre.spatialk.geojson.Position
 fun MapScreen(
     viewModel: MapViewModel = hiltViewModel(),
     initialMapId: Long? = null,
-    startRun: Boolean = false
+    startRun: Boolean = false,
+    runSettings: RunSettings = RunSettings(),
+    onMapSaved: () -> Unit = {},
+    onRunFinished: () -> Unit = {},
+    onNavigateBack: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val runState by viewModel.runState.collectAsStateWithLifecycle()
     val finishedRunState by viewModel.finishedRunState.collectAsStateWithLifecycle()
-    val mapZoom by viewModel.mapZoom.collectAsStateWithLifecycle()
     val showLocationDuringRun by viewModel.showLocationDuringRun.collectAsStateWithLifecycle()
+    val raceStyle by viewModel.raceStyle.collectAsStateWithLifecycle()
+    val mapStyle by viewModel.mapStyle.collectAsStateWithLifecycle()
+    val mapIconStyle by viewModel.mapIconStyle.collectAsStateWithLifecycle()
     val centerCameraOnce by viewModel.centerCameraOnce.collectAsStateWithLifecycle()
     val shouldMoveCamera by viewModel.shouldMoveCamera.collectAsStateWithLifecycle()
 
@@ -69,7 +81,12 @@ fun MapScreen(
 
     val styleState = rememberStyleState()
     val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(
+            initialValue = SheetValue.PartiallyExpanded,
+            skipHiddenState = true
+        )
+    )
 
     var tapPosition by remember { mutableStateOf<Position?>(null) }
     var hasAutoStarted by rememberSaveable { mutableStateOf(false) }
@@ -79,6 +96,20 @@ fun MapScreen(
     var showLocationPermissionSettings by remember { mutableStateOf(false) }
     var pendingRunStart by remember { mutableStateOf(false) }
     var draggingCheckpointIndex by remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(state.mapSaved) {
+        if (state.mapSaved) {
+            viewModel.onMapSavedHandled()
+            onMapSaved()
+        }
+    }
+
+    LaunchedEffect(state.runFinished) {
+        if (state.runFinished) {
+            viewModel.onRunFinishedHandled()
+            onRunFinished()
+        }
+    }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.updatePermissionState()
@@ -159,6 +190,7 @@ fun MapScreen(
     LaunchedEffect(startRun, state.checkpoints) {
         if (startRun && state.checkpoints.isNotEmpty() && !isRunActive && !hasAutoStarted) {
             hasAutoStarted = true
+            viewModel.setRunOptions(runSettings)
             pendingRunStart = true
         }
     }
@@ -201,19 +233,25 @@ fun MapScreen(
         }
     }
 
+    LaunchedEffect(isRunActive) {
+        if (isRunActive) {
+            scaffoldState.bottomSheetState.partialExpand()
+            if (state.checkpoints.isNotEmpty()) {
+                val cam = state.checkpoints.toBoundingCamera()
+                coroutineScope.launch {
+                    cameraState.animateTo(CameraPosition(target = Position(cam.centerLon, cam.centerLat), zoom = cam.zoom))
+                }
+            }
+        } else if (state.checkpoints.isNotEmpty()) {
+            scaffoldState.bottomSheetState.partialExpand()
+        }
+    }
+
     LaunchedEffect(shouldMoveCamera) {
         if (shouldMoveCamera && state.checkpoints.isNotEmpty()) {
-            val firstCheckpoint = state.checkpoints.first()
+            val cam = state.checkpoints.toBoundingCamera()
             coroutineScope.launch {
-                cameraState.animateTo(
-                    CameraPosition(
-                        target = Position(
-                            firstCheckpoint.position.longitude,
-                            firstCheckpoint.position.latitude
-                        ),
-                        zoom = 15.0
-                    )
-                )
+                cameraState.animateTo(CameraPosition(target = Position(cam.centerLon, cam.centerLat), zoom = cam.zoom))
                 viewModel.cameraMoved()
             }
         }
@@ -227,7 +265,7 @@ fun MapScreen(
                 cameraState.animateTo(
                     CameraPosition(
                         target = Position(location.longitude, location.latitude),
-                        zoom = if (cameraState.position.zoom < mapZoom) mapZoom else cameraState.position.zoom
+                        zoom = if (cameraState.position.zoom < 16.0) 16.0 else cameraState.position.zoom
                     )
                 )
                 viewModel.cameraCentered()
@@ -265,7 +303,7 @@ fun MapScreen(
                 modifier = Modifier.fillMaxSize(),
                 cameraState = cameraState,
                 styleState = styleState,
-                baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
+                baseStyle = BaseStyle.Uri(mapStyle.getUrl()),
                 options = MapOptions(
                     ornamentOptions = OrnamentOptions.AllDisabled,
                     gestureOptions = GestureOptions.Standard
@@ -285,7 +323,6 @@ fun MapScreen(
                 if (isRunActive && runState.pathData.isNotEmpty() && shouldShowLocation) {
                     RoutePathLayer(
                         pathData = runState.pathData,
-                        color = Color(0xFF2196F3),
                         width = 4f
                     )
 
@@ -297,12 +334,18 @@ fun MapScreen(
                     )
                 }
 
+                if (isRunActive && raceStyle == RaceStyle.COMPASS_BEARING) {
+                    FogOfWarLayer(checkpoints = state.checkpoints)
+                }
+
                 CheckpointsLayer(
                     checkpoints = state.checkpoints,
                     visitedIndices = if (isRunActive) runState.visitedCheckpointIndices else emptySet(),
                     nextCheckpointIndex = if (isRunActive) runState.nextCheckpointIndex else -1,
                     isRunActive = isRunActive,
                     draggingIndex = draggingCheckpointIndex,
+                    cameraState = cameraState,
+                    iconStyle = mapIconStyle,
                     onCheckpointLongClick = { index ->
                         draggingCheckpointIndex = index
                     }
@@ -417,6 +460,33 @@ fun MapScreen(
                 )
             }
 
+            if (state.isSavingMap) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator()
+                            Text(
+                                text = stringResource(R.string.map_saving),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+
             if (showLocationPermissionRationale) {
                 LocationPermissionRationaleDialog(
                     onDismiss = {
@@ -487,3 +557,6 @@ fun MapScreen(
         }
     }
 }
+
+private fun List<Checkpoint>.toBoundingCamera() =
+    boundingCamera(map { it.position.latitude to it.position.longitude })

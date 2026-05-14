@@ -1,11 +1,14 @@
 package com.mobileorienteering.data.model.network.response
 
+import com.mobileorienteering.data.model.domain.OrientationType
 import com.mobileorienteering.data.model.domain.PathPoint
+import com.mobileorienteering.data.model.domain.RaceStyle
 import com.mobileorienteering.data.model.domain.Run
 import com.mobileorienteering.data.model.domain.RunSettings
+import com.mobileorienteering.data.model.domain.TimerStart
+import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import java.time.Instant
 
 @JsonClass(generateAdapter = true)
 data class RunResponse(
@@ -22,7 +25,12 @@ data class RunResponse(
 @JsonClass(generateAdapter = true)
 data class RunSettingsResponse(
     val id: Long,
-    @param:Json(name = "detection_radius") val detectionRadius: Float
+    @param:Json(name = "detection_radius") val detectionRadius: Float,
+    @param:Json(name = "show_self_on_map") val showSelfOnMap: Boolean = true,
+    @param:Json(name = "ordered_control_points") val orderedControlPoints: Boolean = true,
+    @param:Json(name = "timer_start") val timerStart: String = "race_start",
+    @param:Json(name = "race_style") val raceStyle: String = "standard",
+    @param:Json(name = "orientation_type") val orientationType: String = "foot"
 )
 
 @JsonClass(generateAdapter = true)
@@ -40,8 +48,8 @@ fun RunResponse.toDomainModel(): Run {
         userId = userId,
         map = map.toDomainModel(),
         name = name,
-        startedAt = Instant.parse(startedAt),
-        finishedAt = finishedAt?.let { Instant.parse(it) },
+        startedAt = startedAt.toInstant(),
+        finishedAt = finishedAt?.toInstant(),
         runSettings = runSettings.toDomainModel(),
         pathPoints = pathPoints.map { it.toDomainModel() }
     )
@@ -50,7 +58,12 @@ fun RunResponse.toDomainModel(): Run {
 fun RunSettingsResponse.toDomainModel(): RunSettings {
     return RunSettings(
         id = id,
-        detectionRadius = detectionRadius
+        detectionRadius = detectionRadius,
+        showSelfOnMap = showSelfOnMap,
+        orderedControlPoints = orderedControlPoints,
+        timerStart = TimerStart.fromValue(timerStart),
+        raceStyle = RaceStyle.fromValue(raceStyle),
+        orientationType = OrientationType.fromValue(orientationType)
     )
 }
 
@@ -59,6 +72,6 @@ fun PathPointResponse.toDomainModel(): PathPoint {
         id = id,
         lat = lat,
         lon = lon,
-        timestamp = Instant.parse(timestamp)
+        timestamp = timestamp.toInstant()
     )
 }

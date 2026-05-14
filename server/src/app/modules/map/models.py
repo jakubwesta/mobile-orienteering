@@ -20,8 +20,11 @@ class Map(Base):
   is_snapshot: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
   original_map_id: Mapped[Optional[int]] = mapped_column(ForeignKey("map.id"), nullable=True)
   created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+  image_key: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
 
-  control_points: Mapped[list["ControlPoint"]] = relationship("ControlPoint", back_populates="map")
+  control_points: Mapped[list["ControlPoint"]] = relationship(
+    "ControlPoint", back_populates="map", cascade="all, delete-orphan"
+  )
   runs: Mapped[list["Run"]] = relationship("Run", back_populates="map")
 
 

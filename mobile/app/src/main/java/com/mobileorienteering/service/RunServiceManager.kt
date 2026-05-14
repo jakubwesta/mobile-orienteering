@@ -53,12 +53,13 @@ class RunServiceManager @Inject constructor(
         }
     }
 
-    fun startRun(checkpoints: List<Checkpoint>, mapId: Long, mapName: String) {
+    fun startRun(checkpoints: List<Checkpoint>, mapId: Long, mapName: String, detectionRadius: Int) {
         val intent = Intent(context, RunTrackingService::class.java).apply {
             action = RunTrackingService.ACTION_START
             putExtra(RunTrackingService.EXTRA_CHECKPOINTS, checkpoints.toServiceJson())
             putExtra(RunTrackingService.EXTRA_MAP_ID, mapId)
             putExtra(RunTrackingService.EXTRA_MAP_NAME, mapName)
+            putExtra(RunTrackingService.EXTRA_DETECTION_RADIUS, detectionRadius)
         }
 
         context.startForegroundService(intent)

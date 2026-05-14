@@ -15,8 +15,40 @@ data class Run(
 
 data class RunSettings(
     val id: Long,
-    val detectionRadius: Float
+    val detectionRadius: Float,
+    val showSelfOnMap: Boolean = true,
+    val orderedControlPoints: Boolean = true,
+    val timerStart: TimerStart = TimerStart.RACE_START,
+    val raceStyle: RaceStyle = RaceStyle.STANDARD,
+    val orientationType: OrientationType = OrientationType.FOOT
 )
+
+enum class TimerStart(val value: String) {
+    RACE_START("race_start"),
+    FIRST_POINT("first_point");
+
+    companion object {
+        fun fromValue(value: String) = entries.firstOrNull { it.value == value } ?: RACE_START
+    }
+}
+
+enum class RaceStyle(val value: String) {
+    STANDARD("standard"),
+    COMPASS_BEARING("compass_bearing");
+
+    companion object {
+        fun fromValue(value: String) = entries.firstOrNull { it.value == value } ?: STANDARD
+    }
+}
+
+enum class OrientationType(val value: String) {
+    FOOT("foot"),
+    BICYCLE("bicycle");
+
+    companion object {
+        fun fromValue(value: String) = entries.firstOrNull { it.value == value } ?: FOOT
+    }
+}
 
 data class PathPoint(
     val id: Long,

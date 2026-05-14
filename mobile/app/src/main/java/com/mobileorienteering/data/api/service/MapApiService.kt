@@ -2,6 +2,7 @@ package com.mobileorienteering.data.api.service
 
 import com.mobileorienteering.data.model.network.request.CreateMapRequest
 import com.mobileorienteering.data.model.network.request.UpdateMapRequest
+import com.mobileorienteering.data.model.network.response.MapImageUploadUrlResponse
 import com.mobileorienteering.data.model.network.response.MapResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -10,6 +11,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface MapApiService {
     @POST("api/maps/")
@@ -23,4 +25,16 @@ interface MapApiService {
 
     @GET("api/maps/")
     suspend fun getMaps(): Response<List<MapResponse>>
+
+    @GET("api/maps/{id}/image/upload-url")
+    suspend fun getImageUploadUrl(
+        @Path("id") id: Long,
+        @Query("contentType") contentType: String = "image/jpeg"
+    ): Response<MapImageUploadUrlResponse>
+
+    @POST("api/maps/{id}/image/confirm")
+    suspend fun confirmImageUpload(@Path("id") id: Long): Response<MapResponse>
+
+    @DELETE("api/maps/{id}/image")
+    suspend fun deleteImage(@Path("id") id: Long): Response<Unit>
 }

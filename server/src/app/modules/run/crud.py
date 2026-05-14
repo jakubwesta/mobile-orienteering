@@ -63,7 +63,12 @@ async def create_run(db: AsyncSession, user_id: int, data: RunCreate) -> Run:
 
   run_settings = RunSettings(
     run_id=run.id,
-    detection_radius=data.run_settings.detection_radius
+    detection_radius=data.run_settings.detection_radius,
+    show_self_on_map=data.run_settings.show_self_on_map,
+    ordered_control_points=data.run_settings.ordered_control_points,
+    timer_start=data.run_settings.timer_start,
+    race_style=data.run_settings.race_style,
+    orientation_type=data.run_settings.orientation_type,
   )
   db.add(run_settings)
   await db.flush()

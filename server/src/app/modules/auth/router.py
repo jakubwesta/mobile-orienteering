@@ -63,23 +63,23 @@ async def login_google(
       requests.Request(),
       config.GOOGLE_CLIENT_ID
     )
-    
-    google_sub = idinfo.get("sub")
-    email = idinfo.get("email")
-    name = idinfo.get("name")
-    
-    if not google_sub or not email:
-      raise UnauthorizedException("Invalid Google token")
-    
-    user = await get_or_create_user_by_google(db, google_sub, email, name)
-    access_token, refresh_token = await create_tokens_for_user(db, user.id)
-    
-    return TokenResponse(
-      access_token=access_token,
-      refresh_token=refresh_token
-    )
   except ValueError:
     raise UnauthorizedException("Invalid Google token")
+
+  google_sub = idinfo.get("sub")
+  email = idinfo.get("email")
+  name = idinfo.get("name")
+
+  if not google_sub or not email:
+    raise UnauthorizedException("Invalid Google token")
+
+  user = await get_or_create_user_by_google(db, google_sub, email, name)
+  access_token, refresh_token = await create_tokens_for_user(db, user.id)
+
+  return TokenResponse(
+    access_token=access_token,
+    refresh_token=refresh_token
+  )
 
 
 @auth_router.post("/refresh", response_model=TokenResponse)

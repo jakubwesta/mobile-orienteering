@@ -1,5 +1,8 @@
 package com.mobileorienteering.ui.screens.library
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
@@ -20,15 +24,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
+import com.mobileorienteering.data.model.app.RunSettings
 import com.mobileorienteering.ui.core.Strings
 import com.mobileorienteering.ui.screens.library.components.MapCard
+import com.mobileorienteering.ui.screens.library.components.MapFullscreenImageDialog
+import com.mobileorienteering.ui.screens.library.components.RunSettingsBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
     onEditMap: (Long) -> Unit = {},
-    onStartRun: (Long) -> Unit = {},
+    onStartRun: (Long, RunSettings) -> Unit = { _, _ -> },
     onCreateFirstMap: () -> Unit = {}
 ) {
     val maps by viewModel.filteredMaps.collectAsState()
@@ -39,8 +46,21 @@ fun LibraryScreen(
 
     var isSearchExpanded by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
+    var pendingImageMapId by remember { mutableStateOf<Long?>(null) }
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        val mapId = pendingImageMapId
+        pendingImageMapId = null
+        if (uri != null && mapId != null) {
+            viewModel.changeMapImage(mapId, uri)
+        }
+    }
+
+    var pendingStartMapId by remember { mutableStateOf<Long?>(null) }
+    var fullscreenMapImage by remember { mutableStateOf<ImageBitmap?>(null) }
 
     Scaffold(
         topBar = {
@@ -235,8 +255,15 @@ fun LibraryScreen(
                     MapCard(
                         map = map,
                         onEdit = { onEditMap(map.id) },
+                        onChangeImage = {
+                            pendingImageMapId = map.id
+                            imagePickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
                         onDelete = { viewModel.deleteMap(map.id) },
-                        onStartRun = { onStartRun(map.id) }
+                        onStartRun = { pendingStartMapId = map.id },
+                        onImageClick = { fullscreenMapImage = it }
                     )
                 }
             }
@@ -248,5 +275,22 @@ fun LibraryScreen(
         if (isSearchExpanded) {
             focusRequester.requestFocus()
         }
+    }
+
+    fullscreenMapImage?.let { bitmap ->
+        MapFullscreenImageDialog(
+            bitmap = bitmap,
+            onDismiss = { fullscreenMapImage = null }
+        )
+    }
+
+    pendingStartMapId?.let { mapId ->
+        RunSettingsBottomSheet(
+            onDismiss = { pendingStartMapId = null },
+            onConfirm = { options ->
+                pendingStartMapId = null
+                onStartRun(mapId, options)
+            }
+        )
     }
 }

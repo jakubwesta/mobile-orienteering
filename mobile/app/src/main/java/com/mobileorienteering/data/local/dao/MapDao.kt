@@ -32,6 +32,9 @@ interface MapDao {
     @Query("SELECT * FROM maps WHERE pendingDeletion = 1")
     suspend fun getMapsToDelete(): List<MapEntity>
 
+    @Query("SELECT * FROM maps WHERE imageUploadPending = 1 AND pendingDeletion = 0 AND isSnapshot = 0")
+    suspend fun getMapsWithPendingImageUploads(): List<MapEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMap(map: MapEntity): Long
 
@@ -55,4 +58,13 @@ interface MapDao {
 
     @Query("UPDATE maps SET id = :newId WHERE id = :oldId")
     suspend fun updateMapId(oldId: Long, newId: Long)
+
+    @Query("UPDATE maps SET imageUrl = :imageUrl WHERE id = :id")
+    suspend fun updateImageUrl(id: Long, imageUrl: String?)
+
+    @Query("UPDATE maps SET localImagePath = :localImagePath, imageUploadPending = :imageUploadPending WHERE id = :id")
+    suspend fun updateLocalImage(id: Long, localImagePath: String?, imageUploadPending: Boolean)
+
+    @Query("UPDATE maps SET imageUrl = :imageUrl, imageUploadPending = :imageUploadPending WHERE id = :id")
+    suspend fun updateRemoteImage(id: Long, imageUrl: String?, imageUploadPending: Boolean)
 }

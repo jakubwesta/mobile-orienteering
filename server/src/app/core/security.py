@@ -1,23 +1,27 @@
+import hashlib
+import bcrypt
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.config import config
 from app.core.exceptions import UnauthorizedException
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 
+def _prehash(value: str) -> bytes:
+  return hashlib.sha256(value.encode()).digest()
+
+
 def hash_password(password: str) -> str:
-  return pwd_context.hash(password)
+  return bcrypt.hashpw(_prehash(password), bcrypt.gensalt()).decode()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-  return pwd_context.verify(plain_password, hashed_password)
+  return bcrypt.checkpw(_prehash(plain_password), hashed_password.encode())
 
 
 def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None) -> str:

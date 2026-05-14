@@ -4,20 +4,29 @@ import android.content.Context
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobileorienteering.data.model.domain.ActivityStatus
-import com.mobileorienteering.data.model.domain.ControlPoint
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
+import com.mobileorienteering.data.model.network.request.ControlPointRequest
+import com.mobileorienteering.data.model.network.request.CreateMapRequest
+import com.mobileorienteering.data.model.network.request.CreateRunRequest
+import com.mobileorienteering.data.model.network.request.PathPointRequest
+import com.mobileorienteering.data.model.app.RunSettings
+import com.mobileorienteering.data.model.network.request.RunSettingsRequest
+import com.mobileorienteering.data.model.network.request.UpdateMapRequest
 import com.mobileorienteering.data.repository.RunRepository
-import com.mobileorienteering.data.repository.AuthRepository
 import com.mobileorienteering.data.repository.MapRepository
 import com.mobileorienteering.data.preferences.MapStatePreferences
 import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.data.model.app.Checkpoint
 import com.mobileorienteering.data.model.app.MapState
+import com.mobileorienteering.data.model.app.MapIconStyle
+import com.mobileorienteering.data.model.app.MapQuality
+import com.mobileorienteering.data.model.app.MapStyle
+import com.mobileorienteering.data.model.domain.RaceStyle
 import com.mobileorienteering.service.RunServiceManager
 import com.mobileorienteering.service.RunState
 import com.mobileorienteering.ui.core.Strings
+import com.mobileorienteering.util.MapImageExporter
 import com.mobileorienteering.util.manager.LocationManager
 import com.mobileorienteering.util.manager.PermissionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,11 +43,11 @@ class MapViewModel @Inject constructor(
     private val locationManager: LocationManager,
     private val permissionManager: PermissionManager,
     private val mapRepository: MapRepository,
-    private val authRepository: AuthRepository,
     private val mapStatePreferences: MapStatePreferences,
     private val settingsPreferences: SettingsPreferences,
     private val runRepository: RunRepository,
     private val runServiceManager: RunServiceManager,
+    private val mapImageExporter: MapImageExporter,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -48,8 +57,12 @@ class MapViewModel @Inject constructor(
     private var trackingJob: Job? = null
     private var rawLocation: Location? = null
 
-    private val _mapZoom = MutableStateFlow(16.0)
-    val mapZoom: StateFlow<Double> = _mapZoom.asStateFlow()
+    private var pendingRunSettings = RunSettings()
+
+    fun setRunOptions(options: RunSettings) {
+        pendingRunSettings = options
+        _raceStyle.value = options.raceStyle
+    }
 
     private val _shouldMoveCamera = MutableStateFlow(false)
     val shouldMoveCamera: StateFlow<Boolean> = _shouldMoveCamera.asStateFlow()
@@ -60,6 +73,17 @@ class MapViewModel @Inject constructor(
     private val _centerCameraOnce = MutableStateFlow(false)
     val centerCameraOnce: StateFlow<Boolean> = _centerCameraOnce.asStateFlow()
 
+    private val _mapStyle = MutableStateFlow(MapStyle.CLASSIC)
+    val mapStyle: StateFlow<MapStyle> = _mapStyle.asStateFlow()
+
+    private val _mapIconStyle = MutableStateFlow(MapIconStyle.MODERN)
+    val mapIconStyle: StateFlow<MapIconStyle> = _mapIconStyle.asStateFlow()
+
+    private val _mapQuality = MutableStateFlow(MapQuality.QUALITY_2K)
+
+    private val _raceStyle = MutableStateFlow(RaceStyle.STANDARD)
+    val raceStyle: StateFlow<RaceStyle> = _raceStyle.asStateFlow()
+
     data class FinishedRunState(
         val isCompleted: Boolean,
         val duration: String,
@@ -69,7 +93,8 @@ class MapViewModel @Inject constructor(
         val mapId: Long,
         val mapName: String,
         val pathData: List<PathPoint>,
-        val startTime: Instant
+        val startTime: Instant,
+        val finishedAt: Instant
     )
 
     private val _finishedRunState = MutableStateFlow<FinishedRunState?>(null)
@@ -104,8 +129,10 @@ class MapViewModel @Inject constructor(
     private fun observeSettings() {
         viewModelScope.launch {
             settingsPreferences.settingsFlow.collect { settings ->
-                _mapZoom.value = settings.mapZoom.toDouble()
                 _showLocationDuringRun.value = settings.showLocationDuringRun
+                _mapStyle.value = settings.mapStyle
+                _mapIconStyle.value = settings.mapIconStyle
+                _mapQuality.value = settings.mapQuality
             }
         }
     }
@@ -195,7 +222,8 @@ class MapViewModel @Inject constructor(
         runServiceManager.startRun(
             checkpoints = _state.value.checkpoints,
             mapId = mapId,
-            mapName = mapName
+            mapName = mapName,
+            detectionRadius = pendingRunSettings.detectionRadius.toInt()
         )
 
         _state.update { it.copy(error = null) }
@@ -207,6 +235,7 @@ class MapViewModel @Inject constructor(
         val finalRunState = runServiceManager.stopRun()
 
         if (!finalRunState.isActive && finalRunState.startTime != null) {
+            val finishedAt = finalRunState.startTime.plusSeconds(finalRunState.elapsedSeconds)
             _finishedRunState.value = FinishedRunState(
                 isCompleted = finalRunState.isCompleted,
                 duration = finalRunState.durationString,
@@ -216,7 +245,8 @@ class MapViewModel @Inject constructor(
                 mapId = finalRunState.mapId,
                 mapName = finalRunState.mapName,
                 pathData = finalRunState.pathData,
-                startTime = finalRunState.startTime
+                startTime = finalRunState.startTime,
+                finishedAt = finishedAt
             )
         }
     }
@@ -225,28 +255,41 @@ class MapViewModel @Inject constructor(
         val finishedRun = _finishedRunState.value ?: return
 
         viewModelScope.launch {
-            val auth = authRepository.getCurrentAuth()
-            val userId = auth?.userId ?: -1L
-
-            runRepository.createRunActivity(
-                userId = userId,
+            val request = CreateRunRequest(
+                name = title.ifBlank { Strings.Formatted.runTitleLabel(context, finishedRun.mapName) },
                 mapId = finishedRun.mapId,
-                title = title.ifBlank { Strings.Formatted.runTitleLabel(context, finishedRun.mapName) },
-                startTime = finishedRun.startTime,
-                duration = finishedRun.duration,
-                distance = finishedRun.distance,
-                pathData = finishedRun.pathData,
-                status = if (finishedRun.isCompleted) ActivityStatus.COMPLETED else ActivityStatus.ABANDONED,
-                visitedControlPoints = finishedRun.visitedControlPoints,
-                totalCheckpoints = finishedRun.totalCheckpoints
+                runSettings = RunSettingsRequest(
+                    detectionRadius = pendingRunSettings.detectionRadius,
+                    showSelfOnMap = _showLocationDuringRun.value,
+                    orderedControlPoints = pendingRunSettings.orderedControlPoints,
+                    timerStart = pendingRunSettings.timerStart.value,
+                    raceStyle = pendingRunSettings.raceStyle.value,
+                    orientationType = pendingRunSettings.orientationType.value
+                ),
+                startedAt = finishedRun.startTime.toString(),
+                finishedAt = finishedRun.finishedAt.toString(),
+                pathPoints = finishedRun.pathData.map { pp ->
+                    PathPointRequest(
+                        lat = pp.lat,
+                        lon = pp.lon,
+                        timestamp = pp.timestamp.toString()
+                    )
+                }
             )
 
+            runRepository.createRun(request)
             _finishedRunState.value = null
+            _state.update { it.copy(runFinished = true) }
         }
     }
 
     fun discardFinishedRun() {
         _finishedRunState.value = null
+        _state.update { it.copy(runFinished = true) }
+    }
+
+    fun onRunFinishedHandled() {
+        _state.update { it.copy(runFinished = false) }
     }
 
     fun startTracking() {
@@ -426,37 +469,52 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun saveCurrentMap(name: String, description: String = "", location: String = "") {
+    fun saveCurrentMap(name: String, description: String = "") {
         viewModelScope.launch {
-            val auth = authRepository.getCurrentAuth()
-            val userId = auth?.userId ?: -1L
+            _state.update { it.copy(isSavingMap = true, error = null) }
 
             val controlPoints = _state.value.checkpoints.mapIndexed { index, cp ->
-                ControlPoint(
-                    id = index.toLong(),
-                    latitude = cp.position.latitude,
-                    longitude = cp.position.longitude,
-                    name = cp.name
+                ControlPointRequest(
+                    lat = cp.position.latitude,
+                    lon = cp.position.longitude,
+                    name = cp.name,
+                    sequence = index + 1
                 )
             }
 
             val result = mapRepository.createMap(
-                userId = userId,
-                name = name,
-                description = description,
-                location = location,
-                controlPoints = controlPoints
+                CreateMapRequest(
+                    name = name,
+                    description = description.ifBlank { null },
+                    controlPoints = controlPoints
+                )
             )
 
-            result.onSuccess {
-                _state.update { it.copy(error = null) }
+            result.onSuccess { map ->
+                val imageError = generateAndUploadMapImage(map.id, _state.value.checkpoints)
+                _state.update {
+                    it.copy(
+                        error = imageError,
+                        isSavingMap = false,
+                        mapSaved = imageError == null
+                    )
+                }
             }.onFailure { e ->
-                _state.update { it.copy(error = "Save error: ${e.message}") }
+                _state.update {
+                    it.copy(
+                        error = "Save error: ${e.message}",
+                        isSavingMap = false
+                    )
+                }
             }
         }
     }
 
-    fun updateCurrentMap(name: String, description: String = "", location: String = "") {
+    fun onMapSavedHandled() {
+        _state.update { it.copy(mapSaved = false) }
+    }
+
+    fun updateCurrentMap(name: String, description: String = "") {
         val mapId = _state.value.currentMapId
 
         if (mapId == null) {
@@ -465,37 +523,62 @@ class MapViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val auth = authRepository.getCurrentAuth()
-            val userId = auth?.userId ?: -1L
+            _state.update { it.copy(isSavingMap = true, error = null) }
 
             val controlPoints = _state.value.checkpoints.mapIndexed { index, cp ->
-                ControlPoint(
-                    id = index.toLong(),
-                    latitude = cp.position.latitude,
-                    longitude = cp.position.longitude,
-                    name = cp.name
+                ControlPointRequest(
+                    lat = cp.position.latitude,
+                    lon = cp.position.longitude,
+                    name = cp.name,
+                    sequence = index + 1
                 )
             }
 
             val result = mapRepository.updateMap(
                 mapId = mapId,
-                userId = userId,
-                name = name,
-                description = description,
-                location = location,
-                controlPoints = controlPoints
+                UpdateMapRequest(
+                    name = name,
+                    description = description.ifBlank { null },
+                    controlPoints = controlPoints
+                )
             )
 
-            result.onSuccess {
+            result.onSuccess { map ->
+                val imageError = generateAndUploadMapImage(map.id, _state.value.checkpoints)
                 _state.update {
                     it.copy(
                         currentMapName = name,
-                        error = null
+                        error = imageError,
+                        isSavingMap = false
                     )
                 }
                 saveCurrentMapInfo()
-            }.onFailure { e -> _state.update { it.copy(error = "Update error: ${e.message}") } }
+            }.onFailure { e ->
+                _state.update {
+                    it.copy(
+                        error = "Update error: ${e.message}",
+                        isSavingMap = false
+                    )
+                }
+            }
         }
+    }
+
+    private suspend fun generateAndUploadMapImage(mapId: Long, checkpoints: List<Checkpoint>): String? {
+        if (checkpoints.isEmpty()) return null
+
+        return runCatching {
+            val imageBytes = mapImageExporter.exportMapImage(
+                checkpoints = checkpoints,
+                styleUrl = _mapStyle.value.getUrl(),
+                width = _mapQuality.value.width,
+                height = _mapQuality.value.height
+            )
+            mapRepository.uploadMapImage(mapId, imageBytes, contentType = "image/jpeg").getOrThrow()
+        }.fold(
+            onSuccess = { null },
+            onFailure = { e -> "Map saved, but image generation failed: ${e.message}" }
+        )
     }
 
     fun loadMap(mapId: Long) {
@@ -508,8 +591,8 @@ class MapViewModel @Inject constructor(
 
             val checkpoints = map.controlPoints.mapIndexed { index, cp ->
                 Checkpoint(
-                    position = Position(cp.longitude, cp.latitude),
-                    name = cp.name.ifEmpty {Strings.Formatted.mapControlPointLabel(
+                    position = Position(cp.lon, cp.lat),
+                    name = cp.name.ifEmpty { Strings.Formatted.mapControlPointLabel(
                         context,
                         index + 1
                     ) }

@@ -33,11 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
 import com.mobileorienteering.ui.core.Strings
-import com.mobileorienteering.data.model.domain.Activity
-import com.mobileorienteering.data.model.domain.ActivityStatus
-import com.mobileorienteering.data.model.app.Checkpoint
-import com.mobileorienteering.data.model.domain.Map
+import com.mobileorienteering.data.model.domain.Run
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
+import com.mobileorienteering.data.model.app.Checkpoint
 import com.mobileorienteering.ui.screens.runs.components.RunMapPreview
 import com.mobileorienteering.ui.screens.runs.components.RunStatsCard
 import com.mobileorienteering.ui.screens.runs.components.RunTimeline
@@ -47,17 +45,17 @@ import com.mobileorienteering.util.formatTime
 import org.maplibre.spatialk.geojson.Position
 import java.time.Instant
 
+private enum class RunStatus { COMPLETED, ABANDONED }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RunDetailsScreen(
-    activityId: Long,
+    runId: Long,
     onNavigateBack: () -> Unit,
     viewModel: RunViewModel = hiltViewModel()
 ) {
-    val activity by viewModel.getActivity(activityId).collectAsState(initial = null)
-    val map by viewModel.getMapForActivity(activityId).collectAsState(initial = null)
+    val run by viewModel.getRun(runId).collectAsState(initial = null)
     val isLoading by remember { viewModel.isLoading }
-    val checkpointRadius by viewModel.checkpointRadius.collectAsState()
 
     Scaffold(
         topBar = {
@@ -75,7 +73,7 @@ fun RunDetailsScreen(
         }
     ) { paddingValues ->
         when {
-            isLoading || activity == null -> {
+            isLoading || run == null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -87,9 +85,8 @@ fun RunDetailsScreen(
             }
             else -> {
                 RunDetailsContent(
-                    activity = activity!!,
-                    map = map,
-                    checkpointRadius = checkpointRadius,
+                    run = run!!,
+                    checkpointRadius = run!!.runSettings.detectionRadius.toInt(),
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -101,60 +98,51 @@ fun RunDetailsScreen(
 
 @Composable
 private fun RunDetailsContent(
-    activity: Activity,
-    map: Map?,
+    run: Run,
     checkpointRadius: Int,
     modifier: Modifier = Modifier
 ) {
-    val stablePathData = remember(activity.id) { activity.pathData }
-    val stableCheckpoints = remember(activity.id, map?.id) {
-        map?.controlPoints?.mapIndexed { index, cp ->
-            Checkpoint(
-                position = Position(cp.longitude, cp.latitude),
-                name = "Point ${index + 1}"
-            )
-        } ?: emptyList()
+    val sortedPathPoints = remember(run.id) {
+        run.pathPoints.sortedBy { it.timestamp }
     }
 
-    val visitedControlPoints = remember(activity.id, map?.id, checkpointRadius) {
-        if (activity.visitedControlPoints.isNotEmpty()) {
-            activity.visitedControlPoints
-        } else if (map != null && activity.pathData.isNotEmpty()) {
-            computeVisitedControlPoints(
-                pathData = activity.pathData,
-                controlPoints = map.controlPoints,
-                radiusMeters = checkpointRadius
+    val stableCheckpoints = remember(run.id) {
+        run.map.controlPoints.map { cp ->
+            Checkpoint(
+                position = Position(cp.lon, cp.lat),
+                name = cp.name
             )
-        } else {
-            emptyList()
         }
     }
 
-    val stableVisitedIndices = remember(activity.id, visitedControlPoints) {
+    val visitedControlPoints = remember(run.id, checkpointRadius) {
+        computeVisitedControlPoints(
+            pathData = sortedPathPoints,
+            controlPoints = run.map.controlPoints,
+            radiusMeters = checkpointRadius
+        )
+    }
+
+    val visitedIndices = remember(run.id, visitedControlPoints) {
         visitedControlPoints.map { it.order - 1 }.toSet()
     }
 
-    val computedStatus = remember(visitedControlPoints.size, map?.controlPoints?.size) {
-        when {
-            map == null -> activity.status
-            map.controlPoints.isEmpty() -> ActivityStatus.COMPLETED
-            visitedControlPoints.size >= map.controlPoints.size -> ActivityStatus.COMPLETED
-            else -> ActivityStatus.ABANDONED
-        }
+    val status = remember(run.id) {
+        if (run.finishedAt != null) RunStatus.COMPLETED else RunStatus.ABANDONED
     }
 
     Column(modifier = modifier) {
         RunHeader(
-            title = activity.title,
-            startTime = activity.startTime,
-            status = computedStatus
+            title = run.name,
+            startTime = run.startedAt,
+            status = status
         )
 
-        if (stablePathData.isNotEmpty()) {
+        if (sortedPathPoints.isNotEmpty()) {
             RunMapPreview(
-                pathData = stablePathData,
+                pathData = sortedPathPoints,
                 checkpoints = stableCheckpoints,
-                visitedIndices = stableVisitedIndices,
+                visitedIndices = visitedIndices,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
@@ -176,10 +164,9 @@ private fun RunDetailsContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             RunStatsCard(
-                distance = activity.distance,
-                duration = activity.duration,
-                startTime = activity.startTime,
-                pathData = stablePathData,
+                pathPoints = sortedPathPoints,
+                startedAt = run.startedAt,
+                finishedAt = run.finishedAt,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
@@ -192,14 +179,14 @@ private fun RunDetailsContent(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
-                val startPoint = if (stablePathData.isNotEmpty()) {
-                    val firstPath = stablePathData.minByOrNull { it.timestamp }!!
+                val startPoint = if (sortedPathPoints.isNotEmpty()) {
+                    val firstPath = sortedPathPoints.first()
                     VisitedControlPoint(
                         controlPointName = Strings.Run.detailsStart,
                         order = 0,
-                        visitedAt = activity.startTime,
-                        latitude = firstPath.latitude,
-                        longitude = firstPath.longitude
+                        visitedAt = run.startedAt,
+                        lat = firstPath.lat,
+                        lon = firstPath.lon
                     )
                 } else null
 
@@ -210,11 +197,11 @@ private fun RunDetailsContent(
                 }
 
                 RunTimeline(
-                    startTime = activity.startTime,
+                    startTime = run.startedAt,
                     visitedPoints = timelinePoints,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-            } else if (map != null && map.controlPoints.isNotEmpty()) {
+            } else if (run.map.controlPoints.isNotEmpty()) {
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
                 Text(
@@ -234,7 +221,7 @@ private fun RunDetailsContent(
 private fun RunHeader(
     title: String,
     startTime: Instant,
-    status: ActivityStatus
+    status: RunStatus
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -252,22 +239,18 @@ private fun RunHeader(
 
             Text(
                 text = when (status) {
-                    ActivityStatus.COMPLETED -> Strings.Run.detailsCompleted
-                    ActivityStatus.ABANDONED -> Strings.Run.detailsAbandoned
-                    ActivityStatus.IN_PROGRESS -> Strings.Run.detailsInProgress
+                    RunStatus.COMPLETED -> Strings.Run.detailsCompleted
+                    RunStatus.ABANDONED -> Strings.Run.detailsAbandoned
                 },
                 style = MaterialTheme.typography.labelMedium,
                 color = when (status) {
-                    ActivityStatus.COMPLETED -> MaterialTheme.colorScheme.primary
-                    ActivityStatus.ABANDONED -> MaterialTheme.colorScheme.error
-                    ActivityStatus.IN_PROGRESS -> MaterialTheme.colorScheme.tertiary
+                    RunStatus.COMPLETED -> MaterialTheme.colorScheme.primary
+                    RunStatus.ABANDONED -> MaterialTheme.colorScheme.error
                 }
             )
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(
                 formatDate(startTime),
                 style = MaterialTheme.typography.bodyMedium,

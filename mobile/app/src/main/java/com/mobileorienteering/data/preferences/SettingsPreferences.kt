@@ -5,6 +5,9 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.mobileorienteering.data.model.app.AppLanguage
 import com.mobileorienteering.data.model.app.ContrastLevel
+import com.mobileorienteering.data.model.app.MapIconStyle
+import com.mobileorienteering.data.model.app.MapQuality
+import com.mobileorienteering.data.model.app.MapStyle
 import com.mobileorienteering.data.model.app.SettingsModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -25,9 +28,10 @@ class SettingsPreferences @Inject constructor(
         private val LANGUAGE = stringPreferencesKey("language")
         private val CONTROL_POINT_SOUND = booleanPreferencesKey("control_point_sound")
         private val CONTROL_POINT_VIBRATION = booleanPreferencesKey("control_point_vibration")
-        private val GPS_ACCURACY = intPreferencesKey("gps_accuracy")
-        private val MAP_ZOOM = intPreferencesKey("map_zoom")
         private val SHOW_LOCATION_DURING_RUN = booleanPreferencesKey("show_location_during_run")
+        private val MAP_STYLE = stringPreferencesKey("map_style")
+        private val MAP_ICON_STYLE = stringPreferencesKey("map_icon_style")
+        private val MAP_QUALITY = stringPreferencesKey("map_quality")
     }
 
     val settingsFlow: Flow<SettingsModel> = context.settingsDataStore.data.map { prefs ->
@@ -49,14 +53,20 @@ class SettingsPreferences @Inject constructor(
             controlPointVibration = prefs[CONTROL_POINT_VIBRATION]
                 ?: SettingsModel().controlPointVibration,
 
-            gpsAccuracy = prefs[GPS_ACCURACY]
-                ?: SettingsModel().gpsAccuracy,
-
-            mapZoom = prefs[MAP_ZOOM]
-                ?: SettingsModel().mapZoom,
-
             showLocationDuringRun = prefs[SHOW_LOCATION_DURING_RUN]
-                ?: SettingsModel().showLocationDuringRun
+                ?: SettingsModel().showLocationDuringRun,
+
+            mapStyle = prefs[MAP_STYLE]?.let {
+                runCatching { MapStyle.valueOf(it) }.getOrNull()
+            } ?: SettingsModel().mapStyle,
+
+            mapIconStyle = prefs[MAP_ICON_STYLE]?.let {
+                runCatching { MapIconStyle.valueOf(it) }.getOrNull()
+            } ?: SettingsModel().mapIconStyle,
+
+            mapQuality = prefs[MAP_QUALITY]?.let {
+                runCatching { MapQuality.valueOf(it) }.getOrNull()
+            } ?: SettingsModel().mapQuality
         )
     }
 
@@ -80,15 +90,19 @@ class SettingsPreferences @Inject constructor(
         enabled: Boolean
     ) = context.settingsDataStore.edit { it[CONTROL_POINT_VIBRATION] = enabled }
 
-    suspend fun updateGpsAccuracy(
-        value: Int
-    ) = context.settingsDataStore.edit { it[GPS_ACCURACY] = value }
-
-    suspend fun updateMapZoom(
-        value: Int
-    ) = context.settingsDataStore.edit { it[MAP_ZOOM] = value }
-
     suspend fun updateShowLocationDuringRun(
         enabled: Boolean
     ) = context.settingsDataStore.edit { it[SHOW_LOCATION_DURING_RUN] = enabled }
+
+    suspend fun updateMapStyle(
+        style: MapStyle
+    ) = context.settingsDataStore.edit { it[MAP_STYLE] = style.name }
+
+    suspend fun updateMapIconStyle(
+        style: MapIconStyle
+    ) = context.settingsDataStore.edit { it[MAP_ICON_STYLE] = style.name }
+
+    suspend fun updateMapQuality(
+        quality: MapQuality
+    ) = context.settingsDataStore.edit { it[MAP_QUALITY] = quality.name }
 }

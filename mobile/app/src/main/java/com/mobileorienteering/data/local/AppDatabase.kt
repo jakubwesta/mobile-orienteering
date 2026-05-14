@@ -15,7 +15,7 @@ import com.mobileorienteering.data.local.entity.*
         RunSettingsEntity::class,
         PathPointEntity::class
     ],
-    version = 3,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

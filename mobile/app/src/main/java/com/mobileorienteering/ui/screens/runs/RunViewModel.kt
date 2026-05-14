@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileorienteering.data.model.domain.Map
 import com.mobileorienteering.data.model.domain.Run
-import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.data.repository.RunRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -20,16 +19,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RunViewModel @Inject constructor(
-    private val runRepository: RunRepository,
-    private val settingsPreferences: SettingsPreferences
+    private val runRepository: RunRepository
 ) : ViewModel() {
 
     val runs: StateFlow<List<Run>> = runRepository.getAllRunsFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val checkpointRadius: StateFlow<Int> = settingsPreferences.settingsFlow
-        .map { it.gpsAccuracy }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 10)
 
     var isLoading = mutableStateOf(false)
     var error = mutableStateOf<String?>(null)

@@ -22,5 +22,10 @@ data class PathPointRequest(
 
 @JsonClass(generateAdapter = true)
 data class RunSettingsRequest(
-    @param:Json(name = "detection_radius") val detectionRadius: Float
+    @param:Json(name = "detection_radius") val detectionRadius: Float,
+    @param:Json(name = "show_self_on_map") val showSelfOnMap: Boolean = true,
+    @param:Json(name = "ordered_control_points") val orderedControlPoints: Boolean = true,
+    @param:Json(name = "timer_start") val timerStart: String = "race_start",
+    @param:Json(name = "race_style") val raceStyle: String = "standard",
+    @param:Json(name = "orientation_type") val orientationType: String = "foot"
 )

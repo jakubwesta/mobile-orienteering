@@ -2,9 +2,9 @@ package com.mobileorienteering.data.model.network.response
 
 import com.mobileorienteering.data.model.domain.ControlPoint
 import com.mobileorienteering.data.model.domain.Map
+import com.mobileorienteering.util.toInstant
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import java.time.Instant
 
 @JsonClass(generateAdapter = true)
 data class ControlPointResponse(
@@ -25,7 +25,16 @@ data class MapResponse(
     @param:Json(name = "is_snapshot") val isSnapshot: Boolean,
     @param:Json(name = "original_map_id") val originalMapId: Long?,
     @param:Json(name = "created_at") val createdAt: String,
-    @param:Json(name = "control_points") val controlPoints: List<ControlPointResponse>
+    @param:Json(name = "control_points") val controlPoints: List<ControlPointResponse>,
+    @param:Json(name = "image_key") val imageKey: String? = null,
+    @param:Json(name = "image_url") val imageUrl: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class MapImageUploadUrlResponse(
+    @param:Json(name = "upload_url") val uploadUrl: String,
+    @param:Json(name = "object_key") val objectKey: String,
+    @param:Json(name = "expires_in") val expiresIn: Int
 )
 
 fun MapResponse.toDomainModel(): Map {
@@ -36,8 +45,9 @@ fun MapResponse.toDomainModel(): Map {
         description = description,
         isSnapshot = isSnapshot,
         originalMapId = originalMapId,
-        createdAt = Instant.parse(createdAt),
-        controlPoints = controlPoints.map { it.toDomainModel() }
+        createdAt = createdAt.toInstant(),
+        controlPoints = controlPoints.map { it.toDomainModel() },
+        imageUrl = imageUrl
     )
 }
 

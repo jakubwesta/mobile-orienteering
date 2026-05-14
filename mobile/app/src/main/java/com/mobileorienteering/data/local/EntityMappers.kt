@@ -7,9 +7,12 @@ import com.mobileorienteering.data.local.entity.RunSettingsEntity
 import com.mobileorienteering.data.local.entity.RunWithDetails
 import com.mobileorienteering.data.model.domain.ControlPoint
 import com.mobileorienteering.data.model.domain.Map
+import com.mobileorienteering.data.model.domain.OrientationType
 import com.mobileorienteering.data.model.domain.PathPoint
+import com.mobileorienteering.data.model.domain.RaceStyle
 import com.mobileorienteering.data.model.domain.Run
 import com.mobileorienteering.data.model.domain.RunSettings
+import com.mobileorienteering.data.model.domain.TimerStart
 
 fun MapWithControlPoints.toDomainModel(): Map {
     return Map(
@@ -20,7 +23,9 @@ fun MapWithControlPoints.toDomainModel(): Map {
         isSnapshot = map.isSnapshot,
         originalMapId = map.originalMapId,
         createdAt = map.createdAt,
-        controlPoints = controlPoints.map { it.toDomainModel() }
+        controlPoints = controlPoints.map { it.toDomainModel() },
+        imageUrl = map.imageUrl,
+        localImagePath = map.localImagePath
     )
 }
 
@@ -49,7 +54,9 @@ fun RunWithDetails.toDomainModel(): Run {
             isSnapshot = map.isSnapshot,
             originalMapId = map.originalMapId,
             createdAt = map.createdAt,
-            controlPoints = controlPoints.map { it.toDomainModel() }
+            controlPoints = controlPoints.map { it.toDomainModel() },
+            imageUrl = map.imageUrl,
+            localImagePath = map.localImagePath
         ),
         runSettings = settings.toDomainModel(),
         pathPoints = pathPoints.map { it.toDomainModel() }
@@ -59,7 +66,12 @@ fun RunWithDetails.toDomainModel(): Run {
 fun RunSettingsEntity.toDomainModel(): RunSettings {
     return RunSettings(
         id = id,
-        detectionRadius = detectionRadius
+        detectionRadius = detectionRadius,
+        showSelfOnMap = showSelfOnMap,
+        orderedControlPoints = orderedControlPoints,
+        timerStart = TimerStart.fromValue(timerStart),
+        raceStyle = RaceStyle.fromValue(raceStyle),
+        orientationType = OrientationType.fromValue(orientationType)
     )
 }
 

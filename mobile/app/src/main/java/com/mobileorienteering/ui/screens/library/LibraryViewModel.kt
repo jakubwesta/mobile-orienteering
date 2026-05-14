@@ -1,5 +1,6 @@
 package com.mobileorienteering.ui.screens.library
 
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -45,6 +46,18 @@ class LibraryViewModel @Inject constructor(
 
             mapRepository.deleteMap(mapId)
                 .onFailure { error.value = it.message ?: "Failed to delete map" }
+
+            isLoading.value = false
+        }
+    }
+
+    fun changeMapImage(mapId: Long, imageUri: Uri) {
+        viewModelScope.launch {
+            isLoading.value = true
+            error.value = null
+
+            mapRepository.uploadMapImage(mapId, imageUri)
+                .onFailure { error.value = it.message ?: "Failed to change map image" }
 
             isLoading.value = false
         }

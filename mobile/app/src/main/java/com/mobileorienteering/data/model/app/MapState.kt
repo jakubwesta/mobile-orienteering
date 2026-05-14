@@ -12,7 +12,10 @@ data class MapState(
     val checkpoints: List<Checkpoint> = emptyList(),
 
     val currentMapId: Long? = null,
-    val currentMapName: String? = null
+    val currentMapName: String? = null,
+    val isSavingMap: Boolean = false,
+    val mapSaved: Boolean = false,
+    val runFinished: Boolean = false
 )
 
 data class Checkpoint(

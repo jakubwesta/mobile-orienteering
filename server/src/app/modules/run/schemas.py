@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from app.modules.map.schemas import MapResponse
+from app.modules.run.models import TimerStart, RaceStyle, OrientationType
 
 
 class PathPointBase(BaseModel):
@@ -24,6 +25,11 @@ class PathPointResponse(PathPointBase):
 
 class RunSettingsBase(BaseModel):
   detection_radius: float
+  show_self_on_map: bool = True
+  ordered_control_points: bool = True
+  timer_start: TimerStart = TimerStart.race_start
+  race_style: RaceStyle = RaceStyle.standard
+  orientation_type: OrientationType = OrientationType.foot
 
 
 class RunSettingsCreate(RunSettingsBase):
