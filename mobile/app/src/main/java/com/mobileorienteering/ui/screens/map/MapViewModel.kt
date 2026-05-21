@@ -23,6 +23,7 @@ import com.mobileorienteering.data.model.app.MapIconStyle
 import com.mobileorienteering.data.model.app.MapQuality
 import com.mobileorienteering.data.model.app.MapStyle
 import com.mobileorienteering.data.model.domain.RaceStyle
+import com.mobileorienteering.data.model.domain.TimerStart
 import com.mobileorienteering.service.RunServiceManager
 import com.mobileorienteering.service.RunState
 import com.mobileorienteering.ui.core.Strings
@@ -31,9 +32,11 @@ import com.mobileorienteering.util.manager.LocationManager
 import com.mobileorienteering.util.manager.PermissionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.maplibre.spatialk.geojson.Position
 import java.time.Instant
 import javax.inject.Inject
@@ -223,7 +226,9 @@ class MapViewModel @Inject constructor(
             checkpoints = _state.value.checkpoints,
             mapId = mapId,
             mapName = mapName,
-            detectionRadius = pendingRunSettings.detectionRadius.toInt()
+            detectionRadius = pendingRunSettings.detectionRadius.toInt(),
+            orderedControlPoints = pendingRunSettings.orderedControlPoints,
+            timerStart = pendingRunSettings.timerStart.value
         )
 
         _state.update { it.copy(error = null) }
@@ -233,9 +238,19 @@ class MapViewModel @Inject constructor(
 
     fun stopRun() {
         val finalRunState = runServiceManager.stopRun()
+        val raceStartedAt = finalRunState.raceStartedAt ?: return
 
-        if (!finalRunState.isActive && finalRunState.startTime != null) {
-            val finishedAt = finalRunState.startTime.plusSeconds(finalRunState.elapsedSeconds)
+        val timerStartedAt = finalRunState.startTime
+        val runStartedAt = when (pendingRunSettings.timerStart) {
+            TimerStart.FIRST_POINT -> timerStartedAt ?: raceStartedAt
+            TimerStart.RACE_START -> timerStartedAt ?: raceStartedAt
+        }
+
+        val stoppedAt = Instant.now()
+        val lastPathTimestamp = finalRunState.pathData.maxOfOrNull { it.timestamp }
+        val finishedAt = listOfNotNull(stoppedAt, lastPathTimestamp, runStartedAt).max()
+
+        if (!finalRunState.isActive) {
             _finishedRunState.value = FinishedRunState(
                 isCompleted = finalRunState.isCompleted,
                 duration = finalRunState.durationString,
@@ -245,7 +260,7 @@ class MapViewModel @Inject constructor(
                 mapId = finalRunState.mapId,
                 mapName = finalRunState.mapName,
                 pathData = finalRunState.pathData,
-                startTime = finalRunState.startTime,
+                startTime = runStartedAt,
                 finishedAt = finishedAt
             )
         }
@@ -254,7 +269,7 @@ class MapViewModel @Inject constructor(
     fun saveFinishedRun(title: String) {
         val finishedRun = _finishedRunState.value ?: return
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val request = CreateRunRequest(
                 name = title.ifBlank { Strings.Formatted.runTitleLabel(context, finishedRun.mapName) },
                 mapId = finishedRun.mapId,
@@ -277,9 +292,16 @@ class MapViewModel @Inject constructor(
                 }
             )
 
-            runRepository.createRun(request)
-            _finishedRunState.value = null
-            _state.update { it.copy(runFinished = true) }
+            val result = runRepository.createRun(request)
+            withContext(Dispatchers.Main) {
+                result.onFailure { error ->
+                    _state.update { it.copy(error = error.message ?: "Failed to save run") }
+                }
+                if (result.isSuccess) {
+                    _finishedRunState.value = null
+                    _state.update { it.copy(runFinished = true, error = null) }
+                }
+            }
         }
     }
 

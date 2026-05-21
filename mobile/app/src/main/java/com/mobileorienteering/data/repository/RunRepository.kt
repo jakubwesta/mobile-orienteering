@@ -62,64 +62,64 @@ class RunRepository @Inject constructor(
             val base = System.currentTimeMillis()
             val tempRunId = -base
             val tempSnapshotMapId = -(base + 1)
-
-            mapDao.insertMap(
-                MapEntity(
-                    id = tempSnapshotMapId,
-                    userId = originalMap.userId,
-                    name = originalMap.name,
-                    description = originalMap.description,
-                    isSnapshot = true,
-                    originalMapId = originalMap.id,
-                    createdAt = Instant.now(),
-                    syncedWithServer = false,
-                    pendingDeletion = false,
-                    imageUrl = originalMap.imageUrl,
-                    localImagePath = originalMap.localImagePath
-                )
-            )
-            controlPointDao.insertControlPoints(
-                controlPointDao.getControlPointsForMap(request.mapId)
-                    .map { it.copy(id = 0, mapId = tempSnapshotMapId) }
-            )
-
-            runDao.insertRun(
-                RunEntity(
-                    id = tempRunId,
-                    userId = userId,
-                    mapId = tempSnapshotMapId,
-                    name = request.name,
-                    startedAt = request.startedAt.toInstant(),
-                    finishedAt = request.finishedAt?.toInstant(),
-                    syncedWithServer = false,
-                    pendingDeletion = false
-                )
-            )
-
-            runSettingsDao.insertRunSettings(
-                RunSettingsEntity(
+            val startedAt = request.startedAt.toInstant()
+            val finishedAt = request.finishedAt?.toInstant()
+            val pathPointEntities = request.pathPoints.map { pp ->
+                PathPointEntity(
                     id = 0,
                     runId = tempRunId,
-                    detectionRadius = request.runSettings.detectionRadius,
-                    showSelfOnMap = request.runSettings.showSelfOnMap,
-                    orderedControlPoints = request.runSettings.orderedControlPoints,
-                    timerStart = request.runSettings.timerStart,
-                    raceStyle = request.runSettings.raceStyle,
-                    orientationType = request.runSettings.orientationType
+                    lat = pp.lat,
+                    lon = pp.lon,
+                    timestamp = pp.timestamp.toInstant()
                 )
-            )
+            }
 
-            pathPointDao.insertPathPoints(
-                request.pathPoints.map { pp ->
-                    PathPointEntity(
+            db.withTransaction {
+                mapDao.insertMap(
+                    MapEntity(
+                        id = tempSnapshotMapId,
+                        userId = originalMap.userId,
+                        name = originalMap.name,
+                        description = originalMap.description,
+                        isSnapshot = true,
+                        originalMapId = originalMap.id,
+                        createdAt = Instant.now(),
+                        syncedWithServer = false,
+                        pendingDeletion = false,
+                        imageUrl = originalMap.imageUrl,
+                        localImagePath = originalMap.localImagePath
+                    )
+                )
+                controlPointDao.insertControlPoints(
+                    controlPointDao.getControlPointsForMap(request.mapId)
+                        .map { it.copy(id = 0, mapId = tempSnapshotMapId) }
+                )
+                runDao.insertRun(
+                    RunEntity(
+                        id = tempRunId,
+                        userId = userId,
+                        mapId = tempSnapshotMapId,
+                        name = request.name,
+                        startedAt = startedAt,
+                        finishedAt = finishedAt,
+                        syncedWithServer = false,
+                        pendingDeletion = false
+                    )
+                )
+                runSettingsDao.insertRunSettings(
+                    RunSettingsEntity(
                         id = 0,
                         runId = tempRunId,
-                        lat = pp.lat,
-                        lon = pp.lon,
-                        timestamp = pp.timestamp.toInstant()
+                        detectionRadius = request.runSettings.detectionRadius,
+                        showSelfOnMap = request.runSettings.showSelfOnMap,
+                        orderedControlPoints = request.runSettings.orderedControlPoints,
+                        timerStart = request.runSettings.timerStart,
+                        raceStyle = request.runSettings.raceStyle,
+                        orientationType = request.runSettings.orientationType
                     )
-                }
-            )
+                )
+                pathPointDao.insertPathPoints(pathPointEntities)
+            }
 
             if (request.mapId > 0) {
                 ApiHelper.safeApiCall("Failed to create run") {

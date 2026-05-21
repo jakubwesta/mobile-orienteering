@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -82,10 +83,10 @@ fun RunTimeline(
                 null
             }
 
-            val checkpointLabel = when {
-                isFirst -> Strings.Run.detailsStart
-                isLast -> Strings.Run.detailsFinish
-                else -> visitedPoint.controlPointName.ifEmpty { "Control Point ${visitedPoint.order}" }
+            val checkpointLabel = if (visitedPoint.checkpointIndex < 0) {
+                visitedPoint.controlPointName
+            } else {
+                "${visitedPoint.checkpointIndex + 1}"
             }
 
             TimelineItem(
@@ -183,30 +184,16 @@ private fun TimelineItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = Strings.Run.detailsIntervalLabel,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = intervalDuration,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                TimelineStat(
+                    label = Strings.Run.detailsIntervalLabel,
+                    value = intervalDuration
+                )
 
                 if (distanceFromPrevious != null) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            text = Strings.Run.detailsDistLabel,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = formatDistance(distanceFromPrevious),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+                    TimelineStat(
+                        label = Strings.Run.detailsDistLabel,
+                        value = formatDistance(distanceFromPrevious)
+                    )
                 }
             }
 
@@ -215,18 +202,11 @@ private fun TimelineItem(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            text = Strings.Run.detailsPaceLabel,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = segmentPace,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
+                    TimelineStat(
+                        label = Strings.Run.detailsPaceLabel,
+                        value = segmentPace,
+                        valueColor = MaterialTheme.colorScheme.secondary
+                    )
                 }
             }
 
@@ -234,32 +214,43 @@ private fun TimelineItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = Strings.Run.detailsTotalLabel,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = totalTime,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                TimelineStat(
+                    label = Strings.Run.detailsTotalLabel,
+                    value = totalTime,
+                    valueColor = MaterialTheme.colorScheme.primary
+                )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = Strings.Run.detailsTotalDistLabel,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = formatDistance(totalDistance),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                TimelineStat(
+                    label = Strings.Run.detailsTotalDistLabel,
+                    value = formatDistance(totalDistance),
+                    valueColor = MaterialTheme.colorScheme.primary
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun TimelineStat(
+    label: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.alignBy(FirstBaseline)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = valueColor,
+            modifier = Modifier.alignBy(FirstBaseline)
+        )
     }
 }

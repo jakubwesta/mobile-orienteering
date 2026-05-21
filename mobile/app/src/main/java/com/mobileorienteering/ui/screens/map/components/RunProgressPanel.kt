@@ -35,6 +35,7 @@ fun RunProgressPanel(
     totalCount: Int,
     distance: Double,
     nextCheckpointIndex: Int,
+    showNextCheckpoint: Boolean = true,
     onStopClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -136,7 +137,7 @@ fun RunProgressPanel(
                 if (isExpanded) {
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    if (nextCheckpointIndex < totalCount) {
+                    if (showNextCheckpoint && nextCheckpointIndex < totalCount) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(8.dp)

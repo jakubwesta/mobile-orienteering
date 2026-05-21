@@ -53,9 +53,13 @@ sealed class AppScreen(
             get() = Strings.Nav.runs
     }
 
-  object RunDetails : AppScreen("run_details/{runId}") {
-    fun createRoute(runId: Long) = "run_details/$runId"
-  }
+    object RunDetails : AppScreen("run_details/{runId}") {
+        fun createRoute(runId: Long) = "run_details/$runId"
+    }
+
+    object RunSplits : AppScreen("run_splits/{runId}") {
+        fun createRoute(runId: Long) = "run_splits/$runId"
+    }
 
     object Settings : AppScreen(
         route = "settings",

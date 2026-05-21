@@ -326,12 +326,14 @@ fun MapScreen(
                         width = 4f
                     )
 
-                    NextCheckpointLineLayer(
-                        currentLocation = currentLocation,
-                        nextCheckpoint = if (runState.nextCheckpointIndex < state.checkpoints.size) {
-                            state.checkpoints[runState.nextCheckpointIndex]
-                        } else null
-                    )
+                    if (runState.orderedControlPoints) {
+                        NextCheckpointLineLayer(
+                            currentLocation = currentLocation,
+                            nextCheckpoint = if (runState.nextCheckpointIndex < state.checkpoints.size) {
+                                state.checkpoints[runState.nextCheckpointIndex]
+                            } else null
+                        )
+                    }
                 }
 
                 if (isRunActive && raceStyle == RaceStyle.COMPASS_BEARING) {
@@ -341,7 +343,11 @@ fun MapScreen(
                 CheckpointsLayer(
                     checkpoints = state.checkpoints,
                     visitedIndices = if (isRunActive) runState.visitedCheckpointIndices else emptySet(),
-                    nextCheckpointIndex = if (isRunActive) runState.nextCheckpointIndex else -1,
+                    nextCheckpointIndex = if (isRunActive && runState.orderedControlPoints) {
+                        runState.nextCheckpointIndex
+                    } else {
+                        -1
+                    },
                     isRunActive = isRunActive,
                     draggingIndex = draggingCheckpointIndex,
                     cameraState = cameraState,
@@ -392,6 +398,7 @@ fun MapScreen(
                     totalCount = runState.totalCheckpoints,
                     distance = runState.distance,
                     nextCheckpointIndex = runState.nextCheckpointIndex,
+                    showNextCheckpoint = runState.orderedControlPoints,
                     onStopClick = { viewModel.stopRun() },
                     modifier = Modifier.align(Alignment.TopCenter)
                 )

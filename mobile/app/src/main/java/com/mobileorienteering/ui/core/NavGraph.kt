@@ -19,6 +19,7 @@ import com.mobileorienteering.ui.screens.settings.SettingsScreen
 import com.mobileorienteering.ui.screens.map.MapScreen
 import com.mobileorienteering.ui.screens.first_launch.FirstLaunchScreen
 import com.mobileorienteering.ui.screens.runs.RunDetailsScreen
+import com.mobileorienteering.ui.screens.runs.RunSplitsScreen
 import com.mobileorienteering.ui.screens.settings.EditPasswordScreen
 import com.mobileorienteering.ui.screens.settings.EditProfileScreen
 
@@ -154,6 +155,22 @@ fun AppNavGraph(
         ) { backStackEntry ->
             val runId = backStackEntry.arguments?.getLong("runId") ?: return@composable
             RunDetailsScreen(
+                runId = runId,
+                onNavigateBack = { navController.popBackStack() },
+                onViewSplits = {
+                    navController.navigate(AppScreen.RunSplits.createRoute(runId))
+                }
+            )
+        }
+
+        composable(
+            route = AppScreen.RunSplits.route,
+            arguments = listOf(
+                navArgument("runId") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val runId = backStackEntry.arguments?.getLong("runId") ?: return@composable
+            RunSplitsScreen(
                 runId = runId,
                 onNavigateBack = { navController.popBackStack() }
             )

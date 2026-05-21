@@ -7,6 +7,7 @@ import android.os.Binder
 import android.os.IBinder
 import com.mobileorienteering.data.model.app.Checkpoint
 import com.mobileorienteering.data.model.domain.PathPoint
+import com.mobileorienteering.data.model.domain.TimerStart
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
 import com.mobileorienteering.util.manager.FeedbackManager
 import com.mobileorienteering.util.manager.LocationManager
@@ -46,6 +47,8 @@ class RunTrackingService : Service() {
         const val EXTRA_MAP_ID = "extra_map_id"
         const val EXTRA_MAP_NAME = "extra_map_name"
         const val EXTRA_DETECTION_RADIUS = "extra_detection_radius"
+        const val EXTRA_ORDERED_CONTROL_POINTS = "extra_ordered_control_points"
+        const val EXTRA_TIMER_START = "extra_timer_start"
     }
 
     inner class RunBinder : Binder() {
@@ -61,10 +64,14 @@ class RunTrackingService : Service() {
                 val mapId = intent.getLongExtra(EXTRA_MAP_ID, 0L)
                 val mapName = intent.getStringExtra(EXTRA_MAP_NAME) ?: "Unknown"
                 checkpointRadius = intent.getIntExtra(EXTRA_DETECTION_RADIUS, 15)
+                val orderedControlPoints = intent.getBooleanExtra(EXTRA_ORDERED_CONTROL_POINTS, true)
+                val timerStart = TimerStart.fromValue(
+                    intent.getStringExtra(EXTRA_TIMER_START) ?: TimerStart.RACE_START.value
+                )
 
                 if (checkpointsJson != null) {
                     val checkpoints = deserializeCheckpoints(checkpointsJson)
-                    startRun(checkpoints, mapId, mapName)
+                    startRun(checkpoints, mapId, mapName, orderedControlPoints, timerStart)
                 }
             }
             ACTION_STOP -> {
@@ -74,20 +81,32 @@ class RunTrackingService : Service() {
         return START_STICKY
     }
 
-    private fun startRun(checkpoints: List<Checkpoint>, mapId: Long, mapName: String) {
+    private fun startRun(
+        checkpoints: List<Checkpoint>,
+        mapId: Long,
+        mapName: String,
+        orderedControlPoints: Boolean,
+        timerStart: TimerStart
+    ) {
         val notification = notificationManager.buildRunNotification(
             title = "Starting run...",
             content = "0/0 checkpoints"
         )
         startForeground(NotificationManager.RUN_TRACKING_NOTIFICATION_ID, notification)
 
+        val raceStartedAt = Instant.now()
+        val timerStartedAt = if (timerStart == TimerStart.RACE_START) raceStartedAt else null
+
         _runState.value = RunState(
             isActive = true,
-            startTime = Instant.now(),
+            raceStartedAt = raceStartedAt,
+            startTime = timerStartedAt,
             checkpoints = checkpoints,
             mapId = mapId,
             mapName = mapName,
-            totalCheckpoints = checkpoints.size
+            totalCheckpoints = checkpoints.size,
+            orderedControlPoints = orderedControlPoints,
+            timerStart = timerStart
         )
 
         startLocationUpdates()
@@ -148,46 +167,85 @@ class RunTrackingService : Service() {
 
     private fun checkCheckpointVisit(location: Location) {
         val state = _runState.value
+        if (state.isCompleted) return
+
+        if (state.orderedControlPoints) {
+            checkOrderedCheckpointVisit(location, state)
+        } else {
+            checkAnyOrderCheckpointVisit(location, state)
+        }
+    }
+
+    private fun checkOrderedCheckpointVisit(location: Location, state: RunState) {
         if (state.nextCheckpointIndex >= state.checkpoints.size) return
 
-        val nextCheckpoint = state.checkpoints[state.nextCheckpointIndex]
+        val index = state.nextCheckpointIndex
+        val checkpoint = state.checkpoints[index]
+        if (isWithinCheckpointRadius(location, checkpoint)) {
+            recordCheckpointVisit(state, index, checkpoint)
+        }
+    }
+
+    private fun checkAnyOrderCheckpointVisit(location: Location, state: RunState) {
+        state.checkpoints.forEachIndexed { index, checkpoint ->
+            if (index in state.visitedCheckpointIndices) return@forEachIndexed
+            if (isWithinCheckpointRadius(location, checkpoint)) {
+                recordCheckpointVisit(state, index, checkpoint)
+                return
+            }
+        }
+    }
+
+    private fun isWithinCheckpointRadius(location: Location, checkpoint: Checkpoint): Boolean {
         val checkpointLocation = Location("checkpoint").apply {
-            latitude = nextCheckpoint.position.latitude
-            longitude = nextCheckpoint.position.longitude
+            latitude = checkpoint.position.latitude
+            longitude = checkpoint.position.longitude
+        }
+        return location.distanceTo(checkpointLocation) <= checkpointRadius
+    }
+
+    private fun recordCheckpointVisit(state: RunState, index: Int, checkpoint: Checkpoint) {
+        if (index in state.visitedCheckpointIndices) return
+
+        val visitInstant = Instant.now()
+        val visitSequence = state.visitedControlPoints.size + 1
+        val visitedPoint = VisitedControlPoint(
+            controlPointName = checkpoint.name,
+            order = if (state.orderedControlPoints) index + 1 else visitSequence,
+            checkpointIndex = index,
+            visitedAt = visitInstant,
+            lat = checkpoint.position.latitude,
+            lon = checkpoint.position.longitude
+        )
+
+        val newNextIndex = if (state.orderedControlPoints) index + 1 else state.nextCheckpointIndex
+        val allVisited = state.visitedCheckpointIndices.size + 1 >= state.checkpoints.size
+        val timerStartedAt = if (
+            state.timerStart == TimerStart.FIRST_POINT && state.startTime == null
+        ) {
+            visitInstant
+        } else {
+            state.startTime
         }
 
-        val distanceToCheckpoint = location.distanceTo(checkpointLocation)
-
-        if (distanceToCheckpoint <= checkpointRadius) {
-            val visitedPoint = VisitedControlPoint(
-                controlPointName = nextCheckpoint.name,
-                order = state.nextCheckpointIndex + 1,
-                visitedAt = Instant.now(),
-                lat = nextCheckpoint.position.latitude,
-                lon = nextCheckpoint.position.longitude
+        _runState.update { current ->
+            current.copy(
+                startTime = timerStartedAt,
+                visitedCheckpointIndices = current.visitedCheckpointIndices + index,
+                checkpointVisitTimes = current.checkpointVisitTimes + (index to visitInstant),
+                visitedControlPoints = current.visitedControlPoints + visitedPoint,
+                nextCheckpointIndex = newNextIndex,
+                autoFinished = allVisited
             )
-
-            val newNextIndex = state.nextCheckpointIndex + 1
-            val allVisited = newNextIndex >= state.checkpoints.size
-
-            _runState.update { current ->
-                current.copy(
-                    visitedCheckpointIndices = current.visitedCheckpointIndices + current.nextCheckpointIndex,
-                    checkpointVisitTimes = current.checkpointVisitTimes + (current.nextCheckpointIndex to Instant.now()),
-                    visitedControlPoints = current.visitedControlPoints + visitedPoint,
-                    nextCheckpointIndex = newNextIndex,
-                    autoFinished = allVisited
-                )
-            }
-
-            if (allVisited) {
-                feedbackManager.playFinishFeedback()
-            } else {
-                feedbackManager.playControlPointFeedback()
-            }
-
-            updateNotification()
         }
+
+        if (allVisited) {
+            feedbackManager.playFinishFeedback()
+        } else {
+            feedbackManager.playControlPointFeedback()
+        }
+
+        updateNotification()
     }
 
     private fun startTimer() {
@@ -258,8 +316,11 @@ class RunTrackingService : Service() {
 
 data class RunState(
     val isActive: Boolean = false,
+    val raceStartedAt: Instant? = null,
     val startTime: Instant? = null,
     val elapsedSeconds: Long = 0,
+    val orderedControlPoints: Boolean = true,
+    val timerStart: TimerStart = TimerStart.RACE_START,
     val checkpoints: List<Checkpoint> = emptyList(),
     val visitedCheckpointIndices: Set<Int> = emptySet(),
     val checkpointVisitTimes: Map<Int, Instant> = emptyMap(),

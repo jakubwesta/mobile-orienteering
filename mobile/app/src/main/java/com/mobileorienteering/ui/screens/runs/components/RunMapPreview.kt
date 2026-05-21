@@ -3,17 +3,29 @@ package com.mobileorienteering.ui.screens.runs.components
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.mobileorienteering.data.model.domain.PathPoint
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.mobileorienteering.data.model.app.Checkpoint
+import com.mobileorienteering.data.model.app.MapIconStyle
+import com.mobileorienteering.data.model.app.MapStyle
+import com.mobileorienteering.data.model.domain.PathPoint
+import com.mobileorienteering.ui.screens.map.components.layers.CheckpointsLayer
+import com.mobileorienteering.ui.screens.map.components.layers.RoutePathLayer
+import com.mobileorienteering.ui.theme.CheckpointColorNext
+import com.mobileorienteering.ui.theme.ModernMarkerLabelColor
+import com.mobileorienteering.ui.theme.ModernMarkerStrokeColor
+import com.mobileorienteering.ui.theme.UserLocationStrokeColor
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.format
+import org.maplibre.compose.expressions.dsl.offset
+import org.maplibre.compose.expressions.dsl.span
+import org.maplibre.compose.expressions.value.SymbolAnchor
 import org.maplibre.compose.layers.CircleLayer
-import org.maplibre.compose.layers.LineLayer
+import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
@@ -23,7 +35,6 @@ import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.spatialk.geojson.Feature
-import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 
@@ -32,6 +43,10 @@ fun RunMapPreview(
     pathData: List<PathPoint>,
     checkpoints: List<Checkpoint>,
     visitedIndices: Set<Int>,
+    mapStyle: MapStyle,
+    mapIconStyle: MapIconStyle,
+    playbackPosition: Position? = null,
+    playbackSpeedLabel: String? = null,
     modifier: Modifier = Modifier
 ) {
     val cameraState = rememberCameraState()
@@ -73,116 +88,60 @@ fun RunMapPreview(
         }
     }
 
-    val routeFeature = remember(pathData) {
-        if (pathData.size >= 2) {
-            val positions = pathData.map { Position(it.lon, it.lat) }
-            Feature(geometry = LineString(positions), properties = null)
-        } else null
-    }
-
-    val checkpointFeatures = remember(checkpoints) {
-        checkpoints.map { checkpoint ->
-            Feature(
-                geometry = Point(Position(checkpoint.position.longitude, checkpoint.position.latitude)),
-                properties = null
-            )
-        }
-    }
-
-    val startFeature = remember(pathData) {
-        if (pathData.isNotEmpty()) {
-            val startPoint = pathData.first()
-            Feature(
-                geometry = Point(Position(startPoint.lon, startPoint.lat)),
-                properties = null
-            )
-        } else null
-    }
-
-    val endFeature = remember(pathData) {
-        if (pathData.size > 1) {
-            val endPoint = pathData.last()
-            Feature(
-                geometry = Point(Position(endPoint.lon, endPoint.lat)),
-                properties = null
-            )
-        } else null
-    }
-
     MaplibreMap(
         modifier = modifier,
         cameraState = cameraState,
         styleState = styleState,
-        baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
+        baseStyle = BaseStyle.Uri(mapStyle.getUrl()),
         options = MapOptions(
             ornamentOptions = OrnamentOptions.AllDisabled,
             gestureOptions = GestureOptions.Standard
         )
     ) {
-        // Route path
-        routeFeature?.let { feature ->
-            val routeSource = rememberGeoJsonSource(
-                data = GeoJsonData.Features(feature)
+        RoutePathLayer(pathData = pathData)
+
+        CheckpointsLayer(
+            checkpoints = checkpoints,
+            visitedIndices = visitedIndices,
+            nextCheckpointIndex = -1,
+            isRunActive = true,
+            draggingIndex = null,
+            cameraState = cameraState,
+            iconStyle = mapIconStyle,
+            onCheckpointLongClick = {}
+        )
+
+        playbackPosition?.let { position ->
+            val playbackSource = rememberGeoJsonSource(
+                data = GeoJsonData.Features(
+                    Feature(geometry = Point(position), properties = null)
+                )
             )
 
-            LineLayer(
-                id = "preview-route-outline",
-                source = routeSource,
-                color = const(Color.White),
-                width = const(6.dp)
+            CircleLayer(
+                id = "preview-playback-point",
+                source = playbackSource,
+                color = const(CheckpointColorNext),
+                radius = const(12.dp),
+                strokeColor = const(UserLocationStrokeColor),
+                strokeWidth = const(3.dp)
             )
 
-            LineLayer(
-                id = "preview-route",
-                source = routeSource,
-                color = const(Color(0xFF4CAF50)),
-                width = const(4.dp)
-            )
-        }
-
-        // Checkpoints
-        checkpointFeatures.forEachIndexed { index, feature ->
-            key(index) {
-                val isVisited = index in visitedIndices
-                val source = rememberGeoJsonSource(data = GeoJsonData.Features(feature))
-
-                CircleLayer(
-                    id = "preview-checkpoint-$index",
-                    source = source,
-                    color = const(if (isVisited) Color(0xFF4CAF50) else Color(0xFF9E9E9E)),
-                    radius = const(10.dp),
-                    strokeColor = const(Color.White),
-                    strokeWidth = const(2.dp)
+            playbackSpeedLabel?.let { speedLabel ->
+                SymbolLayer(
+                    id = "preview-playback-speed",
+                    source = playbackSource,
+                    textField = format(span(const(speedLabel))),
+                    textSize = const(14.sp),
+                    textColor = const(ModernMarkerLabelColor),
+                    textHaloColor = const(ModernMarkerStrokeColor),
+                    textHaloWidth = const(1.5.dp),
+                    textAnchor = const(SymbolAnchor.Top),
+                    textOffset = offset(0f.em, 1.5f.em),
+                    textAllowOverlap = const(true),
+                    textIgnorePlacement = const(true)
                 )
             }
-        }
-
-        // Start point
-        startFeature?.let { feature ->
-            val startSource = rememberGeoJsonSource(data = GeoJsonData.Features(feature))
-
-            CircleLayer(
-                id = "preview-start-point",
-                source = startSource,
-                color = const(Color(0xFF2196F3)),
-                radius = const(8.dp),
-                strokeColor = const(Color.White),
-                strokeWidth = const(3.dp)
-            )
-        }
-
-        // End point
-        endFeature?.let { feature ->
-            val endSource = rememberGeoJsonSource(data = GeoJsonData.Features(feature))
-
-            CircleLayer(
-                id = "preview-end-point",
-                source = endSource,
-                color = const(Color(0xFFF44336)),
-                radius = const(8.dp),
-                strokeColor = const(Color.White),
-                strokeWidth = const(3.dp)
-            )
         }
     }
 }

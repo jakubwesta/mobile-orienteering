@@ -100,20 +100,34 @@ fun boundingCamera(latLons: List<Pair<Double, Double>>): BoundingCamera {
 fun computeVisitedControlPoints(
     pathData: List<PathPoint>,
     controlPoints: List<ControlPoint>,
-    radiusMeters: Int
+    radiusMeters: Int,
+    orderedControlPoints: Boolean = true
 ): List<VisitedControlPoint> {
     if (pathData.isEmpty() || controlPoints.isEmpty()) {
         return emptyList()
     }
 
     val sortedPath = pathData.sortedBy { it.timestamp }
+    return if (orderedControlPoints) {
+        computeOrderedVisitedControlPoints(sortedPath, controlPoints, radiusMeters)
+    } else {
+        computeAnyOrderVisitedControlPoints(sortedPath, controlPoints, radiusMeters)
+    }
+}
+
+private fun controlPointLabel(checkpoint: ControlPoint, index: Int): String =
+    checkpoint.name.ifEmpty { "Punkt ${index + 1}" }
+
+private fun computeOrderedVisitedControlPoints(
+    sortedPath: List<PathPoint>,
+    controlPoints: List<ControlPoint>,
+    radiusMeters: Int
+): List<VisitedControlPoint> {
     val visited = mutableListOf<VisitedControlPoint>()
     var nextCheckpointIndex = 0
 
     for (pathPoint in sortedPath) {
-        if (nextCheckpointIndex >= controlPoints.size) {
-            break
-        }
+        if (nextCheckpointIndex >= controlPoints.size) break
 
         val checkpoint = controlPoints[nextCheckpointIndex]
         val distance = calculateDistanceBetweenPoints(
@@ -124,14 +138,57 @@ fun computeVisitedControlPoints(
         if (distance <= radiusMeters) {
             visited.add(
                 VisitedControlPoint(
-                    controlPointName = "Punkt ${nextCheckpointIndex + 1}",
+                    controlPointName = controlPointLabel(checkpoint, nextCheckpointIndex),
                     order = nextCheckpointIndex + 1,
+                    checkpointIndex = nextCheckpointIndex,
                     visitedAt = pathPoint.timestamp,
                     lat = checkpoint.lat,
                     lon = checkpoint.lon
                 )
             )
             nextCheckpointIndex++
+        }
+    }
+
+    return visited
+}
+
+private fun computeAnyOrderVisitedControlPoints(
+    sortedPath: List<PathPoint>,
+    controlPoints: List<ControlPoint>,
+    radiusMeters: Int
+): List<VisitedControlPoint> {
+    val visited = mutableListOf<VisitedControlPoint>()
+    val visitedIndices = mutableSetOf<Int>()
+    var visitSequence = 0
+
+    for (pathPoint in sortedPath) {
+        if (visitedIndices.size >= controlPoints.size) break
+
+        for (index in controlPoints.indices) {
+            if (index in visitedIndices) continue
+
+            val checkpoint = controlPoints[index]
+            val distance = calculateDistanceBetweenPoints(
+                pathPoint.lat, pathPoint.lon,
+                checkpoint.lat, checkpoint.lon
+            )
+
+            if (distance <= radiusMeters) {
+                visitSequence++
+                visited.add(
+                    VisitedControlPoint(
+                        controlPointName = controlPointLabel(checkpoint, index),
+                        order = visitSequence,
+                        checkpointIndex = index,
+                        visitedAt = pathPoint.timestamp,
+                        lat = checkpoint.lat,
+                        lon = checkpoint.lon
+                    )
+                )
+                visitedIndices.add(index)
+                break
+            }
         }
     }
 

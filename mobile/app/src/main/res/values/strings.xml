@@ -186,6 +186,9 @@
 	<string name="run_details_splits">Splits</string>
 	<string name="run_details_start">Start</string>
 	<string name="run_details_title">Run Details</string>
+	<string name="run_details_view_splits">View splits</string>
+	<string name="run_details_play_track">Play track</string>
+	<string name="run_details_pause_track">Pause</string>
 	<string name="run_details_total_dist_label">Total Dist</string>
 	<string name="run_details_total_label">Total</string>
 

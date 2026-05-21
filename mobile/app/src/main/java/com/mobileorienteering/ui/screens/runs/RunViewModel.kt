@@ -3,8 +3,11 @@ package com.mobileorienteering.ui.screens.runs
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mobileorienteering.data.model.app.MapIconStyle
+import com.mobileorienteering.data.model.app.MapStyle
 import com.mobileorienteering.data.model.domain.Map
 import com.mobileorienteering.data.model.domain.Run
+import com.mobileorienteering.data.preferences.SettingsPreferences
 import com.mobileorienteering.data.repository.RunRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -19,8 +22,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RunViewModel @Inject constructor(
-    private val runRepository: RunRepository
+    private val runRepository: RunRepository,
+    private val settingsPreferences: SettingsPreferences
 ) : ViewModel() {
+
+    private val _mapStyle = MutableStateFlow(MapStyle.CLASSIC)
+    val mapStyle: StateFlow<MapStyle> = _mapStyle.asStateFlow()
+
+    private val _mapIconStyle = MutableStateFlow(MapIconStyle.MODERN)
+    val mapIconStyle: StateFlow<MapIconStyle> = _mapIconStyle.asStateFlow()
 
     val runs: StateFlow<List<Run>> = runRepository.getAllRunsFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -40,6 +50,12 @@ class RunViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             runs.collect { updateFilteredRuns(it) }
+        }
+        viewModelScope.launch {
+            settingsPreferences.settingsFlow.collect { settings ->
+                _mapStyle.value = settings.mapStyle
+                _mapIconStyle.value = settings.mapIconStyle
+            }
         }
     }
 

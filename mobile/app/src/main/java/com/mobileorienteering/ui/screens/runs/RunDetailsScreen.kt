@@ -1,60 +1,63 @@
 package com.mobileorienteering.ui.screens.runs
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
+import com.mobileorienteering.data.model.app.MapIconStyle
+import com.mobileorienteering.data.model.app.MapStyle
 import com.mobileorienteering.ui.core.Strings
-import com.mobileorienteering.data.model.domain.Run
-import com.mobileorienteering.data.model.domain.VisitedControlPoint
-import com.mobileorienteering.data.model.app.Checkpoint
+import com.mobileorienteering.ui.screens.runs.components.RunDetailsSummary
 import com.mobileorienteering.ui.screens.runs.components.RunMapPreview
-import com.mobileorienteering.ui.screens.runs.components.RunStatsCard
-import com.mobileorienteering.ui.screens.runs.components.RunTimeline
-import com.mobileorienteering.util.computeVisitedControlPoints
-import com.mobileorienteering.util.formatDate
-import com.mobileorienteering.util.formatTime
-import org.maplibre.spatialk.geojson.Position
-import java.time.Instant
-
-private enum class RunStatus { COMPLETED, ABANDONED }
+import com.mobileorienteering.util.formatPlaybackSpeedKmh
+import com.mobileorienteering.util.interpolatePathPosition
+import com.mobileorienteering.util.pathPlaybackDurationMillis
+import com.mobileorienteering.util.playbackSpeedKmh
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RunDetailsScreen(
     runId: Long,
     onNavigateBack: () -> Unit,
+    onViewSplits: () -> Unit,
     viewModel: RunViewModel = hiltViewModel()
 ) {
     val run by viewModel.getRun(runId).collectAsState(initial = null)
+    val mapStyle by viewModel.mapStyle.collectAsState()
+    val mapIconStyle by viewModel.mapIconStyle.collectAsState()
     val isLoading by remember { viewModel.isLoading }
 
     Scaffold(
@@ -86,7 +89,10 @@ fun RunDetailsScreen(
             else -> {
                 RunDetailsContent(
                     run = run!!,
+                    mapStyle = mapStyle,
+                    mapIconStyle = mapIconStyle,
                     checkpointRadius = run!!.runSettings.detectionRadius.toInt(),
+                    onViewSplits = onViewSplits,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -98,169 +104,133 @@ fun RunDetailsScreen(
 
 @Composable
 private fun RunDetailsContent(
-    run: Run,
+    run: com.mobileorienteering.data.model.domain.Run,
+    mapStyle: MapStyle,
+    mapIconStyle: MapIconStyle,
     checkpointRadius: Int,
+    onViewSplits: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val sortedPathPoints = remember(run.id) {
-        run.pathPoints.sortedBy { it.timestamp }
+    val startPointLabel = Strings.Run.detailsStart
+    val detailsData = remember(run.id, checkpointRadius, run.runSettings.orderedControlPoints, startPointLabel) {
+        run.toDetailsData(checkpointRadius, startPointLabel)
     }
+    val pathData = detailsData.sortedPathPoints
 
-    val stableCheckpoints = remember(run.id) {
-        run.map.controlPoints.map { cp ->
-            Checkpoint(
-                position = Position(cp.lon, cp.lat),
-                name = cp.name
-            )
+    var isPlaying by remember(run.id) { mutableStateOf(false) }
+    val playbackProgress = remember(run.id) { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    val playbackDurationMs = remember(pathData) { pathPlaybackDurationMillis(pathData) }
+    val playbackPosition = remember(pathData, playbackProgress.value) {
+        if (playbackProgress.value <= 0f && !isPlaying) {
+            null
+        } else {
+            interpolatePathPosition(pathData, playbackProgress.value)
+        }
+    }
+    val playbackSpeedLabel = remember(pathData, playbackProgress.value, playbackPosition) {
+        if (playbackPosition == null) {
+            null
+        } else {
+            formatPlaybackSpeedKmh(playbackSpeedKmh(pathData, playbackProgress.value) ?: 0.0)
         }
     }
 
-    val visitedControlPoints = remember(run.id, checkpointRadius) {
-        computeVisitedControlPoints(
-            pathData = sortedPathPoints,
-            controlPoints = run.map.controlPoints,
-            radiusMeters = checkpointRadius
+    LaunchedEffect(isPlaying, pathData, playbackDurationMs) {
+        if (!isPlaying || pathData.size < 2) return@LaunchedEffect
+
+        val remainingProgress = 1f - playbackProgress.value
+        val durationMs = (playbackDurationMs * remainingProgress).toInt().coerceAtLeast(1)
+        playbackProgress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(
+                durationMillis = durationMs,
+                easing = LinearEasing
+            )
         )
-    }
-
-    val visitedIndices = remember(run.id, visitedControlPoints) {
-        visitedControlPoints.map { it.order - 1 }.toSet()
-    }
-
-    val status = remember(run.id) {
-        if (run.finishedAt != null) RunStatus.COMPLETED else RunStatus.ABANDONED
+        playbackProgress.snapTo(0f)
+        isPlaying = false
     }
 
     Column(modifier = modifier) {
-        RunHeader(
-            title = run.name,
-            startTime = run.startedAt,
-            status = status
-        )
-
-        if (sortedPathPoints.isNotEmpty()) {
-            RunMapPreview(
-                pathData = sortedPathPoints,
-                checkpoints = stableCheckpoints,
-                visitedIndices = visitedIndices,
+        if (pathData.isNotEmpty()) {
+            Box(
                 modifier = Modifier
+                    .weight(1f)
                     .fillMaxWidth()
-                    .height(250.dp)
-                    .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(12.dp))
-            )
-        }
+            ) {
+                RunMapPreview(
+                    pathData = pathData,
+                    checkpoints = detailsData.stableCheckpoints,
+                    visitedIndices = detailsData.visitedIndices,
+                    mapStyle = mapStyle,
+                    mapIconStyle = mapIconStyle,
+                    playbackPosition = playbackPosition,
+                    playbackSpeedLabel = playbackSpeedLabel,
+                    modifier = Modifier.fillMaxSize()
+                )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        val sortedVisitedPoints = remember(visitedControlPoints) {
-            visitedControlPoints.sortedBy { it.visitedAt }
+                if (pathData.size >= 2) {
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            if (isPlaying) {
+                                isPlaying = false
+                                scope.launch { playbackProgress.stop() }
+                            } else {
+                                if (playbackProgress.value >= 1f) {
+                                    scope.launch { playbackProgress.snapTo(0f) }
+                                }
+                                isPlaying = true
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp),
+                        icon = {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                contentDescription = null
+                            )
+                        },
+                        text = {
+                            Text(
+                                stringResource(
+                                    if (isPlaying) {
+                                        R.string.run_details_pause_track
+                                    } else {
+                                        R.string.run_details_play_track
+                                    }
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+        } else {
+            Box(modifier = Modifier.weight(1f))
         }
 
         Column(
             modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            RunStatsCard(
-                pathPoints = sortedPathPoints,
+            RunDetailsSummary(
+                pathPoints = pathData,
                 startedAt = run.startedAt,
                 finishedAt = run.finishedAt,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                visitedControlPointCount = detailsData.visitedControlPointCount,
+                totalControlPointCount = detailsData.totalControlPointCount
             )
 
-            if (sortedVisitedPoints.isNotEmpty()) {
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-                Text(
-                    Strings.Run.detailsSplits,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                val startPoint = if (sortedPathPoints.isNotEmpty()) {
-                    val firstPath = sortedPathPoints.first()
-                    VisitedControlPoint(
-                        controlPointName = Strings.Run.detailsStart,
-                        order = 0,
-                        visitedAt = run.startedAt,
-                        lat = firstPath.lat,
-                        lon = firstPath.lon
-                    )
-                } else null
-
-                val timelinePoints = if (startPoint != null) {
-                    listOf(startPoint) + sortedVisitedPoints
-                } else {
-                    sortedVisitedPoints
-                }
-
-                RunTimeline(
-                    startTime = run.startedAt,
-                    visitedPoints = timelinePoints,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            } else if (run.map.controlPoints.isNotEmpty()) {
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-                Text(
-                    Strings.Run.detailsNoControlPoints,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
+            Button(
+                onClick = onViewSplits,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.run_details_view_splits))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-}
-
-@Composable
-private fun RunHeader(
-    title: String,
-    startTime: Instant,
-    status: RunStatus
-) {
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.weight(1f)
-            )
-
-            Text(
-                text = when (status) {
-                    RunStatus.COMPLETED -> Strings.Run.detailsCompleted
-                    RunStatus.ABANDONED -> Strings.Run.detailsAbandoned
-                },
-                style = MaterialTheme.typography.labelMedium,
-                color = when (status) {
-                    RunStatus.COMPLETED -> MaterialTheme.colorScheme.primary
-                    RunStatus.ABANDONED -> MaterialTheme.colorScheme.error
-                }
-            )
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(
-                formatDate(startTime),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                formatTime(startTime),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
