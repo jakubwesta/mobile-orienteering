@@ -12,7 +12,10 @@ private const val SPEED_LOOK_AHEAD_SEGMENTS = 2
 
 fun pathPlaybackDurationMillis(pathData: List<PathPoint>): Long {
     if (pathData.size < 2) return MIN_PLAYBACK_MS
-    val actualMs = Duration.between(pathData.first().timestamp, pathData.last().timestamp).toMillis()
+    val actualMs = Duration.between(
+        pathData.first().timestamp,
+        pathData.last().timestamp
+    ).toMillis()
     return actualMs.coerceIn(MIN_PLAYBACK_MS, MAX_PLAYBACK_MS)
 }
 

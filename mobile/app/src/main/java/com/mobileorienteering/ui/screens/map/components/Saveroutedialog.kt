@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.ui.core.Strings
 
@@ -60,7 +61,9 @@ fun SaveRouteDialog(
                         onValueChange = { name = it },
                         label = { Text(Strings.Map.routeNameLabel) },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("map_route_name")
                     )
                 }
             }

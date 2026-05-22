@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.BuildConfig
@@ -53,10 +52,10 @@ import com.mobileorienteering.ui.screens.settings.components.SettingsSwitchItem
 
 @Composable
 private fun mapStyleDisplayName(style: MapStyle): String = when (style) {
-    MapStyle.CLASSIC -> stringResource(R.string.settings_map_style_classic)
-    MapStyle.SATELLITE -> stringResource(R.string.settings_map_style_satellite)
-    MapStyle.OUTDOOR -> stringResource(R.string.settings_map_style_outdoor)
-    MapStyle.ORIENTEERING -> stringResource(R.string.settings_map_style_orienteering)
+    MapStyle.CLASSIC -> Strings.Settings.mapStyleClassic
+    MapStyle.SATELLITE -> Strings.Settings.mapStyleSatellite
+    MapStyle.OUTDOOR -> Strings.Settings.mapStyleOutdoor
+    MapStyle.ORIENTEERING -> Strings.Settings.mapStyleOrienteering
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -231,7 +230,7 @@ fun SettingsScreen(
             SettingsSection(title = Strings.Settings.advanced) {
                 SettingsClickableItem(
                     icon = R.drawable.ic_map_outlined,
-                    title = stringResource(R.string.settings_map_quality),
+                    title = Strings.Settings.mapQuality,
                     subtitle = settings.mapQuality.getLabel(),
                     showRightArrow = true,
                     onClick = { showMapQualityDialog = true }
@@ -434,7 +433,7 @@ fun SettingsScreen(
     if (showMapQualityDialog) {
         AlertDialog(
             onDismissRequest = { showMapQualityDialog = false },
-            title = { Text(stringResource(R.string.settings_map_quality)) },
+            title = { Text(Strings.Settings.mapQuality) },
             text = {
                 Column {
                     MapQuality.entries.forEach { quality ->

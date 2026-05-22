@@ -53,7 +53,7 @@ class MapRepository @Inject constructor(
     }
 
     suspend fun createMap(request: CreateMapRequest): Result<Map> {
-        val userId = authRepository.getCurrentAuth()?.userId
+        val auth = authRepository.getCurrentAuth()
             ?: return Result.failure(Exception("Not authenticated"))
 
         return try {
@@ -62,7 +62,7 @@ class MapRepository @Inject constructor(
             mapDao.insertMap(
                 MapEntity(
                     id = tempId,
-                    userId = userId,
+                    userId = auth.userId,
                     name = request.name,
                     description = request.description,
                     isSnapshot = false,
@@ -83,6 +83,11 @@ class MapRepository @Inject constructor(
                     )
                 }
             )
+
+            if (auth.isGuestMode) {
+                return mapDao.getMapWithControlPoints(tempId)?.toDomainModel()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("Map not found after save"))
+            }
 
             ApiHelper.safeApiCall("Failed to create map") {
                 mapApi.createMap(request)
@@ -123,6 +128,12 @@ class MapRepository @Inject constructor(
                     )
                 }
             )
+
+            val auth = authRepository.getCurrentAuth()
+            if (auth?.isGuestMode == true) {
+                return mapDao.getMapWithControlPoints(mapId)?.toDomainModel()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("Map not found after update"))
+            }
 
             ApiHelper.safeApiCall("Failed to update map") {
                 mapApi.updateMap(mapId, request)

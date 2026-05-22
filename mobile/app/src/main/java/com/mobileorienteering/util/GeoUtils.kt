@@ -1,15 +1,17 @@
 package com.mobileorienteering.util
 
-import android.location.Location
 import com.mobileorienteering.data.model.domain.ControlPoint
 import com.mobileorienteering.data.model.domain.PathPoint
 import com.mobileorienteering.data.model.domain.VisitedControlPoint
-
+import kotlin.math.PI
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.log2
 import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 
-private const val LATITUDE_TO_RADIANS = kotlin.math.PI / 180.0
+private const val LATITUDE_TO_RADIANS = PI / 180.0
 
 /**
  * Web Mercator scale: ground metres per **screen pixel** at [latitudeDeg] for zoom level [zoom].
@@ -31,7 +33,7 @@ fun metersOnGroundForDpInset(
 ): Double = webMercatorMetersPerPixel(latitudeDeg, zoom) * insetDp * screenDensity
 
 /**
- * Linear interpolation along the segment [from]-[toward] by [distanceMeters] (planar lat/lon).
+ * Linear interpolation along the segment from-toward by [distanceMeters] (planar lat/lon).
  * Fine for short legs (control-to-control). Returns (latitude, longitude).
  */
 fun offsetToward(
@@ -48,13 +50,20 @@ fun offsetToward(
     return lat to lon
 }
 
+private const val EARTH_RADIUS_METERS = 6_371_000.0
+
 fun calculateDistanceBetweenPoints(
     lat1: Double, lon1: Double,
     lat2: Double, lon2: Double
 ): Double {
-    val results = FloatArray(1)
-    Location.distanceBetween(lat1, lon1, lat2, lon2, results)
-    return results[0].toDouble()
+    val lat1Rad = lat1 * LATITUDE_TO_RADIANS
+    val lat2Rad = lat2 * LATITUDE_TO_RADIANS
+    val dLat = (lat2 - lat1) * LATITUDE_TO_RADIANS
+    val dLon = (lon2 - lon1) * LATITUDE_TO_RADIANS
+
+    val a = sin(dLat / 2).pow(2) + cos(lat1Rad) * cos(lat2Rad) * sin(dLon / 2).pow(2)
+    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return EARTH_RADIUS_METERS * c
 }
 
 fun calculateTotalDistance(pathPoints: List<PathPoint>): Double {
@@ -91,7 +100,6 @@ fun boundingCamera(latLons: List<Pair<Double, Double>>): BoundingCamera {
     val lonSpan = (maxLon - minLon).coerceAtLeast(1e-4)
     val maxSpan = maxOf(latSpan, lonSpan)
 
-    // log2(360/span) = zoom where the span fills the world; subtract 1 for ~50% padding margin
     val zoom = (log2(360.0 / maxSpan) - 1.0).coerceIn(10.0, 17.0)
 
     return BoundingCamera(centerLat, centerLon, zoom)
@@ -116,7 +124,7 @@ fun computeVisitedControlPoints(
 }
 
 private fun controlPointLabel(checkpoint: ControlPoint, index: Int): String =
-    checkpoint.name.ifEmpty { "Punkt ${index + 1}" }
+    checkpoint.name.ifEmpty { "Point ${index + 1}" }
 
 private fun computeOrderedVisitedControlPoints(
     sortedPath: List<PathPoint>,

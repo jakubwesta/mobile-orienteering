@@ -138,6 +138,10 @@ class AuthRepository @Inject constructor(
             val currentAuth = getCurrentAuth()
                 ?: return@withLock Result.failure(Exception("No refresh token available"))
 
+            if (currentAuth.isGuestMode) {
+                return@withLock Result.failure(Exception("Guest mode cannot refresh token"))
+            }
+
             ApiHelper.safeApiCall("Token refresh failed") {
                 authApi.refreshToken(RefreshTokenRequest(refreshToken = currentAuth.refreshToken))
             }.mapCatching { tokenResponse ->

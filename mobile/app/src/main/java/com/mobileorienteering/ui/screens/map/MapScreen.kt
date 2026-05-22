@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,7 +14,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
@@ -96,6 +97,12 @@ fun MapScreen(
     var showLocationPermissionSettings by remember { mutableStateOf(false) }
     var pendingRunStart by remember { mutableStateOf(false) }
     var draggingCheckpointIndex by remember { mutableStateOf<Int?>(null) }
+    var isMapLoaded by remember { mutableStateOf(false) }
+    val mapStyleUrl = mapStyle.getUrl()
+
+    LaunchedEffect(mapStyleUrl) {
+        isMapLoaded = false
+    }
 
     LaunchedEffect(state.mapSaved) {
         if (state.mapSaved) {
@@ -300,14 +307,17 @@ fun MapScreen(
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             MaplibreMap(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (isMapLoaded) Modifier.testTag("map_ready") else Modifier),
                 cameraState = cameraState,
                 styleState = styleState,
-                baseStyle = BaseStyle.Uri(mapStyle.getUrl()),
+                baseStyle = BaseStyle.Uri(mapStyleUrl),
                 options = MapOptions(
                     ornamentOptions = OrnamentOptions.AllDisabled,
                     gestureOptions = GestureOptions.Standard
                 ),
+                onMapLoadFinished = { isMapLoaded = true },
                 onMapClick = { point, _ ->
                     if (draggingCheckpointIndex != null) {
                         viewModel.moveCheckpoint(draggingCheckpointIndex!!, point.longitude, point.latitude)
@@ -376,7 +386,9 @@ fun MapScreen(
                 Card(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+                        .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+                        .testTag("map_add_checkpoint")
+                        .clickable { tapPosition = cameraState.position.target },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
@@ -471,6 +483,7 @@ fun MapScreen(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
+                        .testTag("map_saving")
                         .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -486,7 +499,7 @@ fun MapScreen(
                         ) {
                             CircularProgressIndicator()
                             Text(
-                                text = stringResource(R.string.map_saving),
+                                text = Strings.Map.saving,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }

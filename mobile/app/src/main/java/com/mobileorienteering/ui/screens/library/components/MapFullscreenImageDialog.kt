@@ -23,10 +23,9 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.mobileorienteering.R
+import com.mobileorienteering.ui.core.Strings
 
 private const val MinZoom = 1f
 private const val MaxZoom = 5f
@@ -74,7 +73,7 @@ fun MapFullscreenImageDialog(
         ) {
             Image(
                 bitmap = bitmap,
-                contentDescription = stringResource(R.string.library_change_image),
+                contentDescription = Strings.Library.changeImage,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxSize()

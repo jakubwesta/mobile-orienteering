@@ -23,13 +23,20 @@ class TokenAuthenticator @Inject constructor(
         }
 
         val newToken = runBlocking {
-            val result = authRepository.get().refreshToken()
-            result.getOrNull()
+            val auth = authRepository.get().getCurrentAuth()
+            if (auth?.isGuestMode == true) {
+                return@runBlocking null
+            }
+
+            authRepository.get().refreshToken().getOrNull()
         }
 
         if (newToken == null) {
             runBlocking {
-                authRepository.get().logout()
+                val auth = authRepository.get().getCurrentAuth()
+                if (auth?.isGuestMode != true) {
+                    authRepository.get().logout()
+                }
             }
             return null
         }

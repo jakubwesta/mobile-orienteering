@@ -1,8 +1,5 @@
 package com.mobileorienteering.ui.screens.runs
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,14 +22,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobileorienteering.R
@@ -45,7 +42,6 @@ import com.mobileorienteering.util.formatPlaybackSpeedKmh
 import com.mobileorienteering.util.interpolatePathPosition
 import com.mobileorienteering.util.pathPlaybackDurationMillis
 import com.mobileorienteering.util.playbackSpeedKmh
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,38 +114,43 @@ private fun RunDetailsContent(
     val pathData = detailsData.sortedPathPoints
 
     var isPlaying by remember(run.id) { mutableStateOf(false) }
-    val playbackProgress = remember(run.id) { Animatable(0f) }
-    val scope = rememberCoroutineScope()
+    var progress by remember(run.id) { mutableFloatStateOf(0f) }
 
     val playbackDurationMs = remember(pathData) { pathPlaybackDurationMillis(pathData) }
-    val playbackPosition = remember(pathData, playbackProgress.value) {
-        if (playbackProgress.value <= 0f && !isPlaying) {
-            null
-        } else {
-            interpolatePathPosition(pathData, playbackProgress.value)
-        }
+    val showPlaybackMarker = isPlaying || progress > 0f
+    val playbackPosition = if (pathData.isEmpty() || !showPlaybackMarker) {
+        null
+    } else {
+        interpolatePathPosition(pathData, progress)
     }
-    val playbackSpeedLabel = remember(pathData, playbackProgress.value, playbackPosition) {
-        if (playbackPosition == null) {
-            null
-        } else {
-            formatPlaybackSpeedKmh(playbackSpeedKmh(pathData, playbackProgress.value) ?: 0.0)
-        }
+    val playbackSpeedLabel = playbackPosition?.let {
+        formatPlaybackSpeedKmh(playbackSpeedKmh(pathData, progress) ?: 0.0)
     }
 
-    LaunchedEffect(isPlaying, pathData, playbackDurationMs) {
+    LaunchedEffect(isPlaying) {
         if (!isPlaying || pathData.size < 2) return@LaunchedEffect
 
-        val remainingProgress = 1f - playbackProgress.value
-        val durationMs = (playbackDurationMs * remainingProgress).toInt().coerceAtLeast(1)
-        playbackProgress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = durationMs,
-                easing = LinearEasing
-            )
-        )
-        playbackProgress.snapTo(0f)
+        if (progress >= 1f) {
+            progress = 0f
+        }
+
+        val startProgress = progress
+        val remaining = 1f - startProgress
+        val durationMs = (playbackDurationMs * remaining).toLong().coerceAtLeast(1L)
+        val startTime = withFrameMillis { it }
+
+        while (isPlaying) {
+            val elapsed = withFrameMillis { it } - startTime
+            if (elapsed >= durationMs) {
+                progress = 1f
+                break
+            }
+            progress = startProgress + remaining * (elapsed / durationMs.toFloat())
+        }
+
+        if (!isPlaying) return@LaunchedEffect
+
+        progress = 0f
         isPlaying = false
     }
 
@@ -174,15 +175,7 @@ private fun RunDetailsContent(
                 if (pathData.size >= 2) {
                     ExtendedFloatingActionButton(
                         onClick = {
-                            if (isPlaying) {
-                                isPlaying = false
-                                scope.launch { playbackProgress.stop() }
-                            } else {
-                                if (playbackProgress.value >= 1f) {
-                                    scope.launch { playbackProgress.snapTo(0f) }
-                                }
-                                isPlaying = true
-                            }
+                            isPlaying = !isPlaying
                         },
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
@@ -195,13 +188,11 @@ private fun RunDetailsContent(
                         },
                         text = {
                             Text(
-                                stringResource(
-                                    if (isPlaying) {
-                                        R.string.run_details_pause_track
-                                    } else {
-                                        R.string.run_details_play_track
-                                    }
-                                )
+                                if (isPlaying) {
+                                    Strings.Run.detailsPauseTrack
+                                } else {
+                                    Strings.Run.detailsPlayTrack
+                                }
                             )
                         }
                     )
@@ -229,7 +220,7 @@ private fun RunDetailsContent(
                 onClick = onViewSplits,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(stringResource(R.string.run_details_view_splits))
+                Text(Strings.Run.detailsViewSplits)
             }
         }
     }

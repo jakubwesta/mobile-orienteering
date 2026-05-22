@@ -43,7 +43,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mobileorienteering.R
 import com.mobileorienteering.data.model.domain.Map
@@ -122,7 +121,7 @@ fun MapCard(
                         )
 
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.library_change_image)) },
+                            text = { Text(Strings.Library.changeImage) },
                             onClick = {
                                 showMenu = false
                                 onChangeImage()
@@ -230,7 +229,7 @@ private fun MapImagePreview(map: Map, onImageClick: (ImageBitmap) -> Unit) {
         ) {
             Image(
                 bitmap = bitmap,
-                contentDescription = stringResource(R.string.library_change_image),
+                contentDescription = Strings.Library.changeImage,
                 modifier = Modifier
                     .fillMaxWidth(MapPreviewWidthFraction)
                     .aspectRatio(aspectRatio)

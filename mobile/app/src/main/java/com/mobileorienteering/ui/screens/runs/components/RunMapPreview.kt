@@ -112,36 +112,47 @@ fun RunMapPreview(
         )
 
         playbackPosition?.let { position ->
-            val playbackSource = rememberGeoJsonSource(
-                data = GeoJsonData.Features(
-                    Feature(geometry = Point(position), properties = null)
-                )
+            PlaybackMarkerLayer(
+                position = position,
+                speedLabel = playbackSpeedLabel
             )
-
-            CircleLayer(
-                id = "preview-playback-point",
-                source = playbackSource,
-                color = const(CheckpointColorNext),
-                radius = const(12.dp),
-                strokeColor = const(UserLocationStrokeColor),
-                strokeWidth = const(3.dp)
-            )
-
-            playbackSpeedLabel?.let { speedLabel ->
-                SymbolLayer(
-                    id = "preview-playback-speed",
-                    source = playbackSource,
-                    textField = format(span(const(speedLabel))),
-                    textSize = const(14.sp),
-                    textColor = const(ModernMarkerLabelColor),
-                    textHaloColor = const(ModernMarkerStrokeColor),
-                    textHaloWidth = const(1.5.dp),
-                    textAnchor = const(SymbolAnchor.Top),
-                    textOffset = offset(0f.em, 1.5f.em),
-                    textAllowOverlap = const(true),
-                    textIgnorePlacement = const(true)
-                )
-            }
         }
+    }
+}
+
+@Composable
+private fun PlaybackMarkerLayer(
+    position: Position,
+    speedLabel: String?,
+) {
+    val playbackSource = rememberGeoJsonSource(
+        data = GeoJsonData.Features(
+            Feature(geometry = Point(position), properties = null)
+        )
+    )
+
+    CircleLayer(
+        id = "preview-playback-point",
+        source = playbackSource,
+        color = const(CheckpointColorNext),
+        radius = const(12.dp),
+        strokeColor = const(UserLocationStrokeColor),
+        strokeWidth = const(3.dp)
+    )
+
+    speedLabel?.let { label ->
+        SymbolLayer(
+            id = "preview-playback-speed",
+            source = playbackSource,
+            textField = format(span(const(label))),
+            textSize = const(14.sp),
+            textColor = const(ModernMarkerLabelColor),
+            textHaloColor = const(ModernMarkerStrokeColor),
+            textHaloWidth = const(1.5.dp),
+            textAnchor = const(SymbolAnchor.Top),
+            textOffset = offset(0f.em, 1.5f.em),
+            textAllowOverlap = const(true),
+            textIgnorePlacement = const(true)
+        )
     }
 }

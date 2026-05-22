@@ -518,7 +518,7 @@ class MapViewModel @Inject constructor(
                     it.copy(
                         error = imageError,
                         isSavingMap = false,
-                        mapSaved = imageError == null
+                        mapSaved = true
                     )
                 }
             }.onFailure { e ->
